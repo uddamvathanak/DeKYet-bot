@@ -3650,8 +3650,15 @@ end
 
 --银月
 X.ConsiderItemDesire["item_moon_shard"] = function( hItem )
-	if bot:GetNetWorth() < 18000 or Utils.CountBackpackEmptySpace(bot) >= 3
-	then
+	if bot:GetNetWorth() < 18000 then
+		return BOT_ACTION_DESIRE_NONE
+	end
+	-- Only eat/give moon shard when main inventory (6 slots) is completely full
+	local bMainFull = true
+	for slot = 0, 5 do
+		if bot:GetItemInSlot(slot) == nil then bMainFull = false; break end
+	end
+	if not bMainFull then
 		return BOT_ACTION_DESIRE_NONE
 	end
 

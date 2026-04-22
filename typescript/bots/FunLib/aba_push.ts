@@ -306,8 +306,8 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     if (jmz.GetHP(bot) < 0.5) {
         nMaxDesire = math.min(nMaxDesire, 0.25);
     }
-    // Caution when all enemies alive and no advantage
-    if (gameState.aliveEnemyCount >= 5 && gameState.aliveAllyCount <= gameState.aliveEnemyCount) {
+    // Caution when all enemies alive and no advantage (skip in turbo — stay aggressive)
+    if (gameState.gameMode !== 23 && gameState.aliveEnemyCount >= 5 && gameState.aliveAllyCount < gameState.aliveEnemyCount) {
         nMaxDesire = math.min(nMaxDesire, 0.41);
     }
     // Cap push desire when enemy heroes are very close — bot should fight, not push
@@ -388,7 +388,8 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
 
     const hAncient = gameState.ourAncient;
     // Base push desire calculation - missing function implementation
-    let nPushDesire = 0.5; // Default base desire
+    const isTurbo = gameState.gameMode === 23;
+    let nPushDesire = isTurbo ? 0.85 : 0.65; // Higher base in turbo to end games fast
     //   const allyKills = jmz.GetNumOfTeamTotalKills(false) + 1;
     //   const enemyKills = jmz.GetNumOfTeamTotalKills(true) + 1;
     //   const teamKillsRatio = allyKills / enemyKills; // (not used later but retained)

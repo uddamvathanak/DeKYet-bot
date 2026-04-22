@@ -1,5 +1,6 @@
 local Utils = require( GetScriptDirectory()..'/FunLib/utils')
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
+local LPressure = require( GetScriptDirectory()..'/FunLib/laning_pressure')
 
 local Version      = require(GetScriptDirectory()..'/FunLib/version')
 local Localization = require(GetScriptDirectory()..'/FunLib/localization')
@@ -19,6 +20,11 @@ local botAttackRange = bot:GetAttackRange()
 local attackDamage = bot:GetAttackDamage()
 local nH, enemyBots = J.Utils.NumHumanBotPlayersInTeam(GetOpposingTeam())
 local teamHumans, teamBots = J.Utils.NumHumanBotPlayersInTeam(GetTeam())
+
+-- Laning pressure cache (refreshed every 3s)
+local _lp_lastCalc  = -999
+local _lp_enemyNames = {}
+local _lp_aggrMult  = 1.0
 
 -- Announcer state
 local hasPickedOneAnnouncer      = false
@@ -42,6 +48,19 @@ function GetDesire()
 	nEnemyCreeps = bot:GetNearbyLaneCreeps(800, true)
 	nInRangeEnemy = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
 	nFurthestEnemyAttackRange = GetFurthestEnemyAttackRange(nInRangeEnemy)
+
+	-- Refresh laning pressure cache every 3 seconds
+	local _now = DotaTime()
+	if _now - _lp_lastCalc > 3 then
+		_lp_lastCalc = _now
+		_lp_enemyNames = {}
+		for _, e in ipairs(nInRangeEnemy) do
+			if J.IsValidHero(e) then
+				table.insert(_lp_enemyNames, e:GetUnitName())
+			end
+		end
+		_lp_aggrMult = LPressure.GetAggressionMultiplier(botName, _lp_enemyNames, bot:GetLevel())
+	end
 	if local_mode_laning_generic then
 		botAssignedLane = local_mode_laning_generic.GetBotTargetLane()
 	else
@@ -113,6 +132,13 @@ function GetDesire()
 	end
 
 	if currentTime <= 10 then return 0.268 end
+
+	-- Spike boost: at power-spike level with matchup advantage → press the lane harder
+	if _lp_aggrMult >= 1.3 and J.GetHP(bot) > 0.5 then
+		if currentTime <= 9 * 60 and botLV <= 7  then return 0.52 end
+		if currentTime <= 12 * 60 and botLV <= 11 then return 0.44 end
+	end
+
 	if currentTime <= 9 * 60 and botLV <= 7 then return 0.446 end
 	if currentTime <= 12 * 60 and botLV <= 11 then return 0.369 end
 	if botLV <= 14 and J.GetCoresAverageNetworth() < 7000 then return 0.2 end
@@ -212,6 +238,56 @@ if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5)) t
 		end
 
 		bot:Action_MoveToLocation(target_loc + RandomVector(50))
+	end
+else
+	-- General Think() for all other heroes (pos2-5, non-override).
+	-- Handles: support camp stacking at the :52 window,
+	-- and spike-based harassment for cores at their power spike.
+	function Think()
+		local pos   = J.GetPosition(bot)
+		local myHp  = J.GetHP(bot)
+
+		-- Support stacking: pos4-5 walks to a nearby camp during :52-:57
+		if pos >= 4 then
+			local allyHeroes = bot:GetNearbyHeroes(2000, false, BOT_MODE_NONE)
+			local hasCore = false
+			for _, ally in ipairs(allyHeroes) do
+				if J.IsValid(ally) and J.IsCore(ally) then hasCore = true; break end
+			end
+			if LPressure.ShouldSupportStack(bot, hasCore, myHp) then
+				local campLoc = LPressure.GetNearestAllyCamp(bot)
+				if campLoc then
+					bot:Action_MoveToLocation(campLoc)
+					return
+				end
+			end
+		end
+
+		-- Spike harassment: when aggression mult is high and we have HP,
+		-- attack the weakest visible enemy hero in attack range.
+		if _lp_aggrMult >= 1.2 and myHp > 0.5 and #nInRangeEnemy > 0 then
+			local bestEnemy = nil
+			local bestHp    = 1.1
+			for _, enemy in ipairs(nInRangeEnemy) do
+				if J.IsValidHero(enemy) and not J.IsSuspiciousIllusion(enemy)
+				and J.IsInRange(bot, enemy, botAttackRange + 150)
+				and J.GetHP(enemy) < bestHp then
+					bestHp    = J.GetHP(enemy)
+					bestEnemy = enemy
+				end
+			end
+			if bestEnemy then
+				bot:SetTarget(bestEnemy)
+				bot:Action_AttackUnit(bestEnemy, true)
+				return
+			end
+		end
+
+		-- Fallback: move toward lane front
+		if botAssignedLane then
+			local target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -botAttackRange)
+			bot:Action_MoveToLocation(target_loc + RandomVector(50))
+		end
 	end
 end
 

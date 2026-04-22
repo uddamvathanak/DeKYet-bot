@@ -39,6 +39,7 @@ local IsValidUnit = ____utils.IsValidUnit
 local GetLocationToLocationDistance = ____utils.GetLocationToLocationDistance
 local RadiantFountainTpPoint = ____utils.RadiantFountainTpPoint
 local DireFountainTpPoint = ____utils.DireFountainTpPoint
+local GameStrategy = require(GetScriptDirectory().."/FunLib/game_strategy")
 local ____global_cache = require(GetScriptDirectory().."/FunLib/global_cache")
 local getGlobalGameState = ____global_cache.getGlobalGameState
 local getGlobalLocationState = ____global_cache.getGlobalLocationState
@@ -171,7 +172,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     if jmz.GetHP(bot) < 0.5 then
         nMaxDesire = math.min(nMaxDesire, 0.25)
     end
-    if gameState.aliveEnemyCount >= 5 and gameState.aliveAllyCount <= gameState.aliveEnemyCount then
+    if gameState.gameMode ~= 23 and gameState.aliveEnemyCount >= 5 and gameState.aliveAllyCount < gameState.aliveEnemyCount then
         nMaxDesire = math.min(nMaxDesire, 0.41)
     end
     local closeEnemies = getCachedEnemiesNearLoc(
@@ -236,7 +237,8 @@ function ____exports.GetPushDesireHelper(bot, lane)
     local aAliveCoreCount = gameState.aliveAllyCoreCount
     local eAliveCoreCount = gameState.aliveEnemyCoreCount
     local hAncient = gameState.ourAncient
-    local nPushDesire = 0.5
+    local isTurbo = gameState.gameMode == 23
+    local nPushDesire = isTurbo and 0.85 or 0.65
     local teamAncientLoc = hAncient:GetLocation()
     local nEffAlliesNearAncient = #jmz.GetAlliesNearLoc(teamAncientLoc, 4500) + #jmz.Utils.GetAllyIdsInTpToLocation(teamAncientLoc, 4500)
     local nEnemiesAroundAncient = jmz.GetEnemiesAroundLoc(teamAncientLoc, 4500)
@@ -320,13 +322,15 @@ function ____exports.GetPushDesireHelper(bot, lane)
                 )
                 nPushDesire = nPushDesire + groupBonus
             end
-            return RemapValClamped(
+            local rawDesire = RemapValClamped(
                 nPushDesire * jmz.GetHP(bot),
                 0,
                 1,
                 0,
                 nMaxDesire
             )
+            local strat = GameStrategy.GetTeamStrategy()
+            return math.min(rawDesire * strat.push_mult, nMaxDesire)
         end
     end
     return lane == Lane.Mid and BotModeDesire.VeryLow or BOT_MODE_DESIRE_EXTRA_LOW

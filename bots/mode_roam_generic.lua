@@ -1,5 +1,6 @@
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
 local Customize = require( GetScriptDirectory()..'/Customize/general' )
+local LPressure = require( GetScriptDirectory()..'/FunLib/laning_pressure')
 
 local bot = GetBot()
 local botName = bot:GetUnitName()
@@ -39,6 +40,10 @@ local ShouldBotsSpreadOut = false
 local nChainFrostBounceDistance = 600 + 150
 local cachedTombstoneZombieSlowState = 0
 local nInRangeEnemy, nInRangeAlly, allyTowers, enemyTowers, trySeduce, shouldTempRetreat, botTarget, shouldGoBackToFountain, nInCloseRangeEnemy, nInCloseRangeAlly
+
+-- Camp stacking state for supports during laning phase
+local _stackCampLoc = nil
+local _isStacking   = false
 
 local tangoDesire, tangoTarget, tangoSlot
 
@@ -722,6 +727,18 @@ function TrampleToBase()
 end
 
 function ThinkGeneralRoaming()
+	-- Camp stacking: move to the chosen camp during :52-:57, then return to lane
+	if _isStacking and _stackCampLoc then
+		if LPressure.IsStackingWindow() then
+			bot:Action_MoveToLocation(_stackCampLoc)
+			return
+		else
+			-- Window passed — clear state and fall through to normal roaming
+			_isStacking   = false
+			_stackCampLoc = nil
+		end
+	end
+
 	-- Get out of fountain if in item mode
 	if ShouldMoveOutsideFountain
 	then
@@ -1576,6 +1593,29 @@ function ConsiderGeneralRoamingInConditions()
 	-- 	lastGankDecisionTime = DotaTime()
 	-- 	return actualGankingDesire
 	-- end
+
+	-- Camp stacking: pos4-5 supports walk to a neutral camp during :52-:57 window
+	-- when a core ally can hold the lane and bot has sufficient HP.
+	if J.IsInLaningPhase() and J.GetPosition(bot) >= 4 then
+		local allyHeroes = bot:GetNearbyHeroes(2000, false, BOT_MODE_NONE)
+		local hasCore = false
+		for _, ally in ipairs(allyHeroes) do
+			if J.IsValid(ally) and J.IsCore(ally) then hasCore = true; break end
+		end
+		local campLoc = LPressure.ShouldSupportStack(bot, hasCore, J.GetHP(bot))
+			and LPressure.GetNearestAllyCamp(bot)
+		if campLoc then
+			_stackCampLoc = campLoc
+			_isStacking   = true
+			return 0.62   -- moderate desire: stacking is useful but not critical
+		end
+	end
+	-- Clear stacking state when window closes
+	if _isStacking and not LPressure.IsStackingWindow() then
+		_isStacking   = false
+		_stackCampLoc = nil
+	end
+
 	return BOT_ACTION_DESIRE_NONE
 end
 

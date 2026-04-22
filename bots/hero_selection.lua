@@ -40,6 +40,7 @@ local heroUnitNames = require( GetScriptDirectory()..'/FretBots/HeroNames')
 local Customize = require(GetScriptDirectory()..'/FunLib/custom_loader')
 local okMatchupLib, HeroMatchups = pcall(require, GetScriptDirectory()..'/FunLib/aba_matchups')
 if not okMatchupLib then HeroMatchups = nil end
+local DraftStyle = require(GetScriptDirectory()..'/FunLib/draft_style')
 HeroPositionMap = HeroPositionMap.GetHeroPositions()
 
 if GAMEMODE_TURBO == nil then GAMEMODE_TURBO = 23 end
@@ -594,10 +595,44 @@ local function TeamOfPlayer(id)
 	return GetTeamForPlayer(id) -- returns TEAM_RADIANT/TEAM_DIRE for that player
 end
 
+-- Load HeroRolesMap once (shared across calls in same frame)
+local _cachedRolesMap = nil
+local function GetHeroRolesMap()
+	if _cachedRolesMap then return _cachedRolesMap end
+	local ok, m = pcall(require, GetScriptDirectory()..'/FunLib/aba_hero_roles_map')
+	_cachedRolesMap = (ok and m and m.HeroRolesMap) or {}
+	return _cachedRolesMap
+end
+
+-- Compute which critical team roles are still uncovered by already-picked allies
+local function GetMissingTeamRoles(allyNames)
+	local HeroRolesMap = GetHeroRolesMap()
+	local hasCarry, hasNuker, hasInitiator, hasDisabler, hasHealer = false, false, false, false, false
+	for _, ally in ipairs(allyNames) do
+		local r = HeroRolesMap[ally]
+		if r then
+			if (r.carry or 0) >= 2    then hasCarry     = true end
+			if (r.nuker or 0) >= 2    then hasNuker     = true end
+			if (r.initiator or 0) >= 2 then hasInitiator = true end
+			if (r.disabler or 0) >= 2 then hasDisabler  = true end
+			if (r.healer or 0) >= 1 or (r.support or 0) >= 2 then hasHealer = true end
+		end
+	end
+	return {
+		carry     = not hasCarry,
+		nuker     = not hasNuker,
+		initiator = not hasInitiator,
+		disabler  = not hasDisabler,   -- must-have: hard disable
+		healer    = not hasHealer,
+	}
+end
+
 local function ScoreCandidatesForTeam(team, rolePool, enemyNames, posIndex)
 	local list = {}
 	local weakPenalty = WeakPenaltyFactor(team)
 	local allyNames = GetAllyHeroNames()
+	local missingRoles = GetMissingTeamRoles(allyNames)
+	local HeroRolesMap = GetHeroRolesMap()
 
 	for _, cand in ipairs(rolePool) do
 		if X.CanPickHero(team, cand) then
@@ -645,6 +680,61 @@ local function ScoreCandidatesForTeam(team, rolePool, enemyNames, posIndex)
 				score = score * weakPenalty
 			end
 
+			-- 5. Role gap bonus: fill missing critical team roles
+			-- Disabler is a must-have — highest bonus. Others reward balance.
+			local candRoles = HeroRolesMap[cand]
+			if candRoles then
+				if missingRoles.disabler and (candRoles.disabler or 0) >= 2 then
+					score = score + 3.0  -- must-have: hard disable
+				end
+				if missingRoles.initiator and (candRoles.initiator or 0) >= 2 then
+					score = score + 2.5
+				end
+				if missingRoles.healer and ((candRoles.healer or 0) >= 1 or (candRoles.support or 0) >= 2) then
+					score = score + 2.0
+				end
+				if missingRoles.nuker and (candRoles.nuker or 0) >= 2 then
+					score = score + 1.5
+				end
+				if missingRoles.carry and (candRoles.carry or 0) >= 2 then
+					score = score + 1.5
+				end
+			end
+
+			-- 6. Turbo mode bias: favor early-game teamfight heroes
+			if GetGameMode() == 23 then
+				if candRoles then
+					local earlyFightScore = (candRoles.initiator or 0) + (candRoles.nuker or 0) + (candRoles.disabler or 0)
+					if earlyFightScore >= 4 then
+						score = score + 2.0
+					elseif earlyFightScore >= 2 then
+						score = score + 1.0
+					end
+				end
+			end
+
+			-- 6. Team composition: penalize if already have 3+ cores
+			if posIndex and posIndex <= 3 then
+				local coreCount = 0
+				for _, ally in ipairs(allyNames) do
+					if HeroPositionMap[ally] then
+						local bestCore = math.max(HeroPositionMap[ally][1] or 0, HeroPositionMap[ally][2] or 0, HeroPositionMap[ally][3] or 0)
+						local bestSupp = math.max(HeroPositionMap[ally][4] or 0, HeroPositionMap[ally][5] or 0)
+						if bestCore > bestSupp then coreCount = coreCount + 1 end
+					end
+				end
+				if coreCount >= 3 then
+					score = score - 3.0
+				end
+			end
+
+			-- 7. Draft style bonus (wombo_combo / snowball)
+			local activeStyle = DraftStyle.GetActiveStyle(Customize)
+			score = score + DraftStyle.GetStyleBonus(activeStyle, cand, allyNames, posIndex)
+
+			-- 8. Meta bonus: heroes that are strong in the current patch (7.41)
+			score = score + DraftStyle.GetMetaBonus(cand)
+
 			table.insert(list, { name = cand, score = score })
 		end
 	end
@@ -655,11 +745,11 @@ end
 
 local function SelectTopWithFuzz(scored)
 	-- Keep top 5 candidates, weighted random selection
-	-- 35% / 25% / 20% / 12% / 8% — favors counters but adds variety
+	-- 50% / 25% / 15% / 7% / 3% — heavily favor best counter-pick (pro-style)
 	while #scored > 5 do table.remove(scored) end
 	if #scored == 0 then return nil end
 
-	local weights = {35, 25, 20, 12, 8}
+	local weights = {50, 25, 15, 7, 3}
 	local roll = RandomInt(1, 100)
 	local cumulative = 0
 	for i, w in ipairs(weights) do
@@ -682,6 +772,9 @@ local function PickHeroForBotSlot(i, id)
 	-- Use matchup data most of the time unless user forced picks
 	if not X.IsInCustomizedPicks(preselect) and RandomInt(1, 5) >= 1 then
 		local enemyNames = GetEnemyHeroNames()
+		-- Update our read of the enemy draft and possibly switch style to counter it
+		-- Pass HeroRolesMap so untagged heroes are classified by role data (covers all 127 heroes)
+		DraftStyle.UpdateEnemyRead(enemyNames, GetHeroRolesMap())
 		local scored = ScoreCandidatesForTeam(team, rolePool, enemyNames, i)
 
 		local teamName = (team == TEAM_RADIANT and 'Radiant' or 'Dire')
@@ -713,20 +806,50 @@ local function PickHeroForBotSlot(i, id)
 	return pick
 end
 
+-- Returns true if any human on this team has already picked a hero.
+local function HumanOnTeamHasPicked(team)
+	for _, id in pairs(GetTeamPlayers(team)) do
+		if not IsPlayerBot(id) and GetSelectedHeroName(id) ~= "" then
+			return true
+		end
+	end
+	return false
+end
+
+-- Returns true if a human player exists on this team.
+local function HasHumanOnTeam(team)
+	for _, id in pairs(GetTeamPlayers(team)) do
+		if not IsPlayerBot(id) then return true end
+	end
+	return false
+end
+
+-- Maximum GameTime we’ll wait before forcing bots to pick regardless.
+-- AllPick typically gives ~70s total; we act at 65s so there’s time to finalize.
+local DRAFT_FORCE_PICK_TIME = 65
+
 local function AllPickHeros()
 	local teamPlayers = GetTeamPlayers(GetTeam(), true)
+	local hasHuman = HasHumanOnTeam(GetTeam())
 
 	-- Shuffle internal pick order when all-bot team to mix patterns
-	if not ShuffledPickOrder[sTeamName] and not Utils.IsHumanPlayerInTeam(GetTeam()) then
+	if not ShuffledPickOrder[sTeamName] and not hasHuman then
 		X.ShufflePickOrder(teamPlayers)
 		ShuffledPickOrder[sTeamName] = true
+	end
+
+	-- When a human is on this team, bots wait for the human to pick first.
+	-- If time is almost up (last 5 seconds), pick immediately regardless.
+	local timeIsRunningOut = GameTime() >= DRAFT_FORCE_PICK_TIME
+	if hasHuman and not HumanOnTeamHasPicked(GetTeam()) and not timeIsRunningOut then
+		return  -- wait for human
 	end
 
 	for i, id in pairs(teamPlayers) do
 		-- Only pick when: this is a bot, slot is unpicked, and its scheduled time has arrived.
 		if IsPlayerBot(id) and GetSelectedHeroName(id) == ""
 		and IsPlayerInHeroSelectionControl(id)
-		and GameTime() >= (PickSchedule.NextPickAt[i] or math.huge)
+		and (GameTime() >= (PickSchedule.NextPickAt[i] or math.huge) or timeIsRunningOut)
 		then
 			local finalPick = PickHeroForBotSlot(i, id)
 			SelectHero(id, finalPick)
@@ -906,6 +1029,7 @@ end
 -- Slots pick at: base + (slot-1)*step + jitter
 local function InitPickScheduleOnce()
 	if PickSchedule.initialized then return end
+	DraftStyle.Reset()  -- pick a fresh style for this game
 
 	-- Don’t even initialize until basic preconditions are met
 	if (GameTime() < 3.0 and not bLineupReserve)
@@ -914,8 +1038,17 @@ local function InitPickScheduleOnce()
 		return
 	end
 
+	-- When a human is on our team, delay initialization until they pick
+	-- (so bots pick right after the human, not before)
+	if HasHumanOnTeam(GetTeam()) and not HumanOnTeamHasPicked(GetTeam())
+	and GameTime() < DRAFT_FORCE_PICK_TIME then
+		return
+	end
+
 	-- Tweak these three to taste:
-	local base  = GameTime() + 3          -- when the *first* bot may pick
+	-- When human is present, use a short 2s base so bots pick shortly after human.
+	local hasHuman = HasHumanOnTeam(GetTeam())
+	local base  = GameTime() + (hasHuman and 2 or 3)   -- quick follow-up after human
 	local step  = GetTeam() * 3           -- spacing between slots
 	local jitter_min, jitter_max = 1, 3   -- small variability per slot
 

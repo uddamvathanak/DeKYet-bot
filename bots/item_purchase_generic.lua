@@ -1155,6 +1155,102 @@ function ItemPurchaseThink()
 		end
 	end
 
+	-- Counter-itemization: detect enemy threats and queue counter items after core build
+	if not bot.counterItemsInjected and currentTime > 15 * 60 and #bot.purchaseListInReverseOrder <= 3 then
+		bot.counterItemsInjected = true
+		local tEnemyNames = {}
+		for i = 1, 5 do
+			local enemy = GetTeamMember(GetOpposingTeam(), i)
+			if enemy ~= nil then
+				tEnemyNames[#tEnemyNames + 1] = enemy:GetUnitName()
+			end
+		end
+
+		-- Threat detection tables
+		local tEvasionHeroes = {
+			npc_dota_hero_phantom_assassin = true, npc_dota_hero_windrunner = true,
+			npc_dota_hero_weaver = true, npc_dota_hero_brewmaster = true,
+		}
+		local tIllusionHeroes = {
+			npc_dota_hero_phantom_lancer = true, npc_dota_hero_chaos_knight = true,
+			npc_dota_hero_terrorblade = true, npc_dota_hero_naga_siren = true,
+		}
+		local tInvisHeroes = {
+			npc_dota_hero_riki = true, npc_dota_hero_bounty_hunter = true,
+			npc_dota_hero_clinkz = true, npc_dota_hero_nyx_assassin = true,
+		}
+
+		local bEvasion, bIllusion, bInvis = false, false, false
+		for _, name in ipairs(tEnemyNames) do
+			if tEvasionHeroes[name] then bEvasion = true end
+			if tIllusionHeroes[name] then bIllusion = true end
+			if tInvisHeroes[name] then bInvis = true end
+		end
+
+		-- Queue counter items the bot doesn't already own
+		local tCounterQueue = {}
+		if bEvasion and bot:FindItemSlot("item_monkey_king_bar") < 0 then
+			tCounterQueue[#tCounterQueue + 1] = "item_monkey_king_bar"
+		end
+		if bIllusion and bot:FindItemSlot("item_mjollnir") < 0 and bot:FindItemSlot("item_maelstrom") < 0 then
+			tCounterQueue[#tCounterQueue + 1] = "item_mjollnir"
+		end
+		if bInvis and J.IsCore(bot) and bot:FindItemSlot("item_dust") < 0 then
+			tCounterQueue[#tCounterQueue + 1] = "item_dust"
+		end
+
+		-- Insert counter items into the purchase list (reversed order, so insert at end)
+		for _, counterItem in ipairs(tCounterQueue) do
+			-- Check not already in queue
+			local bInQueue = false
+			for _, qItem in ipairs(bot.purchaseListInReverseOrder) do
+				if qItem == counterItem then bInQueue = true; break end
+			end
+			if not bInQueue then
+				table.insert(bot.purchaseListInReverseOrder, 1, counterItem)
+				print("[Counter] "..botName.." queued "..counterItem.." vs enemy threat")
+			end
+		end
+	end
+
+	-- Heroes that benefit from Divine Rapier (physical or magic-toggle mode)
+	-- Physical carries: raw damage scales directly with rapier
+	-- Spell carries: magic-toggle rapier converts to spell damage (Zeus, Lina, SF, TA, Tinker)
+	local RAPIER_HEROES = {
+		-- Physical damage carries
+		npc_dota_hero_gyrocopter        = true,
+		npc_dota_hero_medusa            = true,
+		npc_dota_hero_morphling         = true,
+		npc_dota_hero_phantom_assassin  = true,
+		npc_dota_hero_ember_spirit      = true,
+		npc_dota_hero_kunkka            = true,
+		npc_dota_hero_arc_warden        = true,
+		npc_dota_hero_drow_ranger       = true,
+		-- Spell-damage / magic-toggle rapier carries
+		npc_dota_hero_zuus              = true,   -- Zeus: huge spell amp, magic rapier
+		npc_dota_hero_lina              = true,   -- Lina: high base int + spell amp
+		npc_dota_hero_nevermore         = true,   -- Shadow Fiend: Requiem + magic rapier
+		npc_dota_hero_templar_assassin  = true,   -- TA: psi blades, magic rapier viable
+		npc_dota_hero_tinker            = true,   -- Tinker: refresher + magic rapier spam
+	}
+
+	-- When build is fully complete, rapier-worthy heroes with excess gold buy Divine Rapier
+	if #bot.purchaseListInReverseOrder == 0
+		and RAPIER_HEROES[botName]
+		and bot:GetNetWorth() > 30000
+		and bot:GetGold() >= 6200
+		and bot:FindItemSlot("item_rapier") < 0
+	then
+		local bMainFull = true
+		for slot = 0, 5 do
+			if bot:GetItemInSlot(slot) == nil then bMainFull = false; break end
+		end
+		if bMainFull then
+			bot.purchaseListInReverseOrder[1] = "item_rapier"
+			print("[Purchase] "..botName.." buying Divine Rapier (excess gold)")
+		end
+	end
+
 	if #bot.purchaseListInReverseOrder == 0 then
 		_resetCurrentTarget()
 		bot:SetNextItemPurchaseValue( 0 )

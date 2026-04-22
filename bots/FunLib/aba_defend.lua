@@ -203,6 +203,7 @@ end
 local ____exports = {}
 local getDefendState, updateDefendGameStateCache, updateDefendLocationStateCache, updateDefendUnitStateCache, _q, _keyLoc, _recentHeroCountNear, IsValidBuildingTarget, IsBaseThreatActive, WeightedEnemiesAroundLocation, GetThreatenedLane, GetClosestAllyPos, IsThereNoTeammateTravelBootsDefender, GetHighGroundEdgeWaitPoint, ConsiderPingedDefend, okLoc, Localization, PING_DELTA, MAX_DESIRE_CAP, BASE_THREAT_RADIUS, BASE_THREAT_HOLD, CACHE_ENEMY_AROUND_LOC_HZ, CACHE_LASTSEEN_WINDOW, nTeam, _threatLaneSticky, baseThreatUntil, fTraveBootsDefendTime, _cacheEnemyAroundLoc, DEFEND_CACHE_TTL, defendGameStateCache, defendLocationStateCache, defendUnitStateCache
 local jmz = require(GetScriptDirectory().."/FunLib/jmz_func")
+local GameStrategy = require(GetScriptDirectory().."/FunLib/game_strategy")
 local ____dota = require(GetScriptDirectory().."/ts_libs/dota/index")
 local Barracks = ____dota.Barracks
 local BotActionDesire = ____dota.BotActionDesire
@@ -1173,6 +1174,13 @@ function ____exports.GetDefendDesireHelper(bot, lane)
             nDefendDesire = math.min(nDefendDesire, BotActionDesire.Low)
         end
     end
+    -- In turbo, cap defend desire so bots prefer fighting/pushing over turtling HG
+    if gameState.gameMode == 23 then
+        nDefendDesire = math.min(nDefendDesire, 0.55)
+    end
+    -- Apply strategy multiplier
+    local strat = GameStrategy.GetTeamStrategy()
+    nDefendDesire = nDefendDesire * strat.defend_mult
     if nDefendDesire > 0.7 then
         jmz.Utils.GameStates = jmz.Utils.GameStates or ({})
         jmz.Utils.GameStates.recentDefendTime = DotaTime()

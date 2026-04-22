@@ -74,6 +74,20 @@ Customize.Weak_Penalty = { type = "exp", base = 0.6 }
 -- Exact match on unit names by default; set Customize.Strict_Ban_Match = false to allow guarded substring matches (length ≥ 6).
 Customize.Strict_Ban_Match = true
 
+-- Draft style controls how bots build team composition during hero selection.
+--   "wombo_combo" — Chain AoE ultimates for big teamfight wipes.
+--                   Inspired by Tundra Esports / Team Spirit style.
+--                   Drafts Enigma, Magnus, Tidehunter, Earthshaker, etc.
+--                   then fills around them with amplifiers (Rubick, SD, Dazzle).
+--   "snowball"    — High early tempo, kill-oriented lanes.
+--                   Inspired by Xtreme Gaming / Gaimin Gladiators style.
+--                   Drafts Storm/Void/Ember spirits, PA, Slark as cores with
+--                   high kill-threat supports (Lion, Skywrath, Earth Spirit).
+--   "auto"        — Randomly picks a style each game. Good for variety and
+--                   learning to play against different compositions.
+--                   (Note: counter-pick scoring always applies regardless of style.)
+Customize.DraftStyle = "auto"
+
 -- To allow bots do trash talking in different scenarios: got fb, killing a human, etc. Disable this also disables GPT chat.
 Customize.Allow_Trash_Talk = true
 
@@ -86,13 +100,20 @@ Customize.Trash_Talk_Level = 1
 
 -- To set the names for the Radiant bots. Don't need to provide a value for all 5 bots, missing names will have a Random value.
 Customize.Radiant_Names = {
-    'Random',
-    'Random',
+    'Cao Cao',
+    'Guan Yu',
+    'Zhang Fei',
+    'Zhao Yun',
+    'Zhuge Liang',
 }
 
 -- Same notes as above for setting the bots' names but for the Dire side.
 Customize.Dire_Names = {
-    'Random',
+    'Lu Bu',
+    'Zhou Yu',
+    'Sun Quan',
+    'Sima Yi',
+    'Liu Bei',
 }
 
 -- The desire level that the bots will group up and push the same lane. 

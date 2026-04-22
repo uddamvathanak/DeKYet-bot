@@ -8,6 +8,7 @@ local Localization = require(GetScriptDirectory()..'/FunLib/localization')
 local Customize = require(GetScriptDirectory()..'/Customize/general')
 Customize.ThinkLess = Customize.Enable and Customize.ThinkLess or 1
 local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+local GameStrategy = require(GetScriptDirectory()..'/FunLib/game_strategy')
 local Item = require(GetScriptDirectory()..'/FunLib/aba_item')
 local Roles = require(GetScriptDirectory()..'/FunLib/aba_role')
 local AttackSpecialUnit = dofile(GetScriptDirectory()..'/FunLib/aba_special_units')
@@ -69,6 +70,87 @@ local function CapForLanePush(desire)
     return desire
 end
 
+-- ==============================
+-- Smoke Gank Sub-behavior
+-- ==============================
+local smokeGankActive = false
+local smokeGankTarget = nil
+local smokeGankLastAttempt = -120
+local SMOKE_GANK_COOLDOWN = 90 -- seconds between smoke attempts
+
+local function FindSmokeHolder()
+    local members = GetUnitList(UNIT_LIST_ALLIED_HEROES)
+    for _, ally in pairs(members) do
+        if ally ~= nil and ally:IsAlive() and ally:FindItemSlot('item_smoke_of_deceit') >= 0 then
+            return ally
+        end
+    end
+    return nil
+end
+
+local function FindIsolatedEnemy()
+    local enemies = GetUnitList(UNIT_LIST_ENEMY_HEROES)
+    local bestTarget = nil
+    local bestPriority = 0
+    for _, enemy in pairs(enemies) do
+        if enemy ~= nil and enemy:IsAlive() and enemy:CanBeSeen() then
+            local enemyLoc = enemy:GetLocation()
+            -- Count enemy allies near this enemy
+            local nearbyEnemyAllies = 0
+            for _, other in pairs(enemies) do
+                if other ~= nil and other ~= enemy and other:IsAlive()
+                and GetUnitToLocationDistance(other, enemyLoc) < 1600 then
+                    nearbyEnemyAllies = nearbyEnemyAllies + 1
+                end
+            end
+            -- Target is isolated if 0-1 allies nearby
+            if nearbyEnemyAllies <= 1 then
+                -- Prioritize by role: carry > mid > offlane
+                local priority = 1
+                local enemyNW = enemy:GetNetWorth()
+                if enemyNW > 15000 then priority = 3
+                elseif enemyNW > 10000 then priority = 2 end
+                -- Don't target enemies under tower
+                local enemyTowers = enemy:GetNearbyTowers(900, false)
+                if #enemyTowers == 0 and priority > bestPriority then
+                    bestPriority = priority
+                    bestTarget = enemy
+                end
+            end
+        end
+    end
+    return bestTarget
+end
+
+local function ShouldSmokeGank()
+    local now = DotaTime()
+    local isTurbo = GetGameMode() == 23
+    local minTime = isTurbo and 5 * 60 or 10 * 60
+
+    if now < minTime then return false end
+    if now - smokeGankLastAttempt < SMOKE_GANK_COOLDOWN then return false end
+
+    -- Need a smoke holder
+    local smokeHolder = FindSmokeHolder()
+    if smokeHolder == nil then return false end
+
+    -- Need 3+ allies alive and grouped (within 2500 of bot)
+    local alliesNear = J.GetAlliesNearLoc(bot:GetLocation(), 2500)
+    if #alliesNear < 2 then return false end -- 2 allies + bot = 3 total
+
+    -- Need alive advantage or at least equal
+    local aliveAllies = J.GetNumOfAliveHeroes(false)
+    local aliveEnemies = J.GetNumOfAliveHeroes(true)
+    if aliveAllies < aliveEnemies then return false end
+
+    -- Need an isolated target
+    local target = FindIsolatedEnemy()
+    if target == nil then return false end
+
+    smokeGankTarget = target
+    return true
+end
+
 function GetDesire()
     -- local cacheKey = 'GetTeamRoamDesire'..tostring(bot:GetPlayerID())
     -- local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.2 * (1 + Customize.ThinkLess))
@@ -76,6 +158,10 @@ function GetDesire()
 
     local res = GetDesireHelper()
     res = CapForLanePush(res)
+
+    -- Apply strategy multiplier for roaming
+    local strat = GameStrategy.GetTeamStrategy()
+    res = math.min(res * strat.roam_mult, 1.0)
 
     -- J.Utils.SetCachedVars(cacheKey, res)
     return res
@@ -148,6 +234,16 @@ function GetDesireHelper()
     if HasModifierThatNeedToAvoidEffects() then
         IsAvoidingAbilityZone = true
         return RemapValClamped(J.GetHP(bot), 0.3, 1, BOT_ACTION_DESIRE_VERYHIGH, BOT_ACTION_DESIRE_NONE)
+    end
+
+    -- Smoke gank: if conditions met, boost desire significantly
+    if ShouldSmokeGank() then
+        smokeGankActive = true
+        smokeGankLastAttempt = DotaTime()
+        local strat = GameStrategy.GetTeamStrategy()
+        return math.min(0.85 * strat.roam_mult, 1.0)
+    else
+        smokeGankActive = false
     end
 
     if not J.IsFarming(bot) and not J.IsPushing(bot) and not J.IsDefending(bot)
@@ -298,6 +394,33 @@ function Think()
     -- if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "team_roam") then return end
 
     ItemOpsThink()
+
+    -- Smoke gank execution
+    if smokeGankActive and smokeGankTarget ~= nil then
+        if not J.Utils.IsValidUnit(smokeGankTarget) or not smokeGankTarget:IsAlive() then
+            smokeGankActive = false
+            smokeGankTarget = nil
+        else
+            local targetLoc = smokeGankTarget:GetLocation()
+            local dist = GetUnitToLocationDistance(bot, targetLoc)
+
+            -- If within 1200 range, use smoke if we have one
+            if dist < 1200 then
+                local smokeSlot = bot:FindItemSlot('item_smoke_of_deceit')
+                if smokeSlot >= 0 and bot:GetItemSlotType(smokeSlot) == ITEM_SLOT_TYPE_MAIN then
+                    bot:Action_UseAbilityOnLocation(bot:GetItemInSlot(smokeSlot), bot:GetLocation())
+                    return
+                end
+                -- After smoke (or no smoke), attack target
+                bot:Action_AttackUnit(smokeGankTarget, false)
+                return
+            else
+                -- Move toward the target
+                bot:Action_MoveToLocation(targetLoc)
+                return
+            end
+        end
+    end
 
 	if J.IsValid(hTargetCreep) then
 		bot:Action_AttackUnit(hTargetCreep, true)

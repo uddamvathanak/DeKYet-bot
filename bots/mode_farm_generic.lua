@@ -10,6 +10,7 @@ local Customize = require( GetScriptDirectory()..'/Customize/general' )
 local bot = GetBot();
 local X = {}
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
+local GameStrategy = require( GetScriptDirectory()..'/FunLib/game_strategy')
 local RB = Vector(-7174.000000, -6671.00000, 0.000000)
 local DB = Vector(7023.000000, 6450.000000, 0.000000)
 
@@ -362,9 +363,13 @@ function GetDesireHelper()
 
 	-- Gradual farm desire cap: ramps from 0.3 during laning to 0.6 by 20min (turbo: 14min)
 	-- Keeps jungle farming as a secondary priority — never dominant over teamfight/push/defend
-	local nFarmRampStart = J.IsModeTurbo() and 8 * 60 or 10 * 60
-	local nFarmRampEnd   = J.IsModeTurbo() and 14 * 60 or 20 * 60
-	local nFarmCap = RemapValClamped(DotaTime(), nFarmRampStart, nFarmRampEnd, 0.3, 0.6)
+	local bTurbo = J.IsModeTurbo()
+	local nFarmRampStart = bTurbo and 8 * 60 or 10 * 60
+	local nFarmRampEnd   = bTurbo and 14 * 60 or 20 * 60
+	local nFarmCapMax    = bTurbo and 0.35 or 0.6
+	local nFarmCapRaw = RemapValClamped(DotaTime(), nFarmRampStart, nFarmRampEnd, 0.3, nFarmCapMax)
+	local strat = GameStrategy.GetTeamStrategy()
+	local nFarmCap = math.min(nFarmCapRaw * strat.farm_mult, nFarmCapMax)
 
 	if GetGameMode() ~= GAMEMODE_MO
 	and J.Site.IsTimeToFarm(bot)
