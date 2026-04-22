@@ -190,6 +190,7 @@ local castRDesire, castRTarget
 local nKeepMana, nMP, nHP, nLV, hEnemyList, hAllyList, botTarget, sMotive
 local aetherRange = 0
 local lastCastQTime = -99
+local LION_CHAIN_DELTA = 1.5  -- seconds: Hex + Finger window after Earth Spike
 
 
 function X.SkillsComplement()
@@ -214,7 +215,29 @@ function X.SkillsComplement()
 	local aether = J.IsItemAvailable( "item_aether_lens" )
 	if aether ~= nil then aetherRange = 250 end
 --	if talent4:IsTrained() then aetherRange = aetherRange + talent4:GetSpecialValueInt( "value" ) end
-	
+
+	-- === Earth Spike → Hex → Finger combo chain ===
+	-- After Spike lands (past 0.8s cast-animation window), immediately chain
+	-- Hex to extend CC, then Finger of Death while target is locked down.
+	local spikeAge = DotaTime() - lastCastQTime
+	if spikeAge > 0.8 and spikeAge <= LION_CHAIN_DELTA then
+		castWDesire, castWTarget = X.ConsiderW()
+		if castWDesire > 0 then
+			J.SetQueuePtToINT( bot, true )
+			if talent8:IsTrained() then
+				bot:ActionQueue_UseAbilityOnLocation( abilityW, castWTarget )
+			else
+				bot:ActionQueue_UseAbilityOnEntity( abilityW, castWTarget )
+			end
+			return
+		end
+		castRDesire, castRTarget = X.ConsiderR()
+		if castRDesire > 0 then
+			J.SetQueuePtToINT( bot, true )
+			bot:ActionQueue_UseAbilityOnEntity( abilityR, castRTarget )
+			return
+		end
+	end
 
 	castEDesire, castETarget, sMotive = X.ConsiderE()
 	if ( castEDesire > 0 )

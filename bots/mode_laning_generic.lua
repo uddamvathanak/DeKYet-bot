@@ -109,6 +109,18 @@ function GetDesire()
 	if J.Utils.IsTeamPushingSecondTierOrHighGround(bot) then
 		return BOT_MODE_DESIRE_NONE
 	end
+
+	-- Yield laning when the human player pings a tower objective (push or defend).
+	-- This lets push/defend modes take over with their higher desire (0.9).
+	-- Window: 10 seconds, any ping type, 800-unit proximity to any live tower.
+	local _pingHuman, _pingData = J.GetHumanPing()
+	if _pingHuman ~= nil and _pingData ~= nil and DotaTime() > 0 then
+		if J.IsPingCloseToValidTower(GetOpposingTeam(), _pingData, 800, 10)
+		or J.IsPingCloseToValidTower(GetTeam(),           _pingData, 800, 10) then
+			return BOT_MODE_DESIRE_NONE
+		end
+	end
+
 	-- if J.ShouldGoFarmDuringLaning(bot) then
 	-- 	return 0.2
 	-- end
@@ -198,56 +210,17 @@ function GetBestDenyCreep(hCreepList)
 	return nil
 end
 
-if local_mode_laning_generic or (J.GetPosition(bot) == 1 and J.IsPosxHuman(5)) then
-	function Think()
-		local hitCreep, moveToCreep = GetBestLastHitCreep(nEnemyCreeps)
-		if J.IsValid(hitCreep) then
-			if J.GetPosition(bot) <= 2 or not J.IsThereNonSelfCoreNearby(700)
-			then
-				if GetUnitToUnitDistance(bot, hitCreep) > botAttackRange
-				or (moveToCreep and GetUnitToUnitDistance(bot, hitCreep) > botAttackRange * 0.8) then
-					bot:Action_MoveToUnit(hitCreep)
-					return
-				else
-					bot:SetTarget(hitCreep)
-					bot:Action_AttackUnit(hitCreep, true)
-					return
-				end
-			end
-		end
+-- Unified laning Think() for all positions (1-5, overrides, pos1 with human pos5).
+-- Priority order: camp stack → last hit → deny → harass → wave push → lane position
+-- Wrapped in pcall so Lua errors are both printed and chatted in-game.
+local _lastErrChatTime = -999
 
-		local denyCreep = GetBestDenyCreep(nAllyCreeps)
-		if J.IsValid(denyCreep) then
-			bot:SetTarget(denyCreep)
-			bot:Action_AttackUnit(denyCreep, true)
-			return
-		end
+function Think()
+	local ok, err = pcall(function()
+		local pos  = J.GetPosition(bot)
+		local myHp = J.GetHP(bot)
 
-		if local_mode_laning_generic then
-			local_mode_laning_generic.Think()
-		end
-
-		local fLaneFrontAmount = GetLaneFrontAmount(GetTeam(), botAssignedLane, false)
-		local fLaneFrontAmount_enemy = GetLaneFrontAmount(GetOpposingTeam(), botAssignedLane, false)
-
-		local nLongestAttackRange = math.max(botAttackRange, 250, nFurthestEnemyAttackRange)
-
-		local target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -nLongestAttackRange)
-		if fLaneFrontAmount_enemy < fLaneFrontAmount then
-			target_loc = GetLaneFrontLocation(GetOpposingTeam(), botAssignedLane, -nLongestAttackRange)
-		end
-
-		bot:Action_MoveToLocation(target_loc + RandomVector(50))
-	end
-else
-	-- General Think() for all other heroes (pos2-5, non-override).
-	-- Handles: support camp stacking at the :52 window,
-	-- and spike-based harassment for cores at their power spike.
-	function Think()
-		local pos   = J.GetPosition(bot)
-		local myHp  = J.GetHP(bot)
-
-		-- Support stacking: pos4-5 walks to a nearby camp during :52-:57
+		-- PRIORITY 1: Support camp stacking (:52-:57 window, pos4-5 only)
 		if pos >= 4 then
 			local allyHeroes = bot:GetNearbyHeroes(2000, false, BOT_MODE_NONE)
 			local hasCore = false
@@ -263,30 +236,108 @@ else
 			end
 		end
 
-		-- Spike harassment: when aggression mult is high and we have HP,
-		-- attack the weakest visible enemy hero in attack range.
-		if _lp_aggrMult >= 1.2 and myHp > 0.5 and #nInRangeEnemy > 0 then
-			local bestEnemy = nil
-			local bestHp    = 1.1
-			for _, enemy in ipairs(nInRangeEnemy) do
-				if J.IsValidHero(enemy) and not J.IsSuspiciousIllusion(enemy)
-				and J.IsInRange(bot, enemy, botAttackRange + 150)
-				and J.GetHP(enemy) < bestHp then
-					bestHp    = J.GetHP(enemy)
-					bestEnemy = enemy
+		-- PRIORITY 2: Last hit enemy creeps
+		-- Cores always last hit; supports only if no core is nearby to do it
+		local canLastHit = pos <= 3 or not J.IsThereNonSelfCoreNearby(700)
+		if canLastHit then
+			local hitCreep, moveToIt = GetBestLastHitCreep(nEnemyCreeps)
+			if J.IsValid(hitCreep) then
+				local dist = GetUnitToUnitDistance(bot, hitCreep)
+				local threshold = moveToIt and botAttackRange * 0.8 or botAttackRange
+				if dist > threshold then
+					bot:Action_MoveToUnit(hitCreep)
+				else
+					bot:SetTarget(hitCreep)
+					bot:Action_AttackUnit(hitCreep, true)
 				end
-			end
-			if bestEnemy then
-				bot:SetTarget(bestEnemy)
-				bot:Action_AttackUnit(bestEnemy, true)
 				return
 			end
 		end
 
-		-- Fallback: move toward lane front
+		-- PRIORITY 3: Deny dying ally creeps
+		local denyCreep = GetBestDenyCreep(nAllyCreeps)
+		if J.IsValid(denyCreep) then
+			bot:SetTarget(denyCreep)
+			bot:Action_AttackUnit(denyCreep, true)
+			return
+		end
+
+		-- PRIORITY 4: Harass — attack enemy heroes in range
+		-- Cores harass when aggrMult >= 0.85 (almost always unless we're weak matchup)
+		-- Supports harass at spike (aggrMult >= 1.2)
+		-- Range vs melee: if our hero is ranged and ALL nearby enemies are melee,
+		-- lower the threshold by 0.5 (e.g. ranged core: 0.85→0.35, ranged support: 1.2→0.7)
+		local rangeAdj    = LPressure.GetRangeMatchupAdjust(bot, nInRangeEnemy)
+		local harassThresh = (pos <= 3 and 0.85 or 1.2) + rangeAdj
+		if myHp > 0.5 and nInRangeEnemy and #nInRangeEnemy > 0
+		and _lp_aggrMult >= harassThresh then
+			local bestTarget, bestHp = nil, 1.1
+			for _, enemy in ipairs(nInRangeEnemy) do
+				if J.IsValidHero(enemy) and not J.IsSuspiciousIllusion(enemy)
+				and J.IsInRange(bot, enemy, botAttackRange + 100)
+				and J.GetHP(enemy) < bestHp then
+					bestHp    = J.GetHP(enemy)
+					bestTarget = enemy
+				end
+			end
+			if bestTarget then
+				bot:SetTarget(bestTarget)
+				bot:Action_AttackUnit(bestTarget, false)
+				return
+			end
+		end
+
+		-- PRIORITY 5: Wave push — clear enemy creeps to pressure tower
+		-- Push when ally wave >= enemy wave (or no threats), HP safe, and aggression is ok
+		local nAllyCount  = nAllyCreeps  and #nAllyCreeps  or 0
+		local nEnemyCount = nEnemyCreeps and #nEnemyCreeps or 0
+		local nThreat     = nInRangeEnemy and #nInRangeEnemy or 0
+		if nEnemyCount > 0 and myHp > 0.5
+		and (nAllyCount >= nEnemyCount or nThreat == 0)
+		and (_lp_aggrMult >= 1.0 or nThreat == 0) then
+			local weakest, weakHp = nil, math.huge
+			for _, creep in pairs(nEnemyCreeps) do
+				if J.IsValid(creep) and J.CanBeAttacked(creep) then
+					local hp = creep:GetHealth()
+					if hp < weakHp then weakHp = hp; weakest = creep end
+				end
+			end
+			if weakest then
+				if GetUnitToUnitDistance(bot, weakest) > botAttackRange then
+					bot:Action_MoveToUnit(weakest)
+				else
+					bot:SetTarget(weakest)
+					bot:Action_AttackUnit(weakest, false)
+				end
+				return
+			end
+		end
+
+		-- PRIORITY 6: Hero-override specific logic (Tinker, Morphling, etc.)
+		if local_mode_laning_generic then
+			local_mode_laning_generic.Think()
+			return
+		end
+
+		-- FALLBACK: Move to optimal lane position
 		if botAssignedLane then
-			local target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -botAttackRange)
+			local fLaneFrontAmount       = GetLaneFrontAmount(GetTeam(), botAssignedLane, false)
+			local fLaneFrontAmount_enemy = GetLaneFrontAmount(GetOpposingTeam(), botAssignedLane, false)
+			local nLongestAttackRange    = math.max(botAttackRange, 250, nFurthestEnemyAttackRange)
+			local target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -nLongestAttackRange)
+			if fLaneFrontAmount_enemy < fLaneFrontAmount then
+				target_loc = GetLaneFrontLocation(GetOpposingTeam(), botAssignedLane, -nLongestAttackRange)
+			end
 			bot:Action_MoveToLocation(target_loc + RandomVector(50))
+		end
+	end)
+
+	-- Error reporting: print to console + chat in-game (max once per 30s per bot)
+	if not ok then
+		print("[LaneBot Error] " .. tostring(err))
+		if DotaTime() - _lastErrChatTime > 30 then
+			_lastErrChatTime = DotaTime()
+			bot:ActionImmediate_Chat("[Script Error] " .. tostring(err):sub(1, 80), false)
 		end
 	end
 end

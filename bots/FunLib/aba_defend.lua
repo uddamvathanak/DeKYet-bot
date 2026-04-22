@@ -1057,8 +1057,8 @@ function ____exports.GetDefendDesireHelper(bot, lane)
     end
     local pingFloor = 0
     local human, humanPing = jmz.GetHumanPing()
-    if human and humanPing and not humanPing.normal_ping and DotaTime() > 0 then
-        local isPinged, pingedLane = jmz.IsPingCloseToValidTower(gameState.team, humanPing, 800, 5)
+    if human and humanPing and DotaTime() > 0 then
+        local isPinged, pingedLane = jmz.IsPingCloseToValidTower(gameState.team, humanPing, 800, PING_DELTA)
         if isPinged and lane == pingedLane and GameTime() < humanPing.time + PING_DELTA then
             bot.laneToDefend = lane
             pingFloor = 0.95
@@ -1204,7 +1204,7 @@ else
     ____Customize_Enable_0 = 1
 end
 ____Customize_1.ThinkLess = ____Customize_Enable_0
-PING_DELTA = 5
+PING_DELTA = 10
 local SEARCH_RANGE_DEFAULT = 1600
 MAX_DESIRE_CAP = 0.98
 BASE_THREAT_RADIUS = 2600

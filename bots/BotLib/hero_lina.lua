@@ -223,6 +223,8 @@ local FlameCloakDesire
 local nKeepMana, nMP, nHP, nLV, hEnemyList, hAllyList, botTarget, sMotive
 local aetherRange = 0
 local talent4Damage = 0
+local lastCastQTime = -99     -- Dragon Slave cast timestamp
+local LINA_CHAIN_DELTA = 1.5  -- seconds: LSA + Laguna window after Dragon Slave
 
 
 
@@ -256,6 +258,24 @@ function X.SkillsComplement()
 		return
 	end
 
+	-- === Dragon Slave → LSA → Laguna Blade combo chain ===
+	-- Dragon Slave slows the target; within the window chain LSA for the
+	-- guaranteed AoE stun, then Laguna Blade during CC for full burst.
+	if DotaTime() - lastCastQTime <= LINA_CHAIN_DELTA then
+		castWDesire, castWLocation = X.ConsiderW()
+		if castWDesire > 0 then
+			J.SetQueuePtToINT( bot, true )
+			bot:ActionQueue_UseAbilityOnLocation( abilityW, castWLocation )
+			return
+		end
+		castRDesire, castRTarget = X.ConsiderR()
+		if castRDesire > 0 then
+			J.SetQueuePtToINT( bot, true )
+			bot:ActionQueue_UseAbilityOnEntity( abilityR, castRTarget )
+			return
+		end
+	end
+
 	castRDesire, castRTarget, sMotive = X.ConsiderR()
 	if ( castRDesire > 0 )
 	then
@@ -277,6 +297,7 @@ function X.SkillsComplement()
 		J.SetQueuePtToINT( bot, true )
 
 		bot:ActionQueue_UseAbilityOnLocation( abilityQ, castQLocation )
+		lastCastQTime = DotaTime()
 		return
 	end
 

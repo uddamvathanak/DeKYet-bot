@@ -198,7 +198,22 @@ function ____exports.GetPushDesireHelper(bot, lane)
     if not bMyLane and jmz.IsCore(bot) and gameState.isLaningPhase or jmz.IsDoingRoshan(bot) and #jmz.GetAlliesNearLoc(locationState.roshanLocation, 2800) >= 3 or isMidOrEarlyGame and (#jmz.GetAlliesNearLoc(locationState.tormentorLocation, 1600) >= 3 or #jmz.GetAlliesNearLoc(locationState.tormentorWaitingLocation, 2500) >= 3) then
         return BOT_MODE_DESIRE_EXTRA_LOW
     end
+    -- Human ping check: bypass level/time guards when player explicitly calls for push.
+    -- A live ping on ANY enemy tower returns 0.9 immediately so ALL bots rally.
     do
+        local human, humanPing = jmz.GetHumanPing()
+        if human ~= nil and humanPing ~= nil and DotaTime() > 0 then
+            local isPinged, pingedLane = jmz.IsPingCloseToValidTower(
+                GetOpposingTeam(), humanPing, 800, pingTimeDelta
+            )
+            if isPinged and lane == pingedLane then
+                return 0.9
+            end
+        end
+    end
+    -- Level 6 check: all heroes must be 6+ before pushing, UNLESS we're
+    -- clearly winning (aggressive strategy + 3k+ NW lead) — then push anyway.
+    if not isAggressivePush then
         local i = 1
         while i <= #GetTeamPlayers(team) do
             local member = GetTeamMember(i)
@@ -215,18 +230,6 @@ function ____exports.GetPushDesireHelper(bot, lane)
     if jmz.IsDefending(bot) and nModeDesire >= 0.8 then
         nMaxDesire = 0.75
     end
-    local human, humanPing = jmz.GetHumanPing()
-    if human ~= nil and humanPing ~= nil and not humanPing.normal_ping and DotaTime() > 0 then
-        local isPinged, pingedLane = jmz.IsPingCloseToValidTower(
-            GetOpposingTeam(),
-            humanPing,
-            700,
-            5
-        )
-        if isPinged and lane == pingedLane and GameTime() < humanPing.time + pingTimeDelta then
-            return 0.9
-        end
-    end
     if hEnemyAncient and hEnemyAncient ~= nil then
         if jmz.IsDoingTormentor(bot) and GetUnitToUnitDistance(bot, hEnemyAncient) > 4000 then
             return BOT_MODE_DESIRE_EXTRA_LOW
@@ -239,6 +242,11 @@ function ____exports.GetPushDesireHelper(bot, lane)
     local hAncient = gameState.ourAncient
     local isTurbo = gameState.gameMode == 23
     local nPushDesire = isTurbo and 0.85 or 0.65
+
+    -- Aggressive push flag: skip conservative checks when clearly winning
+    local _strat = GameStrategy.GetTeamStrategy()
+    local isAggressivePush = _strat.strategy == GameStrategy.STRATEGY_AGGRESSIVE
+        and (_strat.nwAdvantage or 0) > 3000
     local teamAncientLoc = hAncient:GetLocation()
     local nEffAlliesNearAncient = #jmz.GetAlliesNearLoc(teamAncientLoc, 4500) + #jmz.Utils.GetAllyIdsInTpToLocation(teamAncientLoc, 4500)
     local nEnemiesAroundAncient = jmz.GetEnemiesAroundLoc(teamAncientLoc, 4500)
@@ -286,8 +294,12 @@ function ____exports.GetPushDesireHelper(bot, lane)
     end
     local pushLane = ____exports.WhichLaneToPush(bot, lane)
     local isCurrentLanePushLane = pushLane == lane
-    if not jmz.IsCore(bot) and isCurrentLanePushLane or jmz.IsCore(bot) and (jmz.IsLateGame() and isCurrentLanePushLane or isMidOrEarlyGame) then
-        local allowNumbers = eAliveCount == 0 or aAliveCoreCount >= eAliveCoreCount or aAliveCoreCount >= 1 and aAliveCount >= eAliveCount + 2 or networthAdvantage > 8000 and aAliveCount >= eAliveCount - 1 or levelAdvantage > 2 and aAliveCount >= eAliveCount - 1
+    -- Supports join push on any lane when aggressively winning (not just their own lane)
+    local supportCanPush = not jmz.IsCore(bot) and (isCurrentLanePushLane or isAggressivePush)
+    if supportCanPush or jmz.IsCore(bot) and (jmz.IsLateGame() and isCurrentLanePushLane or isMidOrEarlyGame) then
+        -- Lower NW threshold when aggressive: 4k instead of 8k
+        local nwThreshold = isAggressivePush and 4000 or 8000
+        local allowNumbers = eAliveCount == 0 or aAliveCoreCount >= eAliveCoreCount or aAliveCoreCount >= 1 and aAliveCount >= eAliveCount + 2 or networthAdvantage > nwThreshold and aAliveCount >= eAliveCount - 1 or levelAdvantage > 2 and aAliveCount >= eAliveCount - 1
         if allowNumbers then
             if gameState.hasAegis then
                 nPushDesire = nPushDesire + 0.3
@@ -559,7 +571,7 @@ else
     ____Customize_Enable_0 = 1
 end
 ____Customize_1.ThinkLess = ____Customize_Enable_0
-pingTimeDelta = 5
+pingTimeDelta = 10
 StartToPushTime = 16 * 60
 BOT_MODE_DESIRE_EXTRA_LOW = 0.02
 hEnemyAncient = nil

@@ -181,7 +181,7 @@ local function GetPositionedPool(heroPosMap, position)
 	-- Pick from weighted options for the pos first.
     for heroName, roleWeights in pairs(heroPosMap) do
         local weight = roleWeights[position]
-        if weight > RandomInt(5, ROLE_WEIGHT_THRESHOLD) then
+        if weight >= 40 then  -- deterministic: only heroes that genuinely fit this position
 			if not Utils.HasValue(WeakHeroes, heroName) or RandomInt(1, 10) > 7 then
 				table.insert(heroList, {name = heroName, weight = weight})
 			end
@@ -728,12 +728,26 @@ local function ScoreCandidatesForTeam(team, rolePool, enemyNames, posIndex)
 				end
 			end
 
+			-- 6b. Hard position guard: prevent cores from being picked for support slots.
+			-- Role gap flat bonuses can override the position weight multiplier, so add
+			-- an explicit penalty when a carry/mid hero is considered for pos4-5.
+			if posIndex and posIndex >= 4 and HeroPositionMap[cand] then
+				local p4w = HeroPositionMap[cand][4] or 0
+				local p5w = HeroPositionMap[cand][5] or 0
+				if math.max(p4w, p5w) < 35 then
+					score = score - 6.0  -- not a support hero: strongly discourage
+				end
+			end
+
 			-- 7. Draft style bonus (wombo_combo / snowball)
 			local activeStyle = DraftStyle.GetActiveStyle(Customize)
 			score = score + DraftStyle.GetStyleBonus(activeStyle, cand, allyNames, posIndex)
 
 			-- 8. Meta bonus: heroes that are strong in the current patch (7.41)
 			score = score + DraftStyle.GetMetaBonus(cand)
+
+			-- 9. Pro pick bonus: heroes archetypically correct for this position in pro play
+			score = score + DraftStyle.GetProPickBonus(cand, posIndex)
 
 			table.insert(list, { name = cand, score = score })
 		end
@@ -749,7 +763,7 @@ local function SelectTopWithFuzz(scored)
 	while #scored > 5 do table.remove(scored) end
 	if #scored == 0 then return nil end
 
-	local weights = {50, 25, 15, 7, 3}
+	local weights = {70, 18, 8, 3, 1}
 	local roll = RandomInt(1, 100)
 	local cumulative = 0
 	for i, w in ipairs(weights) do

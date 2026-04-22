@@ -146,6 +146,28 @@ function M.GetAggressionMultiplier(botName, enemyNames, botLevel)
 end
 
 -- ============================================================
+-- Range vs Melee matchup advantage
+-- Returns a negative adjustment to the harass threshold when our hero is
+-- ranged and ALL visible nearby enemy heroes are melee.  A lower threshold
+-- means the bot harasses more freely.
+-- ============================================================
+function M.GetRangeMatchupAdjust(bot, enemyList)
+    if not bot or bot:GetAttackCapability() ~= ATTACK_CAPABILITY_RANGED then
+        return 0
+    end
+    if not enemyList or #enemyList == 0 then return 0 end
+    for _, enemy in ipairs(enemyList) do
+        if J.IsValidHero(enemy) then
+            if enemy:GetAttackCapability() == ATTACK_CAPABILITY_RANGED then
+                return 0  -- at least one ranged enemy present — no free-trading
+            end
+        end
+    end
+    -- Every visible enemy is melee: ranged hero can trade freely
+    return -0.5
+end
+
+-- ============================================================
 -- Camp stacking timing helpers
 -- ============================================================
 

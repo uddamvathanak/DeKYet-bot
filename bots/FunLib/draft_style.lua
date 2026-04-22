@@ -362,6 +362,94 @@ function M.GetStyleBonus(style, cand, allyNames, posIndex)
 end
 
 -- ============================================================
+-- Pro pick priority — heroes most commonly seen in pro drafts per position.
+-- Gives a +2.0 bonus in scoring to steer toward archetypically correct picks.
+--
+-- If tools/fetch_pro_picks.py has been run, it writes bots/FunLib/pro_picks_data.lua
+-- which is loaded here automatically (overrides the hardcoded table below).
+-- ============================================================
+
+local _ok, _proData = pcall(require, GetScriptDirectory()..'/FunLib/pro_picks_data')
+if _ok and _proData and _proData.PRO_PICKS_BY_POS then
+    M.PRO_PICKS_BY_POS = _proData.PRO_PICKS_BY_POS
+    M.GetProPickBonus   = _proData.GetProPickBonus
+    -- skip hardcoded table below
+else
+
+M.PRO_PICKS_BY_POS = {
+    [1] = {  -- Carries
+        npc_dota_hero_phantom_assassin  = true,
+        npc_dota_hero_gyrocopter        = true,
+        npc_dota_hero_juggernaut        = true,
+        npc_dota_hero_drow_ranger       = true,
+        npc_dota_hero_terrorblade       = true,
+        npc_dota_hero_medusa            = true,
+        npc_dota_hero_anti_mage         = true,
+        npc_dota_hero_monkey_king       = true,
+        npc_dota_hero_slark             = true,
+        npc_dota_hero_wraith_king       = true,
+    },
+    [2] = {  -- Mids
+        npc_dota_hero_leshrac           = true,
+        npc_dota_hero_void_spirit       = true,
+        npc_dota_hero_invoker           = true,
+        npc_dota_hero_dragon_knight     = true,
+        npc_dota_hero_death_prophet     = true,
+        npc_dota_hero_queenofpain       = true,
+        npc_dota_hero_storm_spirit      = true,
+        npc_dota_hero_ember_spirit      = true,
+        npc_dota_hero_tinker            = true,
+        npc_dota_hero_huskar            = true,
+    },
+    [3] = {  -- Offlaners (tanks/initiators)
+        npc_dota_hero_tidehunter        = true,
+        npc_dota_hero_centaur           = true,
+        npc_dota_hero_magnataur         = true,
+        npc_dota_hero_axe               = true,
+        npc_dota_hero_underlord         = true,
+        npc_dota_hero_mars              = true,
+        npc_dota_hero_dark_seer         = true,
+        npc_dota_hero_bristleback       = true,
+        npc_dota_hero_earthshaker       = true,
+        npc_dota_hero_night_stalker     = true,
+        npc_dota_hero_spirit_breaker    = true,
+    },
+    [4] = {  -- Soft supports
+        npc_dota_hero_lion              = true,
+        npc_dota_hero_shadow_demon      = true,
+        npc_dota_hero_earth_spirit      = true,
+        npc_dota_hero_grimstroke        = true,
+        npc_dota_hero_bane              = true,
+        npc_dota_hero_disruptor         = true,
+        npc_dota_hero_rubick            = true,
+        npc_dota_hero_jakiro            = true,
+        npc_dota_hero_ancient_apparition = true,
+        npc_dota_hero_skywrath_mage     = true,
+    },
+    [5] = {  -- Hard supports
+        npc_dota_hero_warlock           = true,
+        npc_dota_hero_witch_doctor      = true,
+        npc_dota_hero_dazzle            = true,
+        npc_dota_hero_crystal_maiden    = true,
+        npc_dota_hero_oracle            = true,
+        npc_dota_hero_winter_wyvern     = true,
+        npc_dota_hero_treant            = true,
+        npc_dota_hero_vengefulspirit    = true,
+        npc_dota_hero_shadow_shaman     = true,
+        npc_dota_hero_ogre_magi         = true,
+    },
+}
+
+function M.GetProPickBonus(cand, posIndex)
+    if posIndex and M.PRO_PICKS_BY_POS[posIndex] and M.PRO_PICKS_BY_POS[posIndex][cand] then
+        return 2.0
+    end
+    return 0
+end
+
+end  -- close else block for pro_picks_data fallback
+
+-- ============================================================
 -- Human-readable label for UI/debug
 -- ============================================================
 

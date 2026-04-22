@@ -52,6 +52,10 @@ local runTime = 0;
 local shouldRunTime = 0
 local runMode = false;
 
+-- Stuck-in-jungle guard: track how long we've been at an empty camp
+local _campEmptySince  = 0
+local CAMP_EMPTY_TIMEOUT = 10  -- seconds before giving up on an empty camp
+
 
 if bot.farmLocation == nil then bot.farmLocation = bot:GetLocation() end
 
@@ -99,6 +103,18 @@ function GetDesireHelper()
 				bot:Action_ClearActions(true);
 			end
 			return BOT_MODE_DESIRE_ABSOLUTE * 1.1;
+		end
+	end
+
+	-- Yield to push/defend when human player pings a tower (last 10s).
+	-- Ensures bots stop farming and TP to the objective when called.
+	do
+		local _fmPingHuman, _fmPingData = J.GetHumanPing()
+		if _fmPingHuman ~= nil and _fmPingData ~= nil and DotaTime() > 0 then
+			if J.IsPingCloseToValidTower(GetOpposingTeam(), _fmPingData, 800, 10)
+			or J.IsPingCloseToValidTower(GetTeam(),           _fmPingData, 800, 10) then
+				return BOT_MODE_DESIRE_NONE
+			end
 		end
 	end
 
@@ -471,8 +487,9 @@ function OnStart()
 end
 
 function OnEnd()
-	preferedCamp = nil;
-	farmState = FARM_STATE_NONE;
+	preferedCamp    = nil;
+	_campEmptySince = 0;
+	farmState       = FARM_STATE_NONE;
 	hLaneCreepList  = {};
 	runMode = false;
 	runTime = 0;
@@ -611,6 +628,26 @@ function Think()
 		local targetFarmLoc = preferedCamp.cattr.location;
 		local cDist = GetUnitToLocationDistance(bot, targetFarmLoc);
 		local nNeutrals = bot:GetNearbyCreeps(900, true);
+
+		-- Stuck-in-jungle guard: if we're standing at an empty camp, give up after timeout
+		if #nNeutrals == 0 and cDist < 400 then
+			if _campEmptySince == 0 then _campEmptySince = GameTime() end
+			if GameTime() - _campEmptySince > CAMP_EMPTY_TIMEOUT then
+				preferedCamp    = nil
+				_campEmptySince = 0
+				-- Head to nearest safe lane front instead of waiting
+				for _, lane in pairs({LANE_TOP, LANE_MID, LANE_BOT}) do
+					local laneFront = GetLaneFrontLocation(GetTeam(), lane, 0)
+					if #J.GetEnemiesNearLoc(laneFront, 1200) == 0 then
+						bot:Action_MoveToLocation(laneFront)
+						return
+					end
+				end
+				return
+			end
+		else
+			_campEmptySince = 0
+		end
 
 		-- Don't steal farm from an ally already at this camp
 		local nAllyNearCamp = J.GetAlliesNearLoc(targetFarmLoc, 800)

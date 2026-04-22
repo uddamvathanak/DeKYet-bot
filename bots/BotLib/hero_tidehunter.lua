@@ -224,6 +224,8 @@ local DeadInTheWaterDesire, AnchorTarget
 
 local nKeepMana, nMP, nHP, nLV, hEnemyList, hAllyList, botTarget, sMotive
 local aetherRange = 0
+local lastCastRavageTime = -99  -- Ravage cast timestamp
+local TIDE_CHAIN_DELTA = 2.5    -- seconds: Anchor Smash priority window post-Ravage
 
 
 function X.SkillsComplement()
@@ -244,7 +246,7 @@ function X.SkillsComplement()
 	local aether = J.IsItemAvailable( "item_aether_lens" )
 	if aether ~= nil then aetherRange = 250 end
 
-	
+
 	castRDesire, sMotive = X.ConsiderR()
 	if castRDesire > 0
 	then
@@ -253,7 +255,19 @@ function X.SkillsComplement()
 		J.SetQueuePtToINT( bot, true )
 
 		bot:ActionQueue_UseAbility( abilityR )
+		lastCastRavageTime = DotaTime()
 		return
+	end
+
+	-- === Ravage → Anchor Smash chain ===
+	-- Ravage stuns all nearby enemies for 2.25s; immediately follow with
+	-- Anchor Smash to strip armour and deal bonus damage while they're stunned.
+	if DotaTime() - lastCastRavageTime <= TIDE_CHAIN_DELTA then
+		castEDesire = X.ConsiderE()
+		if castEDesire > 0 then
+			bot:Action_UseAbility( abilityE )
+			return
+		end
 	end
 	
 
