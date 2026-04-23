@@ -1,6 +1,8 @@
 # DeKYet Bot — Dota 2 Bot Scripts
 
-**Pro-style Dota 2 bot scripts built on top of OpenHyperAI.** Bots that draft like pro teams, pressure lanes at the right timing, stack camps, smoke gank, and adapt their macro strategy to the game state.
+**Pro-style Dota 2 bot scripts built on top of [ryndrb's Tinkering ABout](https://github.com/ryndrb/dota2bot).** The ryndrb baseline gives bots that lane fluidly, last-hit reliably, and feel hand-tuned; on top of that foundation, DeKYet Bot layers pro-style drafting, macro strategy, power-spike awareness, and team coordination.
+
+> **Baseline note (2026-04):** DeKYet Bot was originally built on OpenHyperAI. After extensive testing, we migrated the baseline to ryndrb's Tinkering ABout because its per-tick action loop is smoother and more stable. See [docs/IMPROVEMENTS_ROADMAP.md](docs/IMPROVEMENTS_ROADMAP.md) for the roadmap of additions being re-layered on the new baseline.
 
 > **To play:** Create a **Custom Lobby** and select **Local Host** as the server location.
 
@@ -8,7 +10,7 @@
 
 ## What's New in DeKYet Bot
 
-On top of everything OpenHyperAI already does, DeKYet Bot adds:
+On top of the ryndrb Tinkering ABout baseline, DeKYet Bot adds:
 
 ### Draft Intelligence
 - **Pro-style draft styles** — Wombo Combo (Tundra/Spirit: chain AoE CC) or Snowball (XG/Gaimin: fast tempo kills)
@@ -119,11 +121,11 @@ bots/
 
 DeKYet Bot is built on top of the incredible work of:
 
-- **[forest0xia / dota2bot-OpenHyperAI](https://github.com/forest0xia/dota2bot-OpenHyperAI)** — the foundation everything is built on (MIT License, Copyright 2024 Mingyou Xia)
+- **[ryndrb / dota2bot (Tinkering ABout)](https://github.com/ryndrb/dota2bot)** — the current baseline; the `bots/` tree is based on ryndrb's fluid, hand-tuned bot scripts
+- **[forest0xia / dota2bot-OpenHyperAI](https://github.com/forest0xia/dota2bot-OpenHyperAI)** — the original foundation DeKYet started on; many of our strategic modules were first developed against it (MIT License, Copyright 2024 Mingyou Xia)
 - **New Beginner AI** ([dota2jmz@163.com](mailto:dota2jmz@163.com))
 - **Ranked Matchmaking AI** ([adamqqq](https://github.com/adamqqqplay/dota2ai))
 - **fretbots** ([fretmute](https://github.com/fretmute/fretbots))
-- **Tinkering About** ([ryndrb](https://github.com/ryndrb/dota2bot))
 - **ExtremePush** ([insraq](https://github.com/insraq/dota2bots))
 - BOT Experiment (Furiospuppy)
 - All other contributors who made Dota 2 bot games better
@@ -134,4 +136,4 @@ DeKYet Bot is built on top of the incredible work of:
 
 MIT License — see [LICENSE](LICENSE) for full text.
 
-Built on dota2bot-OpenHyperAI © 2024 Mingyou Xia. DeKYet Bot modifications © 2025 DeKYet Bot Contributors.
+Current baseline: [ryndrb / dota2bot (Tinkering ABout)](https://github.com/ryndrb/dota2bot). Historically built on dota2bot-OpenHyperAI © 2024 Mingyou Xia. DeKYet Bot modifications © 2025–2026 DeKYet Bot Contributors.
