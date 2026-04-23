@@ -101,13 +101,13 @@ function Think()
 	end
 	if bot:DistanceFromSecretShop() == 0
 	then
-		bot:Action_MoveToLocation(preferedShop + RandomVector(200))
+		J.IssueMove(bot, preferedShop + RandomVector(200))
 		return;
 	end
 
 	if bot:DistanceFromSecretShop() > 0
 	then
-		bot:Action_MoveToLocation(preferedShop + RandomVector(20));
+		J.IssueMove(bot, preferedShop + RandomVector(20));
 		return;
 	end
 	

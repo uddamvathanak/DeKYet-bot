@@ -108,13 +108,13 @@ function Think()
 	then
 		if GetUnitToUnitDistance(bot, ClosestOutpost) > 300
 		then
-			bot:Action_MoveToLocation(ClosestOutpost:GetLocation())
+			J.IssueMove(bot, ClosestOutpost:GetLocation())
 			return
 		else
 			if hAbilityCapture then
 				bot:Action_UseAbilityOnEntity(hAbilityCapture, ClosestOutpost)
 			else
-				bot:Action_AttackUnit(ClosestOutpost, false)
+				J.IssueAttackUnit(bot, ClosestOutpost, false)
 			end
 			return
 		end

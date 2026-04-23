@@ -10,6 +10,8 @@ if package and package.path then
 end
 
 local Utils = require( GetScriptDirectory()..'/FunLib/utils')
+-- Install debug-print gate early (idempotent).
+require( GetScriptDirectory()..'/FunLib/debug_log')
 
 -- Override this func for the script to use
 local orig_GetTeamPlayers = GetTeamPlayers

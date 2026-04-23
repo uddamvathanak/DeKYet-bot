@@ -248,7 +248,7 @@ end
 local fNextMovementTime = -math.huge
 function Think()
 	if bot:IsInvulnerable() and bot:DistanceFromFountain() < 500 then
-		bot:Action_MoveToLocation(bot:GetLocation() + RandomVector(500))
+		J.IssueMove(bot, bot:GetLocation() + RandomVector(500))
 		return
 	end
 
@@ -313,18 +313,18 @@ function Think()
 		local preGameAllies = bot:GetNearbyHeroes(1200, false, BOT_MODE_NONE)
 		if #preGameEnemies > #preGameAllies and #preGameEnemies >= 2 then
 			local safeLoc = GetLaneFrontLocation(GetTeam(), botAssignedLane or bot:GetAssignedLane(), -1500)
-			bot:Action_MoveToLocation(safeLoc)
+			J.IssueMove(bot, safeLoc)
 			return
 		end
 
 		if DotaTime() < -10 then
 			local vLocation = X.GetGoOutLocation()
 			if GetUnitToLocationDistance(bot, vLocation) > 300 then
-				bot:Action_MoveToLocation(vLocation)
+				J.IssueMove(bot, vLocation)
 				return
 			else
 				if DotaTime() >= fNextMovementTime then
-					bot:Action_MoveToLocation(vLocation + RandomVector(150))
+					J.IssueMove(bot, vLocation + RandomVector(150))
 					fNextMovementTime = DotaTime() + RandomFloat(1, 3)
 					return
 				end
@@ -334,18 +334,18 @@ function Think()
 
 		if GetTeam() == TEAM_RADIANT then
 			if botAssignedLane == LANE_BOT then
-				bot:Action_MoveToLocation(GetRuneSpawnLocation(RUNE_BOUNTY_2) + RandomVector(50))
+				J.IssueMove(bot, GetRuneSpawnLocation(RUNE_BOUNTY_2) + RandomVector(50))
 				return
 			else
-				bot:Action_MoveToLocation(GetRuneSpawnLocation(RUNE_POWERUP_1) + RandomVector(50))
+				J.IssueMove(bot, GetRuneSpawnLocation(RUNE_POWERUP_1) + RandomVector(50))
 				return
 			end
 		else
 			if botAssignedLane == LANE_TOP then
-				bot:Action_MoveToLocation(GetRuneSpawnLocation(RUNE_BOUNTY_1) + RandomVector(50))
+				J.IssueMove(bot, GetRuneSpawnLocation(RUNE_BOUNTY_1) + RandomVector(50))
 				return
 			else
-				bot:Action_MoveToLocation(GetRuneSpawnLocation(RUNE_POWERUP_2) + RandomVector(50))
+				J.IssueMove(bot, GetRuneSpawnLocation(RUNE_POWERUP_2) + RandomVector(50))
 				return
 			end
 		end
@@ -375,7 +375,7 @@ function Think()
 					and (1.5 * bot:GetEstimatedDamageToTarget(false, bot, 5.0, DAMAGE_TYPE_ALL) > enemyHero:GetEstimatedDamageToTarget(true, bot, 5.0, DAMAGE_TYPE_ALL))
 					and botHP > 0.3
 					then
-						bot:Action_AttackUnit(enemyHero, true)
+						J.IssueAttackUnit(bot, enemyHero, true)
 						return
 					end
 				end
@@ -384,12 +384,12 @@ function Think()
 				and J.CanBeAttacked(nEnemyCreeps[1])
 				and J.CanKillTarget(nEnemyCreeps[1], bot:GetAttackDamage(), DAMAGE_TYPE_PHYSICAL)
 				then
-					bot:Action_AttackUnit(nEnemyCreeps[1], true)
+					J.IssueAttackUnit(bot, nEnemyCreeps[1], true)
 					return
 				end
 
 				bot.rune.location = vRuneLocation
-				bot:Action_MoveToLocation(vRuneLocation)
+				J.IssueMove(bot, vRuneLocation)
 				return
 			else
 				bot:Action_PickUpRune(rune.location)
@@ -401,7 +401,7 @@ function Think()
 				and (1.6 * bot:GetEstimatedDamageToTarget(false, bot, 5.0, DAMAGE_TYPE_ALL) > enemyHero:GetEstimatedDamageToTarget(true, bot, 5.0, DAMAGE_TYPE_ALL))
 				and botHP > 0.3
 				then
-					bot:Action_AttackUnit(enemyHero, true)
+					J.IssueAttackUnit(bot, enemyHero, true)
 					return
 				end
 			end
@@ -410,12 +410,12 @@ function Think()
 			and J.CanBeAttacked(nEnemyCreeps[1])
 			and J.CanKillTarget(nEnemyCreeps[1], bot:GetAttackDamage(), DAMAGE_TYPE_PHYSICAL)
 			then
-				bot:Action_AttackUnit(nEnemyCreeps[1], true)
+				J.IssueAttackUnit(bot, nEnemyCreeps[1], true)
 				return
 			end
 
 			bot.rune.location = vRuneLocation
-			bot:Action_MoveToLocation(vRuneLocation)
+			J.IssueMove(bot, vRuneLocation)
 			return
 		end
 	end

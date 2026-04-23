@@ -1159,6 +1159,33 @@ function ____exports.GetDefendDesireHelper(bot, lane)
     if pingFloor > 0 then
         nDefendDesire = math.max(nDefendDesire, pingFloor)
     end
+    -- Team rally floor (strategy-aware): ROCK boosts it, PAPER cuts it so
+    -- a winning team doesn't abandon their push to over-defend.
+    if buildingTier >= 2 and #lEnemies >= 1 then
+        local rallyFloor = 0
+        local states = jmz.Utils.GameStates or ({})
+        local pings = states.defendPings
+        local GameStrategy = require(GetScriptDirectory().."/FunLib/game_strategy")
+        local strat = GameStrategy.GetTeamStrategy()
+        local rockBonus = (strat.strategy == GameStrategy.STRATEGY_ROCK) and 0.05 or 0
+        local paperCut  = (strat.strategy == GameStrategy.STRATEGY_PAPER) and 0.08 or 0
+        if pings ~= nil and pings.lane == lane and GameTime() - pings.pingedTime < 10 then
+            rallyFloor = 0.9 + rockBonus - paperCut
+        end
+        if jmz.IsAnyAllyDefending(bot, lane) then
+            rallyFloor = math.max(rallyFloor, 0.88 + rockBonus - paperCut)
+        end
+        if rallyFloor > 0 then
+            bot.laneToDefend = lane
+            bot._rallyActive = DotaTime()
+            if IsValidBuildingTarget(furthestBuilding) then
+                bot._rallyHub = furthestBuilding:GetLocation()
+            else
+                bot._rallyHub = hub
+            end
+            nDefendDesire = math.max(nDefendDesire, rallyFloor)
+        end
+    end
     ConsiderPingedDefend(
         bot,
         lane,
@@ -1240,6 +1267,28 @@ function ____exports.DefendThink(bot, lane)
     if jmz.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "defend") then
         return
     end
+    -- Rally TP: if a team rally is active for this lane and we're far away
+    -- with a TP ready, teleport in instead of walking. Keeps the team
+    -- actually converging. Guarded against TPing into a bad fight.
+    local rallyActive = bot._rallyActive
+    local rallyHub = bot._rallyHub
+    if rallyActive ~= nil and rallyHub ~= nil and DotaTime() - rallyActive < 4 then
+        local dist = GetUnitToLocationDistance(bot, rallyHub)
+        if dist > 3500
+            and not bot:HasModifier("modifier_teleporting")
+            and not bot:WasRecentlyDamagedByAnyHero(3)
+        then
+            local tp = jmz.Utils.GetItemFromFullInventory(bot, "item_tpscroll")
+            if tp ~= nil and jmz.CanCastAbility(tp) then
+                local safe = jmz.AdjustLocationWithOffsetTowardsFountain(rallyHub, 900)
+                local closeEnemies = jmz.GetLastSeenEnemiesNearLoc(safe, 900)
+                if #closeEnemies == 0 then
+                    bot:Action_UseAbilityOnLocation(tp, safe)
+                    return
+                end
+            end
+        end
+    end
     local botLocation = bot:GetLocation()
     local pathCacheKey = (("pathEnemies_" .. tostring(bot:GetPlayerID())) .. "_") .. tostring(math.floor(now * 2))
     local pathEnemies
@@ -1263,7 +1312,7 @@ function ____exports.DefendThink(bot, lane)
             bot:GetLocation(),
             700
         )
-        bot:Action_MoveToLocation(add(
+        jmz.IssueMove(bot,add(
             safe,
             jmz.RandomForwardVector(120)
         ))
@@ -1281,7 +1330,7 @@ function ____exports.DefendThink(bot, lane)
                 anchor,
                 jmz.RandomForwardVector(250)
             )
-            bot:Action_MoveToLocation(moveLoc)
+            jmz.IssueMove(bot,moveLoc)
             return
         end
         local nSearchRange = 1400
@@ -1304,14 +1353,14 @@ function ____exports.DefendThink(bot, lane)
             enemiesNear = jmz.Utils[enemiesCacheKey]
         end
         if jmz.IsValidHero(enemiesNear[1]) and jmz.IsInRange(bot, enemiesNear[1], nSearchRange) then
-            bot:Action_AttackUnit(enemiesNear[1], true)
+            jmz.IssueAttackUnit(bot,enemiesNear[1], true)
             return
         end
         local attackMoveLoc = add(
             anchor,
             jmz.RandomForwardVector(300)
         )
-        bot:Action_AttackMove(attackMoveLoc)
+        jmz.IssueAttackMove(bot,attackMoveLoc)
         return
     end
     local attackRange = bot:GetAttackRange()
@@ -1337,25 +1386,25 @@ function ____exports.DefendThink(bot, lane)
                 edgeInside,
                 jmz.RandomForwardVector(120)
             )
-            bot:Action_AttackMove(attackMoveLoc)
+            jmz.IssueAttackMove(bot,attackMoveLoc)
         else
             local deeper = jmz.AdjustLocationWithOffsetTowardsFountain(edgeInside, 200)
             local attackMoveLoc = add(
                 deeper,
                 jmz.RandomForwardVector(120)
             )
-            bot:Action_AttackMove(attackMoveLoc)
+            jmz.IssueAttackMove(bot,attackMoveLoc)
         end
         return
     end
     local enemiesAtHub = jmz.GetEnemiesNearLoc(hub, SEARCH_RANGE_DEFAULT)
     if jmz.IsValidHero(enemiesAtHub[1]) and jmz.IsInRange(bot, enemiesAtHub[1], nSearchRange) then
-        bot:Action_AttackUnit(enemiesAtHub[1], true)
+        jmz.IssueAttackUnit(bot,enemiesAtHub[1], true)
         return
     end
     local nEnemyHeroes = bot:GetNearbyHeroes(SEARCH_RANGE_DEFAULT, true, BotMode.None)
     if jmz.IsValidHero(nEnemyHeroes[1]) and jmz.IsInRange(bot, nEnemyHeroes[1], nSearchRange) then
-        bot:Action_AttackUnit(nEnemyHeroes[1], true)
+        jmz.IssueAttackUnit(bot,nEnemyHeroes[1], true)
         return
     end
     local creeps = bot:GetNearbyCreeps(900, true)
@@ -1372,7 +1421,7 @@ function ____exports.DefendThink(bot, lane)
             end
         end
         if best then
-            bot:Action_AttackUnit(best, true)
+            jmz.IssueAttackUnit(bot,best, true)
             return
         end
     end
@@ -1381,7 +1430,7 @@ function ____exports.DefendThink(bot, lane)
             hub,
             jmz.RandomForwardVector(300)
         )
-        bot:Action_AttackMove(attackMoveLoc)
+        jmz.IssueAttackMove(bot,attackMoveLoc)
         return
     end
     local dist = ds.distanceToLane[lane] or GetUnitToLocationDistance(bot, hub)
@@ -1390,19 +1439,19 @@ function ____exports.DefendThink(bot, lane)
             hub,
             jmz.RandomForwardVector(300)
         )
-        bot:Action_AttackMove(attackMoveLoc)
+        jmz.IssueAttackMove(bot,attackMoveLoc)
     elseif dist > SEARCH_RANGE_DEFAULT * 1.7 then
         local moveLoc = add(
             hub,
             jmz.RandomForwardVector(300)
         )
-        bot:Action_MoveToLocation(moveLoc)
+        jmz.IssueMove(bot,moveLoc)
     else
         local moveLoc = add(
             hub,
             jmz.RandomForwardVector(1000)
         )
-        bot:Action_MoveToLocation(moveLoc)
+        jmz.IssueMove(bot,moveLoc)
     end
 end
 function ____exports.OnEnd()

@@ -292,7 +292,7 @@ function Think()
     if J.CanNotUseAction(bot) then return end
     if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "side_shop") then return end
     if DotaTime() - bot.tormentor_kill_time <= nRestForSeconds then
-        bot:Action_MoveToLocation(TormentorLocation + RandomVector(50))
+        J.IssueMove(bot, TormentorLocation + RandomVector(50))
         return
     end
 
@@ -301,7 +301,7 @@ function Think()
         if J.IsValid(nLaneCreeps[1])
         and J.CanBeAttacked(nLaneCreeps[1])
         then
-            bot:Action_AttackUnit(nLaneCreeps[1], true)
+            J.IssueAttackUnit(bot, nLaneCreeps[1], true)
             return
         end
     end
@@ -323,18 +323,18 @@ function Think()
                 end
             end
 
-            bot:Action_MoveToLocation(TormentorLocation)
+            J.IssueMove(bot, TormentorLocation)
             return
         end
 
         if DotaTime() >= fNextMovementTime then
-            bot:Action_MoveToLocation(vWaitingLocation + RandomVector(300))
+            J.IssueMove(bot, vWaitingLocation + RandomVector(300))
             fNextMovementTime = DotaTime() + RandomFloat(0.05, 0.2)
             return
         end
     else
         if GetUnitToLocationDistance(bot, TormentorLocation) > bot:GetAttackRange() + 50 then
-            bot:Action_MoveToLocation(TormentorLocation)
+            J.IssueMove(bot, TormentorLocation)
             return
         else
             local tCreeps = bot:GetNearbyNeutralCreeps(900)
@@ -346,7 +346,7 @@ function Think()
                         return
                     else
                         if X.IsEnoughAllies(TormentorLocation, 900) or J.GetHP(c) < 0.25 then
-                            bot:Action_AttackUnit(c, true)
+                            J.IssueAttackUnit(bot, c, true)
                             return
                         end
                     end

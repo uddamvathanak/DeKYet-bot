@@ -237,7 +237,7 @@ function Generic.Think()
 		for _, enemy in ipairs(nEnemyHeroes) do
 			if J.IsValidHero(enemy) and J.IsInRange(bot, enemy, 750) and not J.IsSuspiciousIllusion(enemy)
 			and (enemy:GetUnitName() == 'npc_dota_hero_pugna' or enemy:GetUnitName() == 'npc_dota_hero_rubick') then
-				bot:Action_MoveToLocation(J.VectorAway(botLocation, enemy:GetLocation(), 800))
+				J.IssueMove(bot, J.VectorAway(botLocation, enemy:GetLocation(), 800))
 				return
 			end
 		end
@@ -246,7 +246,7 @@ function Generic.Think()
 		for _, enemy in ipairs(nEnemyHeroes) do
 			if J.IsValidHero(enemy) and J.IsInRange(bot, enemy, 750) and not J.IsSuspiciousIllusion(enemy)
 			and enemy:GetUnitName() == 'npc_dota_hero_razor' then
-				bot:Action_MoveToLocation(J.VectorAway(botLocation, enemy:GetLocation(), 800))
+				J.IssueMove(bot, J.VectorAway(botLocation, enemy:GetLocation(), 800))
 				return
 			end
 		end
@@ -258,7 +258,7 @@ function Generic.Think()
 				or enemy:HasModifier('modifier_skeleton_king_reincarnation_scepter_active'))
 			then
 				if J.IsInRange(bot, enemy, enemy:GetAttackRange() + 150) then
-					bot:Action_MoveToLocation(J.VectorAway(botLocation, enemy:GetLocation(), enemy:GetAttackRange() * 2))
+					J.IssueMove(bot, J.VectorAway(botLocation, enemy:GetLocation(), enemy:GetAttackRange() * 2))
 					return
 				end
 			end
@@ -273,7 +273,7 @@ function Generic.Think()
 				end
 			end
 			if unitDamage / (botHealth + bot:GetHealthRegen() * 3.0) >= 0.2 then
-				bot:Action_MoveToLocation(J.VectorAway(botLocation, nEnemyTowers[1]:GetLocation(), 800))
+				J.IssueMove(bot, J.VectorAway(botLocation, nEnemyTowers[1]:GetLocation(), 800))
 				return
 			end
 		end
@@ -350,12 +350,12 @@ function Generic.Think()
 		if botAttackRange < 330 and botName ~= 'npc_dota_hero_templar_assassin' then
 			if dist < botAttackRange then
 				if not J.CanBeAttacked(__target) then
-					bot:Action_MoveToLocation(__target:GetLocation())
+					J.IssueMove(bot, __target:GetLocation())
 				else
-					bot:Action_AttackUnit(__target, true)
+					J.IssueAttackUnit(bot, __target, true)
 				end
 			else
-				bot:Action_MoveToLocation(__target:GetLocation())
+				J.IssueMove(bot, __target:GetLocation())
 			end
 			return
 		else
@@ -363,23 +363,23 @@ function Generic.Think()
 			if dist < botAttackRange then
 				if not J.CanBeAttacked(__target) then
 					if dist < botAttackRange - 100 then
-						bot:Action_MoveToLocation(J.VectorAway(botLocation, __target:GetLocation(), botAttackRange - dist - 100))
+						J.IssueMove(bot, J.VectorAway(botLocation, __target:GetLocation(), botAttackRange - dist - 100))
 					elseif dist > botAttackRange - 100 then
-						bot:Action_MoveToLocation(J.VectorTowards(botLocation, __target:GetLocation(), dist - botAttackRange - 100))
+						J.IssueMove(bot, J.VectorTowards(botLocation, __target:GetLocation(), dist - botAttackRange - 100))
 					end
 				else
-					bot:Action_AttackUnit(__target, true)
+					J.IssueAttackUnit(bot, __target, true)
 				end
 			else
-				bot:Action_MoveToLocation(__target:GetLocation())
+				J.IssueMove(bot, __target:GetLocation())
 			end
 			return
 		end
 	end
 
-	-- Help ally movement
+	-- Help ally movement (long traversal — use fluidity-debounced fallback)
 	if helpAlly.should then
-		bot:Action_MoveToLocation(helpAlly.location)
+		J.IssueMoveFallback(bot, helpAlly.location)
 		return
 	end
 
@@ -402,7 +402,7 @@ function Generic.Think()
 			end
 		end
 		if vBest then
-			bot:Action_MoveToLocation(vBest)
+			J.IssueMoveFallback(bot, vBest)
 			return
 		end
 	end

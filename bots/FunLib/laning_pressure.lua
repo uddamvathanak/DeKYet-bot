@@ -8,6 +8,13 @@
 
 local M = {}
 
+local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+
+-- Ranged units in Dota 2 bot API are detected via attack range; there is no
+-- GetAttackCapability() method. 300 is the standard cutoff used elsewhere in
+-- this codebase (see jmz_func.lua usages).
+local RANGED_CUTOFF = 300
+
 -- Lazy-load aba_matchups to avoid circular require issues at file load time
 local _Matchups = nil
 local function GetMatchups()
@@ -152,13 +159,13 @@ end
 -- means the bot harasses more freely.
 -- ============================================================
 function M.GetRangeMatchupAdjust(bot, enemyList)
-    if not bot or bot:GetAttackCapability() ~= ATTACK_CAPABILITY_RANGED then
+    if not bot or bot:GetAttackRange() <= RANGED_CUTOFF then
         return 0
     end
     if not enemyList or #enemyList == 0 then return 0 end
     for _, enemy in ipairs(enemyList) do
         if J.IsValidHero(enemy) then
-            if enemy:GetAttackCapability() == ATTACK_CAPABILITY_RANGED then
+            if enemy:GetAttackRange() > RANGED_CUTOFF then
                 return 0  -- at least one ranged enemy present — no free-trading
             end
         end

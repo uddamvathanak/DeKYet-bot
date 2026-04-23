@@ -28,6 +28,27 @@ local assembleTime = 0;
 local teamTime = 0;
 
 local countTime = 0;
+
+-- Sticky target: don't thrash between farm targets within the lock window.
+local FARM_TARGET_LOCK_SEC = 1.0
+local farmStickyTarget = nil
+local farmTargetLockUntil = -90
+local function SetStickyFarmTarget(t)
+    if t == nil then
+        farmStickyTarget = nil
+        bot:SetTarget(nil)
+        return
+    end
+    if farmStickyTarget ~= nil and farmStickyTarget ~= t
+       and DotaTime() < farmTargetLockUntil
+       and farmStickyTarget.IsNull ~= nil and not farmStickyTarget:IsNull()
+       and farmStickyTarget:IsAlive() then
+        return
+    end
+    farmStickyTarget = t
+    bot:SetTarget(t)
+    farmTargetLockUntil = DotaTime() + FARM_TARGET_LOCK_SEC
+end
 local countCD = 5.0;
 local allyKills = 0;
 local enemyKills = 0;
@@ -493,7 +514,7 @@ function OnEnd()
 	hLaneCreepList  = {};
 	runMode = false;
 	runTime = 0;
-	bot:SetTarget(nil);
+	SetStickyFarmTarget(nil);
 end
 
 function Think()
@@ -515,7 +536,7 @@ function Think()
 				and botName ~= "npc_dota_hero_bristleback"
 				and J.GetDistanceFromEnemyFountain(bot) > 2200
 			then
-				bot:Action_AttackUnit(runModeEnemyHeroes[1], true);
+				J.IssueAttackUnit(bot,runModeEnemyHeroes[1], true);
 				return;
 			end
 			local runModeBarracks  = bot:GetNearbyBarracks(botAttackRange +150,true);
@@ -527,7 +548,7 @@ function Think()
 				and not runModeBarracks[1]:HasModifier("modifier_invulnerable")
 				and not runModeBarracks[1]:HasModifier("modifier_backdoor_protection_active")
 			then
-				bot:Action_AttackUnit(runModeBarracks[1], true);
+				J.IssueAttackUnit(bot,runModeBarracks[1], true);
 				return;
 			end
 		end
@@ -535,21 +556,21 @@ function Think()
 		then
 			if bot:GetTeam() == TEAM_RADIANT
 			then
-				bot:Action_MoveToLocation(RB);
+				J.IssueMove(bot,RB);
 				return;
 			else
-				bot:Action_MoveToLocation(DB);
+				J.IssueMove(bot,DB);
 				return;
 			end
 		else
 			if bot:GetTeam() == TEAM_RADIANT
 			then
 			    local mLoc = J.GetLocationTowardDistanceLocation(bot,DB,-700);
-				bot:Action_MoveToLocation(mLoc);
+				J.IssueMove(bot,mLoc);
 				return;
 			else
 			    local mLoc = J.GetLocationTowardDistanceLocation(bot,RB,-700);
-				bot:Action_MoveToLocation(mLoc);
+				J.IssueMove(bot,mLoc);
 				return;
 			end
 		end
@@ -582,17 +603,17 @@ function Think()
 				local nEnemyTowers = bot:GetNearbyTowers(1600, true)
 				if J.IsValidBuilding(nEnemyTowers[1]) then
 					if nEnemyTowers[1]:GetAttackTarget() == bot or bot:WasRecentlyDamagedByTower(5.0) then
-						bot:Action_MoveToLocation(J.VectorAway(bot:GetLocation(), nEnemyTowers[1]:GetLocation(), 1600))
+						J.IssueMove(bot,J.VectorAway(bot:GetLocation(), nEnemyTowers[1]:GetLocation(), 1600))
 						return
 					end
 				end
 
 				local nFarmRange = math.max(nEffectiveRange, bot:GetAttackRange())
 				if GetUnitToUnitDistance(bot, farmTarget) > nFarmRange then
-					bot:Action_MoveToLocation(farmTarget:GetLocation());
+					J.IssueMove(bot,farmTarget:GetLocation());
 					return
 				else
-					bot:Action_AttackUnit(farmTarget, true);
+					J.IssueAttackUnit(bot,farmTarget, true);
 					return
 				end
 			end
@@ -639,7 +660,7 @@ function Think()
 				for _, lane in pairs({LANE_TOP, LANE_MID, LANE_BOT}) do
 					local laneFront = GetLaneFrontLocation(GetTeam(), lane, 0)
 					if #J.GetEnemiesNearLoc(laneFront, 1200) == 0 then
-						bot:Action_MoveToLocation(laneFront)
+						J.IssueMove(bot,laneFront)
 						return
 					end
 				end
@@ -691,12 +712,12 @@ function Think()
 			local farmTarget = J.Site.FindFarmNeutralTarget(nNeutrals)
 			if J.IsValid(farmTarget)
 			then
-				bot:SetTarget(farmTarget);
-				bot:Action_AttackUnit(farmTarget, true);
+				SetStickyFarmTarget(farmTarget);
+				J.IssueAttackUnit(bot,farmTarget, true);
 				return;
 			elseif J.IsValid(nNeutrals[1]) then
-				bot:SetTarget(nNeutrals[1]);
-				bot:Action_AttackUnit(nNeutrals[1], true);
+				SetStickyFarmTarget(nNeutrals[1]);
+				J.IssueAttackUnit(bot,nNeutrals[1], true);
 				return;
 			end
 			
@@ -707,7 +728,7 @@ function Think()
 			then
 				if J.IsValid(hLaneCreepList[1])
 				then
-					bot:Action_MoveToLocation( hLaneCreepList[1]:GetLocation() );
+					J.IssueMove(bot, hLaneCreepList[1]:GetLocation() );
 					return;
 				end
 				
@@ -715,7 +736,7 @@ function Think()
 				
 				if X.CouldBlade(bot,targetFarmLoc) then return end;
 							
-				bot:Action_MoveToLocation(targetFarmLoc);
+				J.IssueMove(bot,targetFarmLoc);
 				return;
 		else
 			local neutralCreeps = bot:GetNearbyCreeps(1000, true); 
@@ -727,8 +748,8 @@ function Think()
 				local farmTarget = J.Site.FindFarmNeutralTarget(neutralCreeps)
 				if J.IsValid(farmTarget)
 				then
-					bot:SetTarget(farmTarget);
-					bot:Action_AttackUnit(farmTarget, true);
+					SetStickyFarmTarget(farmTarget);
+					J.IssueAttackUnit(bot,farmTarget, true);
 					return;
 				end
 				
@@ -744,8 +765,8 @@ function Think()
 					local farmTarget = J.Site.FindFarmNeutralTarget(neutralCreeps)
 					if J.IsValid(farmTarget)
 					then
-						bot:SetTarget(farmTarget);
-						bot:Action_AttackUnit(farmTarget, true);
+						SetStickyFarmTarget(farmTarget);
+						J.IssueAttackUnit(bot,farmTarget, true);
 						return;
 					end
 			else
@@ -753,17 +774,17 @@ function Think()
 				local farmTarget = J.Site.FindFarmNeutralTarget(neutralCreeps)
 				if J.IsValid(farmTarget)
 				then
-					bot:SetTarget(farmTarget);
-					bot:Action_AttackUnit(farmTarget, true);
+					SetStickyFarmTarget(farmTarget);
+					J.IssueAttackUnit(bot,farmTarget, true);
 					return;
 				end
 				
-				if cDist > 200 then bot:Action_MoveToLocation(targetFarmLoc) return end
+				if cDist > 200 then J.IssueMove(bot,targetFarmLoc) return end
 			end
 		end			
 	end
 	
-	bot:Action_MoveToLocation( ( RB + DB )/2 );
+	J.IssueMoveFallback(bot, ( RB + DB )/2 );
 	return;
 end
 

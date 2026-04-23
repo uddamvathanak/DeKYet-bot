@@ -872,6 +872,36 @@ export function GetDefendDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     if (panic.active) nDefendDesire = math.max(nDefendDesire, panic.floor);
     if (pingFloor > 0) nDefendDesire = math.max(nDefendDesire, pingFloor);
 
+    // --- Team rally floor (strategy-aware) ---
+    // If a defend ping was fired recently for this lane, OR an ally is
+    // already actively defending this lane, everyone else commits too so
+    // the team converges instead of one bot dying solo. Only applies to
+    // T2+ towers under real threat to avoid rallying on creep waves.
+    // Floor scales with the current Rock/Paper/Scissors strategy so
+    // winning teams (PAPER) don't abandon their push to over-defend.
+    if (buildingTier >= 2 && lEnemies.length >= 1) {
+        let rallyFloor = 0;
+        const states: any = (jmz.Utils as any).GameStates || {};
+        const pings = states.defendPings;
+        const GameStrategy = require("bots/FunLib/game_strategy");
+        const strat = GameStrategy.GetTeamStrategy();
+        const rockBonus = strat.strategy === GameStrategy.STRATEGY_ROCK ? 0.05 : 0;
+        const paperCut  = strat.strategy === GameStrategy.STRATEGY_PAPER ? 0.08 : 0;
+        if (pings && pings.lane === lane && GameTime() - pings.pingedTime < 10) {
+            rallyFloor = 0.9 + rockBonus - paperCut;
+        }
+        if (jmz.IsAnyAllyDefending(bot, lane)) {
+            rallyFloor = math.max(rallyFloor, 0.88 + rockBonus - paperCut);
+        }
+        if (rallyFloor > 0) {
+            (bot as any).laneToDefend = lane;
+            (bot as any)._rallyActive = DotaTime();
+            (bot as any)._rallyHub = IsValidBuildingTarget(furthestBuilding)
+                ? furthestBuilding.GetLocation() : hub;
+            nDefendDesire = math.max(nDefendDesire, rallyFloor);
+        }
+    }
+
     // Ask for help if needed
     ConsiderPingedDefend(bot, lane, nDefendDesire, furthestBuilding, buildingTier, nEffAllies, lEnemies.length);
 
@@ -898,6 +928,31 @@ export function DefendThink(bot: Unit, lane: Lane) {
     if (jmz.CanNotUseAction(bot)) return;
     if (jmz.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "defend")) return;
 
+    // --- Rally TP: if a team rally is active for this lane and we're far
+    // away with a TP ready, teleport in instead of walking. Keeps the team
+    // actually converging together. Guarded so we don't TP into a losing
+    // fight or blow a scroll we don't need.
+    const rallyActive = (bot as any)._rallyActive;
+    const rallyHub: Vector | undefined = (bot as any)._rallyHub;
+    if (rallyActive && rallyHub && DotaTime() - rallyActive < 4) {
+        const dist = GetUnitToLocationDistance(bot, rallyHub);
+        if (
+            dist > 3500 &&
+            !bot.HasModifier("modifier_teleporting") &&
+            !bot.WasRecentlyDamagedByAnyHero(3)
+        ) {
+            const tp = jmz.Utils.GetItemFromFullInventory(bot, "item_tpscroll");
+            if (tp && jmz.CanCastAbility(tp)) {
+                const safe = jmz.AdjustLocationWithOffsetTowardsFountain(rallyHub, 900);
+                const closeEnemies = jmz.GetLastSeenEnemiesNearLoc(safe, 900);
+                if (closeEnemies.length === 0) {
+                    bot.Action_UseAbilityOnLocation(tp, safe);
+                    return;
+                }
+            }
+        }
+    }
+
     // a small don't-walk-through-fire guard - use cached enemies when possible
     const botLocation = bot.GetLocation();
     const pathCacheKey = `pathEnemies_${bot.GetPlayerID()}_${Math.floor(now * 2)}`; // 500ms cache
@@ -919,7 +974,7 @@ export function DefendThink(bot: Unit, lane: Lane) {
     if (bot.WasRecentlyDamagedByAnyHero(5) && pathEnemies.length > ds.nInRangeEnemy.length) {
         // step back toward fountain a bit, then re-eval next tick
         const safe = jmz.AdjustLocationWithOffsetTowardsFountain(bot.GetLocation(), 700);
-        bot.Action_MoveToLocation(add(safe, jmz.RandomForwardVector(120)));
+        jmz.IssueMove(bot,add(safe, jmz.RandomForwardVector(120)));
         return;
     }
 
@@ -931,7 +986,7 @@ export function DefendThink(bot: Unit, lane: Lane) {
         const toAnc = GetUnitToUnitDistance(bot, ancient);
         if (toAnc > BASE_LEASH_OUTBOUND) {
             const moveLoc = add(anchor, jmz.RandomForwardVector(250));
-            bot.Action_MoveToLocation(moveLoc);
+            jmz.IssueMove(bot,moveLoc);
             return;
         }
 
@@ -955,12 +1010,12 @@ export function DefendThink(bot: Unit, lane: Lane) {
         }
 
         if (jmz.IsValidHero(enemiesNear[0]) && jmz.IsInRange(bot, enemiesNear[0], nSearchRange)) {
-            bot.Action_AttackUnit(enemiesNear[0], true);
+            jmz.IssueAttackUnit(bot,enemiesNear[0], true);
             return;
         }
 
         const attackMoveLoc = add(anchor, jmz.RandomForwardVector(300));
-        bot.Action_AttackMove(attackMoveLoc);
+        jmz.IssueAttackMove(bot,attackMoveLoc);
         return;
     }
 
@@ -984,12 +1039,12 @@ export function DefendThink(bot: Unit, lane: Lane) {
         // Default: hold just inside HG. Only step out if we have clear numbers.
         if (enemyAtHG === 0 && nearEdgeEnemies.length > 0 && nearEdgeAllies.length >= nearEdgeEnemies.length + 1) {
             const attackMoveLoc = add(edgeInside, jmz.RandomForwardVector(120));
-            bot.Action_AttackMove(attackMoveLoc);
+            jmz.IssueAttackMove(bot,attackMoveLoc);
         } else {
             // tuck slightly deeper if contested or alone
             const deeper = jmz.AdjustLocationWithOffsetTowardsFountain(edgeInside, 200);
             const attackMoveLoc = add(deeper, jmz.RandomForwardVector(120));
-            bot.Action_AttackMove(attackMoveLoc);
+            jmz.IssueAttackMove(bot,attackMoveLoc);
         }
         return;
     }
@@ -997,13 +1052,13 @@ export function DefendThink(bot: Unit, lane: Lane) {
     // Prefer nearest valid enemy hero within range (cheap local queries first)
     const enemiesAtHub = jmz.GetEnemiesNearLoc(hub, SEARCH_RANGE_DEFAULT);
     if (jmz.IsValidHero(enemiesAtHub[0]) && jmz.IsInRange(bot, enemiesAtHub[0], nSearchRange)) {
-        bot.Action_AttackUnit(enemiesAtHub[0], true);
+        jmz.IssueAttackUnit(bot,enemiesAtHub[0], true);
         return;
     }
 
     const nEnemyHeroes = bot.GetNearbyHeroes(SEARCH_RANGE_DEFAULT, true, BotMode.None);
     if (jmz.IsValidHero(nEnemyHeroes[0]) && jmz.IsInRange(bot, nEnemyHeroes[0], nSearchRange)) {
-        bot.Action_AttackUnit(nEnemyHeroes[0], true);
+        jmz.IssueAttackUnit(bot,nEnemyHeroes[0], true);
         return;
     }
 
@@ -1022,7 +1077,7 @@ export function DefendThink(bot: Unit, lane: Lane) {
             }
         }
         if (best) {
-            bot.Action_AttackUnit(best, true);
+            jmz.IssueAttackUnit(bot,best, true);
             return;
         }
     }
@@ -1030,20 +1085,20 @@ export function DefendThink(bot: Unit, lane: Lane) {
     // Move with small jitter; prefer assertive move if ShouldDefend says we're the responder
     if (bld && ShouldDefend(bot, bld, 1600)) {
         const attackMoveLoc = add(hub, jmz.RandomForwardVector(300));
-        bot.Action_AttackMove(attackMoveLoc);
+        jmz.IssueAttackMove(bot,attackMoveLoc);
         return;
     }
 
     const dist = ds.distanceToLane[lane] || GetUnitToLocationDistance(bot, hub);
     if ((ds.weAreStronger || ds.nInRangeAlly.length >= ds.nInRangeEnemy.length) && dist < SEARCH_RANGE_DEFAULT) {
         const attackMoveLoc = add(hub, jmz.RandomForwardVector(300));
-        bot.Action_AttackMove(attackMoveLoc);
+        jmz.IssueAttackMove(bot,attackMoveLoc);
     } else if (dist > SEARCH_RANGE_DEFAULT * 1.7) {
         const moveLoc = add(hub, jmz.RandomForwardVector(300));
-        bot.Action_MoveToLocation(moveLoc);
+        jmz.IssueMove(bot,moveLoc);
     } else {
         const moveLoc = add(hub, jmz.RandomForwardVector(1000));
-        bot.Action_MoveToLocation(moveLoc);
+        jmz.IssueMove(bot,moveLoc);
     }
 }
 

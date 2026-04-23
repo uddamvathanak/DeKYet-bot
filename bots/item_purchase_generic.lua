@@ -661,7 +661,7 @@ function ItemPurchaseThink()
 		if d ~= nil and d.owner == bot and d.item ~= nil and not string.find(d.item:GetName(), 'token') then
 			local dist = GetUnitToLocationDistance(bot, d.location)
 			if dist > 200 and dist < 1000 then
-				bot:Action_MoveToLocation(d.location)
+				J.IssueMove(bot, d.location)
 			elseif dist <= 100 then
 				bot:Action_PickUpItem(d.item)
 				return
@@ -709,7 +709,7 @@ function ItemPurchaseThink()
 				local distance = GetUnitToLocationDistance(bot, tDropItem.location)
 				if distance > 200 and distance < 1000 and tDropItem.owner == bot
 				then
-					bot:Action_MoveToLocation(tDropItem.location)
+					J.IssueMove(bot, tDropItem.location)
 				elseif distance <= 100 then
 					bot:Action_PickUpItem(tDropItem.item)
 					return

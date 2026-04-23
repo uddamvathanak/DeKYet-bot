@@ -412,18 +412,18 @@ function Think()
                     return
                 end
                 -- After smoke (or no smoke), attack target
-                bot:Action_AttackUnit(smokeGankTarget, false)
+                J.IssueAttackUnit(bot,smokeGankTarget, false)
                 return
             else
                 -- Move toward the target
-                bot:Action_MoveToLocation(targetLoc)
+                J.IssueMove(bot,targetLoc)
                 return
             end
         end
     end
 
 	if J.IsValid(hTargetCreep) then
-		bot:Action_AttackUnit(hTargetCreep, true)
+		J.IssueAttackUnit(bot,hTargetCreep, true)
 		return
 	end
 
@@ -439,7 +439,7 @@ function Think()
 	end
 
     if IsAvoidingAbilityZone then
-        bot:Action_MoveToLocation(Utils.GetOffsetLocationTowardsTargetLocation(bot:GetLocation(), J.GetTeamFountain(), 600) + RandomVector(200))
+        J.IssueMoveFallback(bot, Utils.GetOffsetLocationTowardsTargetLocation(bot:GetLocation(), J.GetTeamFountain(), 600), 200)
         return
     end
 
@@ -448,7 +448,7 @@ function Think()
     end
 
     if towerCreepMode then
-        bot:Action_AttackUnit(towerCreep, false)
+        J.IssueAttackUnit(bot,towerCreep, false)
         return
     end
 
@@ -457,12 +457,12 @@ function Think()
     end
 
     if ShouldHelpAlly and J.Utils.IsValidUnit(targetUnit) then
-        bot:Action_AttackUnit(targetUnit, false)
+        J.IssueAttackUnit(bot,targetUnit, false)
         return
     end
 
     if (IsHeroCore or IsSupport) and J.Utils.IsValidUnit(targetUnit) then
-        bot:Action_AttackUnit(targetUnit, false)
+        J.IssueAttackUnit(bot,targetUnit, false)
         return
     end
 end
@@ -1635,7 +1635,7 @@ end
 function GoPickUpItem(goPickItem)
     local distance = GetUnitToLocationDistance(bot, goPickItem.location)
     if distance > 200 and distance < 2000 then
-        bot:Action_MoveToLocation(goPickItem.location)
+        J.IssueMove(bot,goPickItem.location)
     elseif distance <= 100 then
         tryPickCount = tryPickCount + 1
         bot:Action_PickUpItem(goPickItem.item)

@@ -1,5 +1,10 @@
 local J = {}
 
+-- Install global debug-print gate as early as possible. When DEBUG_LOG is
+-- false (default), print() becomes a no-op across every bot file that loads
+-- jmz_func. Toggle FunLib/debug_log.lua:DEBUG_LOG to re-enable traces.
+J.DebugLog = require( GetScriptDirectory()..'/FunLib/debug_log' )
+
 local bDebugMode = ( 1 == 10 )
 local tAllyIDList = GetTeamPlayers( GetTeam() )
 local tAllyHeroList = {}
@@ -6528,9 +6533,15 @@ function J.CheckBotIdleState()
 			and diffDistance <= deltaIdleDistance -- normally a bot gets stuck if it stopped moving.
 			then
 				botState.idleCount = botState.idleCount + 1
+				local stuckAtFountain = botMode == BOT_MODE_RETREAT
+					and bot:DistanceFromFountain() < 1600
+					and J.GetHP(bot) >= 0.95
+					and J.GetMP(bot) >= 0.85
+					and not bot:WasRecentlyDamagedByAnyHero(3)
 				if bot:GetCurrentActionType() == BOT_ACTION_TYPE_IDLE
 				or botMode == BOT_MODE_ITEM
-				or botMode == BOT_MODE_FARM then
+				or botMode == BOT_MODE_FARM
+				or stuckAtFountain then
 					local nActions = bot:NumQueuedActions()
 					if nActions > 0 then
 						for i=1, nActions do
@@ -6739,5 +6750,101 @@ function J.GetUltLoc(bot, target, nManaCost, nCastRange, s)
 	return dest
 end
 
+-- ==========================================================================
+-- Smooth action helpers
+--
+-- Bots stutter when Think() issues Action_MoveToLocation / Action_AttackMove /
+-- Action_AttackUnit every frame with slightly different inputs -- each call
+-- cancels the prior order and restarts pathing / attack wind-up. These
+-- helpers debounce: they no-op when the new command is "close enough" to
+-- the last one AND not enough time has passed to warrant a new order.
+-- ==========================================================================
+
+local function _actState(bot)
+    bot._smoothAct = bot._smoothAct or {
+        lastMoveLoc = nil, lastMoveTime = -99,
+        lastAtkMoveLoc = nil, lastAtkMoveTime = -99,
+        lastAtkTargetId = -1, lastAtkTime = -99,
+    }
+    return bot._smoothAct
+end
+
+local function _locClose(a, b, tol)
+    if a == nil or b == nil then return false end
+    local dx = a.x - b.x
+    local dy = a.y - b.y
+    return (dx * dx + dy * dy) <= (tol * tol)
+end
+
+function J.IssueMove(bot, loc, tolerance, minInterval)
+    if loc == nil then return end
+    tolerance   = tolerance or 200
+    minInterval = minInterval or 0.25
+    local s = _actState(bot)
+    local now = DotaTime()
+    if _locClose(s.lastMoveLoc, loc, tolerance)
+        and (now - s.lastMoveTime) < minInterval then
+        return
+    end
+    s.lastMoveLoc  = loc
+    s.lastMoveTime = now
+    bot:Action_MoveToLocation(loc)
+end
+
+-- Fluidity helper for "fallback" walks (move to lane front, walk home, drift to
+-- map center, etc). Uses the ryndrb-style randomized 0.3–0.9 s debounce so the
+-- engine isn't re-pathing every tick, plus Action_MoveDirectly which doesn't
+-- re-evaluate pathing on each call. Adds a small RandomVector jitter to break
+-- the "standing-still-with-foot-tap" look on long idle walks.
+function J.IssueMoveFallback(bot, loc, jitter)
+    if loc == nil then return end
+    local s = _actState(bot)
+    local now = DotaTime()
+    if (s.lastFallbackTime or 0) > now then return end
+    jitter = jitter or 100
+    s.lastFallbackTime = now + RandomFloat(0.3, 0.9)
+    s.lastMoveLoc  = loc
+    s.lastMoveTime = now
+    bot:Action_MoveDirectly(loc + RandomVector(jitter))
+end
+
+function J.IssueAttackMove(bot, loc, tolerance, minInterval)
+    if loc == nil then return end
+    tolerance   = tolerance or 250
+    minInterval = minInterval or 0.25
+    local s = _actState(bot)
+    local now = DotaTime()
+    local hasHeroTarget = false
+    local atkTarget = bot:GetAttackTarget()
+    if atkTarget ~= nil and atkTarget:IsHero() and atkTarget:IsAlive() then
+        hasHeroTarget = true
+    end
+    if not hasHeroTarget
+        and _locClose(s.lastAtkMoveLoc, loc, tolerance)
+        and (now - s.lastAtkMoveTime) < minInterval then
+        return
+    end
+    s.lastAtkMoveLoc  = loc
+    s.lastAtkMoveTime = now
+    bot:Action_AttackMove(loc)
+end
+
+function J.IssueAttackUnit(bot, target, bOnce)
+    if target == nil or not target:IsAlive() then return end
+    local s = _actState(bot)
+    local now = DotaTime()
+    local tid = target.GetPlayerID and target:GetPlayerID() or -2
+    if s.lastAtkTargetId == tid and (now - s.lastAtkTime) < 0.2 then
+        return
+    end
+    if bot:GetAttackTarget() == target then
+        s.lastAtkTargetId = tid
+        s.lastAtkTime = now
+        return
+    end
+    s.lastAtkTargetId = tid
+    s.lastAtkTime = now
+    bot:Action_AttackUnit(target, bOnce ~= false)
+end
 
 return J

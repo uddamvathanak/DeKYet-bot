@@ -117,7 +117,7 @@ function Think()
 				hTargetSpot.plant_time_obs = DotaTime()
 				return
 			else
-				bot:Action_MoveToLocation(hTargetSpot.location)
+				J.IssueMove(bot, hTargetSpot.location)
 				return
 			end
 		end
@@ -143,7 +143,7 @@ function Think()
 				hTargetSpot.plant_time_sentry = DotaTime()
 				return
 			else
-				bot:Action_MoveToLocation(hTargetSpot.location)
+				J.IssueMove(bot, hTargetSpot.location)
 				return
 			end
 		end

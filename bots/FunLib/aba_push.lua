@@ -283,7 +283,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     end
     if hEnemyAncient and GetUnitToUnitDistance(bot, hEnemyAncient) < nSearchRange * 0.5 and jmz.CanBeAttacked(hEnemyAncient) and not bot:WasRecentlyDamagedByAnyHero(1) and jmz.GetHP(bot) > 0.5 and not ____exports.HasBackdoorProtect(hEnemyAncient) then
         bot:SetTarget(hEnemyAncient)
-        bot:Action_AttackUnit(hEnemyAncient, true)
+        jmz.IssueAttackUnit(bot,hEnemyAncient, true)
         return RemapValClamped(
             jmz.GetHP(bot),
             0,
@@ -801,7 +801,7 @@ function ____exports.PushThink(bot, lane)
         if bot:GetActualIncomingDamage(nDamage, DamageType.Physical) / bot:GetHealth() > 0.15 or #nAllyCreeps > 2 then
             local retreat = math.min(fDeltaFromFront - 200, -300)
             local retreatLoc = GetLaneFrontLocation(gameState.team, lane, retreat)
-            bot:Action_MoveToLocation(retreatLoc)
+            jmz.IssueMove(bot,retreatLoc)
             return
         end
     end
@@ -811,7 +811,7 @@ function ____exports.PushThink(bot, lane)
         1600
     )
     if hEnemyAncient and botState.distanceToAncient < 1000 and jmz.CanBeAttacked(hEnemyAncient) and not ____exports.HasBackdoorProtect(hEnemyAncient) and (#____exports.GetAllyHeroesAttackingUnit(hEnemyAncient) >= 3 or #____exports.GetAllyCreepsAttackingUnit(hEnemyAncient) >= 4 or hEnemyAncient:GetHealthRegen() < 20 or (alliesNearAncient and #alliesNearAncient or 0) >= 4) then
-        bot:Action_AttackUnit(hEnemyAncient, true)
+        jmz.IssueAttackUnit(bot,hEnemyAncient, true)
         return
     end
     local nRange = math.min(700 + botAttackRange, 1600)
@@ -844,7 +844,7 @@ function ____exports.PushThink(bot, lane)
                     __continue120 = true
                     break
                 end
-                bot:Action_AttackUnit(creep, true)
+                jmz.IssueAttackUnit(bot,creep, true)
                 return
             until true
             if not __continue120 then
@@ -855,19 +855,19 @@ function ____exports.PushThink(bot, lane)
     local hgTarget = SelectOrStickHGTarget(bot, lane, targetLoc)
     if hgTarget then
         if jmz.IsInRange(bot, hgTarget, botAttackRange + 150) then
-            bot:Action_AttackUnit(hgTarget, true)
+            jmz.IssueAttackUnit(bot,hgTarget, true)
         else
-            bot:Action_MoveToLocation(hgTarget:GetLocation())
+            jmz.IssueMove(bot,hgTarget:GetLocation())
         end
         return
     end
     if botState.distanceToTargetLoc > 500 then
-        bot:Action_MoveToLocation(targetLoc)
+        jmz.IssueMove(bot,targetLoc)
         return
     else
         if DotaTime() >= fNextMovementTime then
             local attackMoveLoc = jmz.GetRandomLocationWithinDist(targetLoc, 0, 400)
-            bot:Action_AttackMove(attackMoveLoc)
+            jmz.IssueAttackMove(bot,attackMoveLoc)
             fNextMovementTime = DotaTime() + RandomFloat(0.05, 0.3)
             return
         end

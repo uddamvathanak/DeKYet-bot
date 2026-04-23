@@ -79,7 +79,7 @@ function X.Think()
 	or (J.IsValidBuilding(tEnemyTowers[1]) and tEnemyTowers[1]:GetAttackTarget() == bot)
 	or (bot:WasRecentlyDamagedByCreep(2.0) and not (bot:HasModifier('modifier_tower_aura') or bot:HasModifier('modifier_tower_aura_bonus')) and #nAllyCreeps > 0) then
 		local safeLoc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -1200)
-		bot:Action_MoveToLocation(safeLoc)
+		J.IssueMove(bot, safeLoc)
 		return
 	end
 
@@ -89,7 +89,7 @@ function X.Think()
 		if #nEnemyTowersClose > 0 then
 			for _, creep in pairs(nEnemyCreeps) do
 				if J.IsValid(creep) and GetUnitToUnitDistance(creep, nEnemyTowersClose[1]) < 700 then
-					bot:Action_AttackUnit(creep, true)
+					J.IssueAttackUnit(bot, creep, true)
 					return
 				end
 			end
@@ -100,7 +100,7 @@ function X.Think()
 	if J.IsValidBuilding(tEnemyTowers[1]) then
 		local dist = GetUnitToUnitDistance(bot, tEnemyTowers[1])
 		if dist < 800 and #nEnemyCreeps < 3 then
-			bot:Action_MoveToLocation(J.VectorAway(bot:GetLocation(), tEnemyTowers[1]:GetLocation(), 800))
+			J.IssueMove(bot, J.VectorAway(bot:GetLocation(), tEnemyTowers[1]:GetLocation(), 800))
 			return
 		end
 	end
@@ -118,7 +118,7 @@ function X.Think()
 			if GetUnitToUnitDistance(bot, hitCreep) > botAttackRange then
 				bot:Action_MoveToUnit(hitCreep)
 			else
-				bot:Action_AttackUnit(hitCreep, true)
+				J.IssueAttackUnit(bot, hitCreep, true)
 			end
 			return
 		end
@@ -127,7 +127,7 @@ function X.Think()
 	-- Deny
 	local denyCreep = GetBestDenyCreep(nAllyCreeps)
 	if J.IsValid(denyCreep) then
-		bot:Action_AttackUnit(denyCreep, true)
+		J.IssueAttackUnit(bot, denyCreep, true)
 		return
 	end
 
@@ -136,7 +136,7 @@ function X.Think()
 	if #nCloseEnemyCreeps <= 1 and not J.IsCore(bot) then
 		local harassTarget = GetHarassTarget(tEnemyHeroes)
 		if J.IsValidHero(harassTarget) then
-			bot:Action_AttackUnit(harassTarget, true)
+			J.IssueAttackUnit(bot, harassTarget, true)
 			return
 		end
 	end
@@ -156,7 +156,7 @@ function X.Think()
 	end
 
 	if DotaTime() >= fNextMovementTime then
-		bot:Action_MoveToLocation(target_loc + RandomVector(300))
+		J.IssueMove(bot, target_loc + RandomVector(300))
 		fNextMovementTime = DotaTime() + RandomFloat(0.05, 0.2)
 	end
 end

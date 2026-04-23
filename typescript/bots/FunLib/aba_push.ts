@@ -444,7 +444,7 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
         !HasBackdoorProtect(hEnemyAncient)
     ) {
         bot.SetTarget(hEnemyAncient);
-        bot.Action_AttackUnit(hEnemyAncient, true);
+        jmz.IssueAttackUnit(bot,hEnemyAncient, true);
         return RemapValClamped(jmz.GetHP(bot), 0, 0.5, BotModeDesire.None, 0.98) as BotModeDesire;
     }
 
@@ -808,7 +808,7 @@ export function PushThink(bot: Unit, lane: Lane): void {
         if (bot.GetActualIncomingDamage(nDamage, DamageType.Physical) / bot.GetHealth() > 0.15 || nAllyCreeps.length > 2) {
             const retreat = Math.min(fDeltaFromFront - 200, -300);
             const retreatLoc = GetLaneFrontLocation(gameState.team, lane, retreat);
-            bot.Action_MoveToLocation(retreatLoc);
+            jmz.IssueMove(bot,retreatLoc);
             return;
         }
     }
@@ -826,7 +826,7 @@ export function PushThink(bot: Unit, lane: Lane): void {
             hEnemyAncient.GetHealthRegen() < 20 ||
             (alliesNearAncient?.length ?? 0) >= 4)
     ) {
-        bot.Action_AttackUnit(hEnemyAncient, true);
+        jmz.IssueAttackUnit(bot,hEnemyAncient, true);
         return;
     }
 
@@ -852,7 +852,7 @@ export function PushThink(bot: Unit, lane: Lane): void {
 
         if (bTowerNearby && GetUnitToLocationDistance(creep, vTeamFountain) >= towerDistanceToFountain) continue;
 
-        bot.Action_AttackUnit(creep, true);
+        jmz.IssueAttackUnit(bot,creep, true);
         return;
     }
 
@@ -861,21 +861,21 @@ export function PushThink(bot: Unit, lane: Lane): void {
     const hgTarget = SelectOrStickHGTarget(bot, lane, targetLoc);
     if (hgTarget) {
         if (jmz.IsInRange(bot, hgTarget, botAttackRange + 150)) {
-            bot.Action_AttackUnit(hgTarget, true);
+            jmz.IssueAttackUnit(bot,hgTarget, true);
         } else {
-            bot.Action_MoveToLocation(hgTarget.GetLocation());
+            jmz.IssueMove(bot,hgTarget.GetLocation());
         }
         return;
     }
 
     // 10) Movement fallback: path to approach point, then do small attack-move jitter to hold space
     if (botState.distanceToTargetLoc > 500) {
-        bot.Action_MoveToLocation(targetLoc);
+        jmz.IssueMove(bot,targetLoc);
         return;
     } else {
         if (DotaTime() >= fNextMovementTime) {
             const attackMoveLoc = jmz.GetRandomLocationWithinDist(targetLoc, 0, 400);
-            bot.Action_AttackMove(attackMoveLoc);
+            jmz.IssueAttackMove(bot,attackMoveLoc);
             fNextMovementTime = DotaTime() + RandomFloat(0.05, 0.3);
             return;
         }

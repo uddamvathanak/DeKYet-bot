@@ -211,50 +211,112 @@ function GetBestDenyCreep(hCreepList)
 end
 
 -- Unified laning Think() for all positions (1-5, overrides, pos1 with human pos5).
--- Priority order: camp stack → last hit → deny → harass → wave push → lane position
+-- Fluidity model (ported from upstream ryndrb/dota2bot):
+--   1. Let Action_AttackUnit run uninterrupted when last-hitting / denying.
+--   2. Debounce the *fallback* move so the hero doesn't get re-ordered every tick.
+--   3. Use Action_MoveDirectly (not IssueMove) to step into exact attack range,
+--      with bounding-radius math so we stop *precisely* in range and attack.
+--   4. Drop tower aggro the moment the enemy T1 targets us.
+--   5. Pull back if we dove the enemy tower without creep cover.
 -- Wrapped in pcall so Lua errors are both printed and chatted in-game.
-local _lastErrChatTime = -999
+local _lastErrChatTime   = -999
+local fNextMovementTime  = 0
+
+-- Drop tower aggro: if the enemy tower targets us, hand the aggro to the
+-- nearest ally creep by attacking it; if no creep is available, retreat home.
+local function DropTowerAggro(hUnit, nUnitList)
+	if not J.IsValid(hUnit) then return false end
+	local nEnemyTowers = hUnit:GetNearbyTowers(800, true)
+	if not J.IsValidBuilding(nEnemyTowers[1]) then return false end
+	if nEnemyTowers[1]:GetAttackTarget() ~= hUnit then return false end
+	for _, creep in pairs(nUnitList) do
+		if J.IsValid(creep) and GetUnitToUnitDistance(creep, nEnemyTowers[1]) < 700 then
+			hUnit:Action_AttackUnit(creep, false)
+			return true
+		end
+	end
+	J.IssueMove(hUnit, J.GetTeamFountain())
+	return true
+end
+
+-- Find a creep (e.g. siege) at a tower location — used for "attack tower while
+-- our creep tanks it" opportunistic assist.
+local function GetCreepInLocation(sCreepName, vLocation, nRadius, bEnemy)
+	local list = bEnemy and GetUnitList(UNIT_LIST_ENEMY_CREEPS) or GetUnitList(UNIT_LIST_ALLIED_CREEPS)
+	for _, creep in pairs(list) do
+		if J.IsValid(creep)
+		and GetUnitToLocationDistance(creep, vLocation) <= nRadius
+		and string.find(creep:GetUnitName(), sCreepName) then
+			return creep
+		end
+	end
+	return nil
+end
 
 function Think()
 	local ok, err = pcall(function()
+		if J.CanNotUseAction(bot) then return end
+
 		local pos  = J.GetPosition(bot)
 		local myHp = J.GetHP(bot)
 
+		-- Reload per-frame lane state cheaply (GetDesire caches most of this).
+		local nEnemyTowers = bot:GetNearbyTowers(1200, true)
+		local nInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
+
+		-- PRIORITY 0 (always first): drop tower aggro if we're being shot at.
+		if DropTowerAggro(bot, nAllyCreeps) then return end
+
 		-- PRIORITY 1: Support camp stacking (:52-:57 window, pos4-5 only)
 		if pos >= 4 then
-			local allyHeroes = bot:GetNearbyHeroes(2000, false, BOT_MODE_NONE)
 			local hasCore = false
-			for _, ally in ipairs(allyHeroes) do
+			for _, ally in ipairs(nInRangeAlly) do
 				if J.IsValid(ally) and J.IsCore(ally) then hasCore = true; break end
 			end
 			if LPressure.ShouldSupportStack(bot, hasCore, myHp) then
 				local campLoc = LPressure.GetNearestAllyCamp(bot)
 				if campLoc then
-					bot:Action_MoveToLocation(campLoc)
+					J.IssueMove(bot, campLoc)
 					return
 				end
 			end
 		end
 
-		-- PRIORITY 2: Last hit enemy creeps
-		-- Cores always last hit; supports only if no core is nearby to do it
-		local canLastHit = pos <= 3 or not J.IsThereNonSelfCoreNearby(700)
-		if canLastHit then
-			local hitCreep, moveToIt = GetBestLastHitCreep(nEnemyCreeps)
-			if J.IsValid(hitCreep) then
-				local dist = GetUnitToUnitDistance(bot, hitCreep)
-				local threshold = moveToIt and botAttackRange * 0.8 or botAttackRange
-				if dist > threshold then
-					bot:Action_MoveToUnit(hitCreep)
-				else
-					bot:SetTarget(hitCreep)
-					bot:Action_AttackUnit(hitCreep, true)
+		-- PRIORITY 2: Pull back if dove the enemy tower without creep cover.
+		-- Spaced by fNextMovementTime so we don't re-issue every tick.
+		if J.IsValidBuilding(nEnemyTowers[1]) then
+			local distTower = GetUnitToUnitDistance(bot, nEnemyTowers[1])
+			local enemyCreepsAtTower = bot:GetNearbyLaneCreeps(800, true)
+			if distTower < 800 and #enemyCreepsAtTower < 3 then
+				if DotaTime() >= fNextMovementTime then
+					bot:Action_MoveDirectly(J.VectorAway(bot:GetLocation(), nEnemyTowers[1]:GetLocation(), 950) + RandomVector(75))
+					fNextMovementTime = DotaTime() + RandomFloat(1, 3)
 				end
 				return
 			end
 		end
 
-		-- PRIORITY 3: Deny dying ally creeps
+		-- PRIORITY 3: Last hit enemy creeps.
+		-- Use Action_MoveDirectly into bounding-radius-adjusted spot so the bot
+		-- stops *exactly* at attack range and immediately swings — the single
+		-- biggest fluidity win over Action_MoveToUnit.
+		local canLastHit = pos <= 3 or not J.IsThereNonSelfCoreNearby(700)
+		if canLastHit then
+			local hitCreep, moveToIt = GetBestLastHitCreep(nEnemyCreeps)
+			if J.IsValid(hitCreep) then
+				local dist = GetUnitToUnitDistance(bot, hitCreep)
+				if dist > botAttackRange then
+					bot:Action_MoveDirectly(J.VectorTowards(hitCreep:GetLocation(), bot:GetLocation(), botAttackRange - hitCreep:GetBoundingRadius()))
+				else
+					-- Direct Action_AttackUnit (no debounce) so wind-up never gets cancelled.
+					bot:SetTarget(hitCreep)
+					bot:Action_AttackUnit(hitCreep, false)
+				end
+				return
+			end
+		end
+
+		-- PRIORITY 4: Deny dying ally creeps
 		local denyCreep = GetBestDenyCreep(nAllyCreeps)
 		if J.IsValid(denyCreep) then
 			bot:SetTarget(denyCreep)
@@ -262,73 +324,63 @@ function Think()
 			return
 		end
 
-		-- PRIORITY 4: Harass — attack enemy heroes in range
-		-- Cores harass when aggrMult >= 0.85 (almost always unless we're weak matchup)
-		-- Supports harass at spike (aggrMult >= 1.2)
-		-- Range vs melee: if our hero is ranged and ALL nearby enemies are melee,
-		-- lower the threshold by 0.5 (e.g. ranged core: 0.85→0.35, ranged support: 1.2→0.7)
+		-- PRIORITY 5: Siege-assist — if enemy tower is shooting a creep and we
+		-- have wave advantage, chip the tower while our creeps tank.
+		if J.IsValidBuilding(nEnemyTowers[1])
+		and J.CanBeAttacked(nEnemyTowers[1])
+		and J.IsValid(nEnemyTowers[1]:GetAttackTarget())
+		and nEnemyTowers[1]:GetAttackTarget():IsCreep()
+		and #nInRangeAlly >= (nInRangeEnemy and #nInRangeEnemy or 0) then
+			local siegeCreep = GetCreepInLocation('siege', nEnemyTowers[1]:GetLocation(), 800, false)
+			if J.IsValid(siegeCreep) and J.GetHP(siegeCreep) >= 0.5
+			and siegeCreep:GetAttackTarget() == nEnemyTowers[1] then
+				bot:Action_AttackUnit(nEnemyTowers[1], true)
+				return
+			end
+		end
+
+		-- PRIORITY 6: Harass — attack enemy heroes in range
 		local rangeAdj    = LPressure.GetRangeMatchupAdjust(bot, nInRangeEnemy)
 		local harassThresh = (pos <= 3 and 0.85 or 1.2) + rangeAdj
+		-- Supports: don't harass while we have creep aggro (≥2 nearby enemy creeps)
+		local closeEnemyCreeps = bot:GetNearbyLaneCreeps(600, true)
+		local creepAggroSafe   = pos <= 3 or #closeEnemyCreeps <= 1
 		if myHp > 0.5 and nInRangeEnemy and #nInRangeEnemy > 0
-		and _lp_aggrMult >= harassThresh then
+		and creepAggroSafe and _lp_aggrMult >= harassThresh then
 			local bestTarget, bestHp = nil, 1.1
 			for _, enemy in ipairs(nInRangeEnemy) do
 				if J.IsValidHero(enemy) and not J.IsSuspiciousIllusion(enemy)
 				and J.IsInRange(bot, enemy, botAttackRange + 100)
 				and J.GetHP(enemy) < bestHp then
-					bestHp    = J.GetHP(enemy)
+					bestHp     = J.GetHP(enemy)
 					bestTarget = enemy
 				end
 			end
 			if bestTarget then
 				bot:SetTarget(bestTarget)
-				bot:Action_AttackUnit(bestTarget, false)
+				bot:Action_AttackUnit(bestTarget, true)
 				return
 			end
 		end
 
-		-- PRIORITY 5: Wave push — clear enemy creeps to pressure tower
-		-- Push when ally wave >= enemy wave (or no threats), HP safe, and aggression is ok
-		local nAllyCount  = nAllyCreeps  and #nAllyCreeps  or 0
-		local nEnemyCount = nEnemyCreeps and #nEnemyCreeps or 0
-		local nThreat     = nInRangeEnemy and #nInRangeEnemy or 0
-		if nEnemyCount > 0 and myHp > 0.5
-		and (nAllyCount >= nEnemyCount or nThreat == 0)
-		and (_lp_aggrMult >= 1.0 or nThreat == 0) then
-			local weakest, weakHp = nil, math.huge
-			for _, creep in pairs(nEnemyCreeps) do
-				if J.IsValid(creep) and J.CanBeAttacked(creep) then
-					local hp = creep:GetHealth()
-					if hp < weakHp then weakHp = hp; weakest = creep end
-				end
-			end
-			if weakest then
-				if GetUnitToUnitDistance(bot, weakest) > botAttackRange then
-					bot:Action_MoveToUnit(weakest)
-				else
-					bot:SetTarget(weakest)
-					bot:Action_AttackUnit(weakest, false)
-				end
-				return
-			end
-		end
-
-		-- PRIORITY 6: Hero-override specific logic (Tinker, Morphling, etc.)
+		-- PRIORITY 7: Hero-override specific logic (Tinker, Morphling, etc.)
 		if local_mode_laning_generic then
 			local_mode_laning_generic.Think()
 			return
 		end
 
-		-- FALLBACK: Move to optimal lane position
-		if botAssignedLane then
+		-- FALLBACK: walk to lane front, but only every 0.3–0.9s so we don't
+		-- re-issue movement on every tick (the smoothness trick).
+		if botAssignedLane and DotaTime() >= fNextMovementTime then
+			local nLongestAttackRange    = math.max(botAttackRange, 250, nFurthestEnemyAttackRange)
 			local fLaneFrontAmount       = GetLaneFrontAmount(GetTeam(), botAssignedLane, false)
 			local fLaneFrontAmount_enemy = GetLaneFrontAmount(GetOpposingTeam(), botAssignedLane, false)
-			local nLongestAttackRange    = math.max(botAttackRange, 250, nFurthestEnemyAttackRange)
 			local target_loc = GetLaneFrontLocation(GetTeam(), botAssignedLane, -nLongestAttackRange)
 			if fLaneFrontAmount_enemy < fLaneFrontAmount then
 				target_loc = GetLaneFrontLocation(GetOpposingTeam(), botAssignedLane, -nLongestAttackRange)
 			end
-			bot:Action_MoveToLocation(target_loc + RandomVector(50))
+			bot:Action_MoveToLocation(target_loc + RandomVector(100))
+			fNextMovementTime = DotaTime() + RandomFloat(0.3, 0.9)
 		end
 	end)
 

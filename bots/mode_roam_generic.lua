@@ -235,7 +235,7 @@ function ThinkIndividualRoaming()
 	-- Batrider
 	if bot:HasModifier('modifier_batrider_flaming_lasso_self')
 	then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
@@ -287,7 +287,7 @@ function ThinkIndividualRoaming()
 
 		if J.IsRetreating(bot)
 		then
-			bot:Action_MoveToLocation(J.GetTeamFountain())
+			J.IssueMoveFallback(bot, J.GetTeamFountain())
 			return
 		end
 
@@ -723,7 +723,7 @@ end
 function TrampleToBase()
 	trample_step = 12
 	trample = {}
-	bot:Action_MoveToLocation(J.GetTeamFountain())
+	J.IssueMoveFallback(bot, J.GetTeamFountain())
 end
 
 function ThinkGeneralRoaming()
@@ -772,7 +772,7 @@ function ThinkGeneralRoaming()
 	and bot:GetActiveModeDesire() > BOT_MODE_DESIRE_VERYHIGH
 	and (botName == 'npc_dota_hero_lone_druid_bear' or bot:HasModifier('modifier_arc_warden_tempest_double') or J.IsMeepoClone(bot))
 	then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
@@ -792,7 +792,7 @@ function ThinkGeneralRoaming()
 
 	if J.GetModifierTime(bot, "modifier_flask_healing") >= 1 then
 		if #bot:GetNearbyHeroes(1000, true, BOT_MODE_NONE) >= 1 and J.GetHP(bot) < 0.8 then
-			bot:Action_MoveToLocation(J.GetTeamFountain())
+			J.IssueMoveFallback(bot, J.GetTeamFountain())
 			return
 		end
 	end
@@ -828,62 +828,62 @@ function ThinkGeneralRoaming()
 
 	if botName == 'npc_dota_hero_lone_druid' then
 		if J.GetHP(bot) < 0.65 or J.GetMP(bot) < 0.35 then
-			bot:Action_MoveToLocation(J.GetTeamFountain()); return
+			J.IssueMoveFallback(bot, J.GetTeamFountain()); return
 		end
 	end
 
 	if bot:HasModifier("modifier_ursa_fury_swipes_damage_increase") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if bot:HasModifier("modifier_monkey_king_quadruple_tap_counter") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if bot:HasModifier("modifier_slark_essence_shift_debuff_counter") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if bot:HasModifier("modifier_silencer_glaives_of_wisdom_debuff_counter") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if bot:HasModifier("modifier_dazzle_poison_touch") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if bot:HasModifier("modifier_maledict") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if bot:HasModifier("modifier_viper_poison_attack_slow") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if J.GetModifierCount(bot, "modifier_huskar_burning_spear_debuff") >= 3 then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if J.GetModifierCount(bot, "modifier_batrider_sticky_napalm") >= 3 then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if bot:HasModifier("modifier_undying_tombstone_zombie_deathstrike_slow") then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if J.GetModifierCount(bot, "modifier_bristleback_quill_spray") >= 3 then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
@@ -896,19 +896,19 @@ function ThinkGeneralRoaming()
 			if distanceFromFountain > towerFromFountain and distanceToTower > 300 then
 				bot:Action_MoveToLocation(allyTowers[1]:GetLocation() + RandomVector(150))
 			else
-				bot:Action_MoveToLocation(J.GetTeamFountain())
+				J.IssueMoveFallback(bot, J.GetTeamFountain())
 			end
 			return
 		end
 	end
 
 	if shouldTempRetreat then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 
 	if shouldGoBackToFountain then
-		bot:Action_MoveToLocation(J.GetTeamFountain())
+		J.IssueMoveFallback(bot, J.GetTeamFountain())
 		return
 	end
 end
@@ -929,7 +929,7 @@ end
 function MoveAwayFromTarget(target, keepDistance)
 	if J.IsValidHero(target) and GetUnitToUnitDistance(bot, target) < keepDistance then
 		if GetUnitToLocationDistance(target, J.GetTeamFountain()) > GetUnitToLocationDistance(bot, J.GetTeamFountain()) then
-			bot:Action_MoveToLocation(J.GetTeamFountain())
+			J.IssueMoveFallback(bot, J.GetTeamFountain())
 		else
 			bot:Action_MoveToLocation(J.Utils.GetOffsetLocationTowardsTargetLocation(target:GetLocation(), bot:GetLocation(), keepDistance * 2))
 		end

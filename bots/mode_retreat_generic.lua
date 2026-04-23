@@ -278,6 +278,24 @@ function GetDesireHelper()
         end
     end
 
+    -- Early escape: if bot is parked at fountain with full HP/MP and no
+    -- real threat, clear latched run-timer and yield so another mode (farm /
+    -- push / defend / roam) can take over. Without this, ConsiderCompleteItem
+    -- or a stale fCurrentRunTime can keep a healthy bot glued to base.
+    if bot:IsAlive()
+        and bot:DistanceFromFountain() < 1400
+        and botHP >= 0.98
+        and botMP >= 0.9
+        and not bot:WasRecentlyDamagedByAnyHero(3)
+        and #nEnemyHeroes == 0
+        and not C.haveEnemyTowerThreat
+        and not bot:HasModifier('modifier_teleporting')
+    then
+        fCurrentRunTime = 0
+        fShouldRunTime = 0
+        return BOT_MODE_DESIRE_NONE
+    end
+
     -- should directly run
     if bot:IsAlive() then
         if fCurrentRunTime ~= 0 and DotaTime() < fCurrentRunTime + fShouldRunTime then
@@ -295,10 +313,19 @@ function GetDesireHelper()
         end
     end
 
-    -- try complete items
-    local nCompletItemDesire = X.ConsiderCompleteItem()
-    if nCompletItemDesire > 0 then
-        return nCompletItemDesire
+    -- try complete items -- but only if bot actually needs to go home.
+    -- Without this guard, having any combinable recipe in stash drags a
+    -- full-HP bot back to base, which is a common "bot runs home for no
+    -- reason" bug.
+    if botHP < 0.85
+        or botMP < 0.6
+        or bot:DistanceFromFountain() < 2500
+        or bot:HasModifier('modifier_fountain_aura_buff')
+    then
+        local nCompletItemDesire = X.ConsiderCompleteItem()
+        if nCompletItemDesire > 0 then
+            return nCompletItemDesire
+        end
     end
 
     -- ==== nearby counts (reusing context + last-seen augmentation) ====

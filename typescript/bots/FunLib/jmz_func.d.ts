@@ -20,6 +20,10 @@ interface IItem {
     GetRoleItemsBuyList(bot: Unit): BotRole;
 }
 
+declare function IssueMove(bot: Unit, loc: Vector, tolerance?: number, minInterval?: number): void;
+declare function IssueAttackMove(bot: Unit, loc: Vector, tolerance?: number, minInterval?: number): void;
+declare function IssueAttackUnit(bot: Unit, target: Unit, bOnce?: boolean): void;
+
 declare function IsInTeamFight(bot: Unit, radius: number): boolean;
 
 declare function IsRetreating(bot: Unit): boolean;
