@@ -1,52 +1,108 @@
 local X = {}
-local bear = GetBot()
+local bot = GetBot()
 
-local Utils = require( GetScriptDirectory()..'/FunLib/utils' )
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func' )
 local Minion = dofile( GetScriptDirectory()..'/FunLib/aba_minion' )
+local sTalentList = J.Skill.GetTalentList( bot )
+local sAbilityList = J.Skill.GetAbilityList( bot )
+local sRole = J.Item.GetRoleItemsBuyList( bot )
 
-if Utils.GetLoneDruid(bear).bear == nil or not Utils.GetLoneDruid(bear).bear:IsAlive() then Utils.GetLoneDruid(bear).bear = bear end
-bear.assignedRole = Utils.GetLoneDruid(bear).hero.assignedRole -- math.min(1, Utils['LoneDruid'].hero.assignedRole - 1)
-bear.isBear = true
+if GetBot():GetUnitName() == 'npc_dota_hero_lone_druid_bear'
+then
 
-local sTalentList = J.Skill.GetTalentList( bear )
-local sAbilityList = J.Skill.GetAbilityList( bear )
-local sRole = J.Item.GetRoleItemsBuyList( bear )
+local RI = require(GetScriptDirectory()..'/FunLib/util_role_item')
 
-local tTalentTreeList = {--pos2
-                        ['t25'] = {0, 10},
-                        ['t20'] = {0, 10},
-                        ['t15'] = {0, 10},
-                        ['t10'] = {0, 10},
+local sUtility = {"item_pipe", "item_lotus_orb"}
+local sUtilityItem = RI.GetBestUtilityItem(sUtility)
+
+local HeroBuild = {
+    ['pos_1'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {
+                    ['t25'] = {10, 0},
+                    ['t20'] = {0, 10},
+                    ['t15'] = {0, 10},
+                    ['t10'] = {0, 10},
+                }
+            },
+            ['ability'] = {
+                [1] = {1,2,1,2,1,2,1,2,6,3,6,3,3,3,6},
+            },
+            ['buy_list'] = {
+            },
+            ['sell_list'] = {
+                "item_quelling_blade", "item_basher",
+                -- "item_quelling_blade", "item_ultimate_scepter",
+            },
+        },
+    },
+    ['pos_2'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {
+                    ['t25'] = {10, 0},
+                    ['t20'] = {0, 10},
+                    ['t15'] = {0, 10},
+                    ['t10'] = {0, 10},
+                }
+            },
+            ['ability'] = {
+                [1] = {1,2,1,2,1,2,1,2,6,3,6,3,3,3,6},
+            },
+            ['buy_list'] = {
+            },
+            ['sell_list'] = {
+                "item_quelling_blade", "item_basher",
+                -- "item_quelling_blade", "item_ultimate_scepter",
+            },
+        },
+    },
+    ['pos_3'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {}
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_4'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_5'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
 }
 
-local tAllAbilityBuildList = {
-                        {1,2,1,2,1,6,1,2,2,3,6,3,3,3,6},--pos2
-}
+local sSelectedBuild = HeroBuild[sRole][RandomInt(1, #HeroBuild[sRole])]
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+local nTalentBuildList = J.Skill.GetTalentBuild(J.Skill.GetRandomBuild(sSelectedBuild.talent))
+local nAbilityBuildList = J.Skill.GetRandomBuild(sSelectedBuild.ability)
 
-local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
-
-local sRoleItemsBuyList = {}
-
-sRoleItemsBuyList['pos_1'] = { }
-
-sRoleItemsBuyList['pos_2'] = sRoleItemsBuyList['pos_1']
-
-sRoleItemsBuyList['pos_3'] = sRoleItemsBuyList['pos_1']
-
-sRoleItemsBuyList['pos_4'] = sRoleItemsBuyList['pos_1']
-
-sRoleItemsBuyList['pos_5'] = sRoleItemsBuyList['pos_1']
-
-X['sBuyList'] = sRoleItemsBuyList[sRole]
-
-X['sSellList'] = {
-
-	"item_black_king_bar",
-	"item_quelling_blade",
-}
+X['sBuyList'] = sSelectedBuild.buy_list
+X['sSellList'] = sSelectedBuild.sell_list
 
 if J.Role.IsPvNMode() or J.Role.IsAllShadow() then X['sBuyList'], X['sSellList'] = { 'PvN_antimage' }, {} end
 
@@ -61,64 +117,56 @@ function X.MinionThink(hMinionUnit)
     Minion.MinionThink(hMinionUnit)
 end
 
--- Ability usage logic
-local abilityQ = bear:GetAbilityByName(sAbilityList[1])
-local SavageRoar = bear:GetAbilityByName('lone_druid_savage_roar_bear')
-
-local castQDesire
-local castSavageRoarDesire
-
-local hEnemyList, hAllyList, botTarget, distanceFromHero
-
-function X.SkillsComplement()
-
-    if J.CanNotUseAbility(bear) or bear:IsInvisible() then return end
-
-    botTarget = J.GetProperTarget(Utils.GetLoneDruid(bear).hero)
-    if botTarget ~= nil then bear:SetTarget(botTarget) end
-    botTarget = J.GetProperTarget(bear)
-
-    distanceFromHero = GetUnitToUnitDistance(Utils.GetLoneDruid(bear).hero, bear)
-
-    -- hEnemyList = J.GetNearbyHeroes(bear, 1600, true, BOT_MODE_NONE)
-    -- hAllyList = J.GetNearbyHeroes(bear, 1600, false, BOT_MODE_NONE)
-
-    castQDesire = X.ConsiderQ()
-    if castQDesire > 0 then
-        bear:Action_UseAbility(abilityQ)
-        return
-    end
-
-    castSavageRoarDesire = X.ConsiderSavageRoar()
-    if castSavageRoarDesire > 0 then
-        bear:Action_UseAbility(SavageRoar)
-        return
-    end
-
 end
 
-function X.ConsiderQ()
-    if not abilityQ:IsFullyCastable() then return 0 end
-    if not Utils.GetLoneDruid(bear).hero:IsAlive() then return 0 end
+local Return = bot:GetAbilityByName('lone_druid_spirit_bear_return')
+local SavageRoar = bot:GetAbilityByName('lone_druid_savage_roar_bear')
 
-    if J.GetHP(bear) < 0.9 and bear:DistanceFromFountain() < 450 then return 0 end
+local ReturnDesire
+local SavageRoarDesire
 
-    -- too far from hero
-    if distanceFromHero > 3000
-    and J.GetHP(bear) > 0.25
-    and not J.IsRetreating(bear)
-    and not J.Item.HasItem( bear, 'item_ultimate_scepter' ) then
-        return BOT_ACTION_DESIRE_HIGH
+function X.SkillsComplement()
+    bot = GetBot()
+
+    for i = 1, 5 do
+        local member = GetTeamMember(i)
+        if member ~= nil and member:GetUnitName() == 'npc_dota_hero_lone_druid' then
+            if member.bearItems == nil then member.bearItems = {[0]='',[1]='',[2]='',[3]='',[4]='',[5]='',[6]='',[7]='',[8]=''} end
+            for j = 0, 8 do
+                local hItem = bot:GetItemInSlot(j)
+                if hItem ~= nil then
+                    member.bearItems[j] = hItem:GetName()
+                end
+            end
+            break
+        end
     end
 
-    -- hero is being attacked
-    if Utils.GetLoneDruid(bear).hero:WasRecentlyDamagedByAnyHero(2)
-    and J.GetHP(Utils.GetLoneDruid(bear).hero) < 0.9
-    and J.GetHP(bear) > 0.25
-    and not J.IsRetreating(bear)
-    and distanceFromHero > 3000 then
-        local nInRangeEnemy = J.GetNearbyHeroes(Utils.GetLoneDruid(bear).hero, 1000, true, BOT_MODE_NONE)
-        if #nInRangeEnemy >= 1 then
+    if J.CanNotUseAbility(bot) then return end
+
+    ReturnDesire = X.ConsiderReturn()
+    if ReturnDesire > 0 then
+        bot:Action_UseAbility(Return)
+        return
+    end
+
+    SavageRoarDesire = X.ConsiderSavageRoar()
+    if SavageRoarDesire > 0
+    then
+        bot:Action_UseAbility(SavageRoar)
+        return
+    end
+end
+
+function X.ConsiderReturn()
+    if not J.CanCastAbility(Return) then
+        return BOT_ACTION_DESIRE_NONE
+    end
+
+    local LoneDruid = J.CheckLoneDruid()
+
+    if LoneDruid.hero ~= nil and LoneDruid.bear ~= nil then
+        if GetUnitToUnitDistance(LoneDruid.hero, LoneDruid.bear) > 3000 then
             return BOT_ACTION_DESIRE_HIGH
         end
     end
@@ -127,57 +175,53 @@ function X.ConsiderQ()
 end
 
 function X.ConsiderSavageRoar()
-    if not SavageRoar:IsFullyCastable() then return 0 end
-
-    local nRadius = SavageRoar:GetSpecialValueInt('radius')
-    local nInRangeEnemy = J.GetNearbyHeroes(bear, nRadius, true, BOT_MODE_NONE)
-
-    for _, enemyHero in pairs(nInRangeEnemy) do
-		if J.IsValidTarget(enemyHero)
-        -- and J.IsInRange(bear, enemyHero, nRadius)
-        and (J.IsChasingTarget(enemyHero, bear)
-            or J.IsAttacking(enemyHero)
-            or J.IsMoving(enemyHero)
-            or enemyHero:IsChanneling()
-            or enemyHero:IsUsingAbility())
-        and not J.IsSuspiciousIllusion(enemyHero)
-        and not J.IsDisabled(enemyHero)
-        and J.CanCastOnNonMagicImmune( enemyHero )
-        and J.CanCastOnTargetAdvanced( enemyHero )
-		then
-            return BOT_ACTION_DESIRE_HIGH
-		end
+    if not J.CanCastAbility(SavageRoar) then
+        return BOT_ACTION_DESIRE_NONE
     end
 
-    if J.IsGoingOnSomeone(bear)
-	then
-		if J.IsValidTarget(botTarget)
-        and J.IsInRange(bear, botTarget, nRadius)
-        and not J.IsSuspiciousIllusion(botTarget)
+    local nRadius = SavageRoar:GetSpecialValueInt('radius')
+    local botTarget = J.GetProperTarget(bot)
+    local nAllyHeroes = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
+    local nEnemyHeroes = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
+
+	for _, enemyHero in pairs(nEnemyHeroes) do
+		if J.IsValidHero(enemyHero)
+		and J.IsInRange(bot, enemyHero, nRadius)
+		and J.CanCastOnNonMagicImmune(enemyHero)
 		then
-            return BOT_ACTION_DESIRE_HIGH
+			if enemyHero:HasModifier('modifier_teleporting') then
+				return BOT_ACTION_DESIRE_HIGH
+			end
 		end
 	end
 
-    if J.IsDoingRoshan(bear)
-    then
-        if J.IsRoshan(botTarget)
-        and J.IsInRange(bear, botTarget, 500)
-        and J.IsAttacking(bear)
-        then
-            return BOT_ACTION_DESIRE_HIGH
-        end
-    end
+    if J.IsGoingOnSomeone(bot) then
+		if  J.IsValidTarget(botTarget)
+        and J.IsInRange(bot, botTarget, nRadius)
+        and J.CanCastOnNonMagicImmune(botTarget)
+        and not J.IsChasingTarget(bot, botTarget)
+        and not J.IsDisabled(botTarget)
+        and not botTarget:HasModifier('modifier_necrolyte_reapers_scythe')
+		then
+            if #nAllyHeroes >= #nEnemyHeroes and not (#nAllyHeroes >= #nEnemyHeroes + 2) then
+                return BOT_ACTION_DESIRE_HIGH
+            end
+		end
+	end
 
-    if J.IsDoingTormentor(bear)
-    then
-        if J.IsTormentor(botTarget)
-        and J.IsInRange(bear, botTarget, 500)
-        and J.IsAttacking(bear)
-        then
-            return BOT_ACTION_DESIRE_HIGH
+    if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
+        for _, enemyHero in pairs(nEnemyHeroes) do
+            if  J.IsValidHero(enemyHero)
+            and J.CanBeAttacked(enemyHero)
+            and J.IsInRange(bot, enemyHero, nRadius)
+            and J.CanCastOnNonMagicImmune(enemyHero)
+            and not J.IsDisabled(enemyHero)
+            and bot:WasRecentlyDamagedByHero(enemyHero, 2.0)
+            then
+                return BOT_ACTION_DESIRE_HIGH
+            end
         end
-    end
+	end
 
     return BOT_ACTION_DESIRE_NONE
 end

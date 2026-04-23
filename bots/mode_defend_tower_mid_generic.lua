@@ -1,11 +1,10 @@
 local Defend = require( GetScriptDirectory()..'/FunLib/aba_defend')
 
-local bot = GetBot()
-local botName = bot:GetUnitName()
-
-if bot:IsInvulnerable() or not bot:IsHero() or not string.find(botName, "hero") or bot:IsIllusion() then
-	return
+function GetDesire()
+    GetBot().DefendLaneDesire[LANE_MID] = Defend.GetDefendDesire(GetBot(), LANE_MID)
+    return GetBot().DefendLaneDesire[LANE_MID]
 end
 
-function GetDesire() return Defend.GetDefendDesire(bot, LANE_MID) end
-function Think() Defend.DefendThink(bot, LANE_MID) end
+function Think()
+    Defend.DefendThink(GetBot(), LANE_MID)
+end

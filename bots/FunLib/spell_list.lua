@@ -64,9 +64,11 @@ X['spells'] = {
     
     ['npc_dota_hero_beastmaster'] = {
         ['beastmaster_wild_axes'] = {weight = 0.4},
-        ['beastmaster_call_of_the_wild_razorback'] = {weight = 1},
+        ['beastmaster_call_of_the_wild_boar'] = {weight = 1},
+        ['beastmaster_call_of_the_wild_hawk'] = {weight = 1},
+        ['beastmaster_summon_razorback'] = {weight = 1},
+        ['beastmaster_summon_raptor'] = {weight = 1},
         ['beastmaster_inner_beast'] = {weight = 1},
-        ['beastmaster_call_of_the_wild_raptor'] = {weight = 1},
     },
     
     ['npc_dota_hero_bloodseeker'] = {
@@ -128,11 +130,13 @@ X['spells'] = {
         ['chen_holy_persuasion'] = {weight = 1},
         ['chen_divine_favor'] = {weight = 0.1},
         ['chen_summon_convert'] = {weight = 1},
+        ['chen_zealot'] = {weight = 1},
         ['chen_hand_of_god'] = {weight = 0.2},
     },
     
     ['npc_dota_hero_clinkz'] = {
         ['clinkz_strafe'] = {weight = 0.9},
+        ['clinkz_searing_arrows'] = {weight = 0.9},
         ['clinkz_tar_bomb'] = {weight = 0.8},
         ['clinkz_death_pact'] = {weight = 0.9},
         ['clinkz_burning_barrage'] = {weight = 0.9},
@@ -374,6 +378,16 @@ X['spells'] = {
         ['kunkka_ghostship'] = {weight = 0.8},
     },
     
+    ['npc_dota_hero_largo'] = {
+        ['largo_catchy_lick'] = {weight = 0.3},
+        ['largo_frogstomp'] = {weight = 0.4},
+        ['largo_croak_of_genius'] = {weight = 0.4},
+        ['largo_amphibian_rhapsody'] = {weight = 1},
+        ['largo_song_fight_song'] = {weight = 1},
+        ['largo_song_double_time'] = {weight = 1},
+        ['largo_song_good_vibrations'] = {weight = 1},
+    },
+    
     ['npc_dota_hero_legion_commander'] = {
         ['legion_commander_overwhelming_odds'] = {weight = 0.8},
         ['legion_commander_press_the_attack'] = {weight = 0.2},
@@ -393,6 +407,7 @@ X['spells'] = {
         ['lich_frost_nova'] = {weight = 0.4},
         ['lich_frost_shield'] = {weight = 0.4},
         ['lich_sinister_gaze'] = {weight = 0.7},
+        ['lich_death_charge'] = {weight = 0.5},
         ['lich_ice_spire'] = {weight = 0.9},
         ['lich_chain_frost'] = {weight = 0.1},
     },
@@ -419,6 +434,13 @@ X['spells'] = {
         ['lion_voodoo'] = {weight = 0},
         ['lion_mana_drain'] = {weight = 0.5},
         ['lion_finger_of_death'] = {weight = 0.5},
+    },
+
+    ['npc_dota_hero_lone_druid'] = {
+        ['lone_druid_entangle'] = {weight = 0.6},
+        ['lone_druid_savage_roar'] = {weight = 0.8},
+        ['lone_druid_spirit_bear'] = {weight = 1},
+        ['lone_druid_true_form'] = {weight = 0.8},
     },
 
     ['npc_dota_hero_luna'] = {
@@ -483,6 +505,7 @@ X['spells'] = {
         ['mirana_starfall'] = {weight = 0.8},
         ['mirana_arrow'] = {weight = 0.5},
         ['mirana_leap'] = {weight = 0.5},
+        ['mirana_celestial_quiver'] = {weight = 0.9},
         ['mirana_invis'] = {weight = 0.5},
     },
 
@@ -504,6 +527,7 @@ X['spells'] = {
         ['muerta_ofrenda'] = {weight = 1},
         ['muerta_ofrenda_destroy'] = {weight = 1},
         ['muerta_parting_shot'] = {weight = 0.5},
+        ['muerta_spectral_slug'] = {weight = 0.5},
         ['muerta_pierce_the_veil'] = {weight = 0.9},
     },
 
@@ -539,6 +563,7 @@ X['spells'] = {
         ['night_stalker_void'] = {weight = 0.5},
         ['night_stalker_crippling_fear'] = {weight = 0.5},
         ['night_stalker_hunter_in_the_night'] = {weight = 1},
+        ['night_stalker_midnight_feast'] = {weight = 0.8},
         ['night_stalker_darkness'] = {weight = 0.8},
     },
 
@@ -554,8 +579,8 @@ X['spells'] = {
     ['npc_dota_hero_obsidian_destroyer'] = {
         ['obsidian_destroyer_arcane_orb'] = {weight = 1},
         ['obsidian_destroyer_astral_imprisonment'] = {weight = 0.2},
-        ['obsidian_destroyer_essence_aura'] = {weight = 1},
-        ['obsidian_destroyer_objurgation'] = {weight = 0.8},
+        ['obsidian_destroyer_equilibrium'] = {weight = 1},
+        ['obsidian_destroyer_objurgation'] = {weight = 0.3},
         ['obsidian_destroyer_sanity_eclipse'] = {weight = 0.5},
     },
 
@@ -716,6 +741,7 @@ X['spells'] = {
         ['shadow_shaman_ether_shock'] = {weight = 0.5},
         ['shadow_shaman_voodoo'] = {weight = 0},
         ['shadow_shaman_shackles'] = {weight = 0},
+        ['shadow_shaman_urnaconda'] = {weight = 0.2},
         ['shadow_shaman_mass_serpent_ward'] = {weight = 0.2},
     },
 
@@ -763,6 +789,7 @@ X['spells'] = {
         ['slark_dark_pact'] = {weight = 0.5},
         ['slark_pounce'] = {weight = 0.6},
         ['slark_essence_shift'] = {weight = 1},
+        ['slark_saltwater_shiv'] = {weight = 0.8},
         ['slark_depth_shroud'] = {weight = 0.2},
         ['slark_shadow_dance'] = {weight = 0.6},
     },
@@ -800,16 +827,6 @@ X['spells'] = {
         ['spirit_breaker_planar_pocket'] = {weight = 0.7},
         ['spirit_breaker_nether_strike'] = {weight = 0.6},
     },
-    
-    ['npc_dota_hero_largo'] = {
-        ['largo_catchy_lick'] = {weight = 0.3},
-        ['largo_frogstomp'] = {weight = 0.4},
-        ['largo_croak_of_genius'] = {weight = 0.4},
-        ['largo_amphibian_rhapsody'] = {weight = 1},
-        ['largo_song_fight_song'] = {weight = 1},
-        ['largo_song_double_time'] = {weight = 1},
-        ['largo_song_good_vibrations'] = {weight = 1},
-    },
 
     ['npc_dota_hero_storm_spirit'] = {
         ['storm_spirit_static_remnant'] = {weight = 0.8},
@@ -830,6 +847,8 @@ X['spells'] = {
         ['techies_reactive_tazer'] = {weight = 0.5},
         ['techies_reactive_tazer_stop'] = {weight = 1},
         ['techies_suicide'] = {weight = 1},
+        ['techies_mutually_assured_destruction'] = {weight = 1},
+        ['techies_focused_detonate'] = {weight = 1},
         ['techies_minefield_sign'] = {weight = 1},
         ['techies_land_mines'] = {weight = 0.5},
     },
@@ -864,7 +883,8 @@ X['spells'] = {
         ['tinker_laser'] = {weight = 0.3},
         ['tinker_heat_seeking_missile'] = {weight = 1},
         ['tinker_march_of_the_machines'] = {weight = 0.5},
-        ['tinker_deploy_turrets'] = {weight = 0.1},
+        ['tinker_defense_matrix'] = {weight = 0.1},
+        ['tinker_deploy_turrets'] = {weight = 0.8},
         ['tinker_warp_grenade'] = {weight = 0.6},
         ['tinker_keen_teleport'] = {weight = 0.6},
         ['tinker_rearm'] = {weight = 1},
@@ -930,6 +950,7 @@ X['spells'] = {
 
     ['npc_dota_hero_venomancer'] = {
         ['venomancer_venomous_gale'] = {weight = 0.4},
+        ['venomancer_snakebite'] = {weight = 0.3},
         ['venomancer_poison_sting'] = {weight = 1},
         ['venomancer_plague_ward'] = {weight = 0.8},
         ['venomancer_latent_poison'] = {weight = 1},

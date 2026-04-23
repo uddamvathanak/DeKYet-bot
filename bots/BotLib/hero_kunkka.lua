@@ -1,13 +1,4 @@
-----------------------------------------------------------------------------------------------------
---- The Creation Come From: BOT EXPERIMENT Credit:FURIOUSPUPPY
---- BOT EXPERIMENT Author: Arizona Fauzie 2018.11.21
---- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=837040016
---- Refactor: 决明子 Email: dota2jmz@163.com 微博@Dota2_决明子
---- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=1573671599
---- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=1627071163
-----------------------------------------------------------------------------------------------------
 local X = {}
-local bDebugMode = ( 1 == 10 )
 local bot = GetBot()
 
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func' )
@@ -15,136 +6,221 @@ local Minion = dofile( GetScriptDirectory()..'/FunLib/aba_minion' )
 local sTalentList = J.Skill.GetTalentList( bot )
 local sAbilityList = J.Skill.GetAbilityList( bot )
 local sRole = J.Item.GetRoleItemsBuyList( bot )
+local M = require( GetScriptDirectory()..'/FunLib/aba_modifiers' )
 
-local tTalentTreeList = {
-						{--pos2
-							['t25'] = {0, 10},
-							['t20'] = {0, 10},
-							['t15'] = {0, 10},
-							['t10'] = {0, 10},
-						},
-						{--pos3
-							['t25'] = {0, 10},
-							['t20'] = {0, 10},
-							['t15'] = {0, 10},
-							['t10'] = {0, 10},
-						},
-}
-
-local tAllAbilityBuildList = {
-						{2,1,2,3,2,6,2,3,3,3,1,6,1,1,6},--pos2
-						{2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},--pos3
-}
-
-local nAbilityBuildList
-local nTalentBuildList
-
-if sRole == "pos_2"
+if GetBot():GetUnitName() == 'npc_dota_hero_kunkka'
 then
-    nAbilityBuildList   = tAllAbilityBuildList[1]
-    nTalentBuildList    = J.Skill.GetTalentBuild(tTalentTreeList[1])
-else
-    nAbilityBuildList   = tAllAbilityBuildList[2]
-    nTalentBuildList    = J.Skill.GetTalentBuild(tTalentTreeList[2])
-end
 
-local sRoleItemsBuyList = {}
+local RI = require(GetScriptDirectory()..'/FunLib/util_role_item')
 
-sRoleItemsBuyList['pos_2'] = {
-	"item_tango",
-	"item_double_branches",
-	"item_quelling_blade",
-	"item_gauntlets",
-	"item_circlet",
+local sUtility = {"item_pipe", "item_heavens_halberd", "item_lotus_orb"}
+local sUtilityItem = RI.GetBestUtilityItem(sUtility)
 
-	"item_bottle",
-	"item_magic_wand",
-	"item_bracer",
-	"item_phase_boots",
-	"item_blade_mail",
-	"item_ultimate_scepter",
-	"item_aghanims_shard",
-	"item_black_king_bar",--
-	"item_shivas_guard",--
-	"item_octarine_core",--
-	"item_travel_boots",
-	"item_heart",--
-	"item_refresher",--
-	"item_ultimate_scepter_2",
-	"item_travel_boots_2",--
-	"item_moon_shard"
+local HeroBuild = {
+    ['pos_1'] = {
+        [1] = {
+            ['talent'] = {
+				[1] = {
+					['t25'] = {10, 0},
+					['t20'] = {10, 0},
+					['t15'] = {10, 0},
+					['t10'] = {0, 10},
+				}
+            },
+            ['ability'] = {
+                [1] = {2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},
+            },
+            ['buy_list'] = {
+				"item_tango",
+				"item_double_branches",
+				"item_quelling_blade",
+				"item_circlet",
+				"item_gauntlets",
+			
+				"item_magic_wand",
+				"item_bracer",
+				"item_phase_boots",
+				"item_radiance",--
+				"item_aghanims_shard",
+				"item_black_king_bar",--
+				"item_satanic",--
+				"item_bloodthorn",--
+				"item_greater_crit",--
+				"item_moon_shard",
+				"item_ultimate_scepter_2",
+				"item_travel_boots_2",--
+			},
+            ['sell_list'] = {
+				"item_quelling_blade", "item_satanic",
+				"item_magic_wand", "item_bloodthorn",
+				"item_bracer", "item_greater_crit",
+			},
+        },
+    },
+    ['pos_2'] = {
+        [1] = {
+            ['talent'] = {
+				[1] = {
+					['t25'] = {0, 10},
+					['t20'] = {0, 10},
+					['t15'] = {0, 10},
+					['t10'] = {0, 10},
+				}
+            },
+            ['ability'] = {
+                [1] = {2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},
+            },
+            ['buy_list'] = {
+				"item_tango",
+				"item_double_branches",
+				"item_quelling_blade",
+				"item_double_gauntlets",
+			
+				"item_bottle",
+				"item_magic_wand",
+				"item_double_bracer",
+				"item_phase_boots",
+				"item_blade_mail",
+				"item_aghanims_shard",
+				"item_ultimate_scepter",
+				"item_black_king_bar",--
+				"item_shivas_guard",--
+				"item_octarine_core",--
+				"item_sheepstick",--
+				"item_ultimate_scepter_2",
+				"item_heart",--
+				"item_moon_shard",
+				"item_travel_boots_2",--
+			},
+            ['sell_list'] = {
+				"item_quelling_blade", "item_blade_mail",
+				"item_magic_wand", "item_ultimate_scepter",
+				"item_bracer", "item_black_king_bar",
+				"item_bracer", "item_shivas_guard",
+				"item_bottle", "item_octarine_core",
+				"item_blade_mail", "item_heart",
+			},
+        },
+        [2] = {
+            ['talent'] = {
+				[1] = {
+					['t25'] = {10, 0},
+					['t20'] = {10, 0},
+					['t15'] = {10, 0},
+					['t10'] = {0, 10},
+				}
+            },
+            ['ability'] = {
+                [1] = {2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},
+            },
+            ['buy_list'] = {
+				"item_tango",
+				"item_double_branches",
+				"item_quelling_blade",
+				"item_circlet",
+				"item_gauntlets",
+			
+				"item_bottle",
+				"item_magic_wand",
+				"item_bracer",
+				"item_phase_boots",
+				"item_radiance",--
+				"item_blade_mail",
+				"item_aghanims_shard",
+				"item_black_king_bar",--
+				"item_satanic",--
+				"item_bloodthorn",--
+				"item_greater_crit",--
+				"item_moon_shard",
+				"item_ultimate_scepter_2",
+				"item_travel_boots_2",--
+			},
+            ['sell_list'] = {
+				"item_quelling_blade", "item_satanic",
+				"item_magic_wand", "item_black_king_bar",
+				"item_bottle", "item_satanic",
+				"item_bracer", "item_bloodthorn",
+				"item_blade_mail", "item_greater_crit",
+			},
+        },
+    },
+    ['pos_3'] = {
+        [1] = {
+            ['talent'] = {
+				[1] = {
+					['t25'] = {0, 10},
+					['t20'] = {0, 10},
+					['t15'] = {0, 10},
+					['t10'] = {0, 10},
+				}
+            },
+            ['ability'] = {
+                [1] = {2,1,2,3,2,6,2,3,3,3,6,1,1,1,6},
+            },
+            ['buy_list'] = {
+				"item_tango",
+				"item_double_branches",
+				"item_quelling_blade",
+				"item_double_gauntlets",
+			
+				"item_magic_wand",
+				"item_boots",
+				"item_double_bracer",
+				"item_phase_boots",
+				"item_blade_mail",
+				"item_crimson_guard",--
+				"item_aghanims_shard",
+				"item_ultimate_scepter",
+				sUtilityItem,--
+				"item_black_king_bar",--
+				"item_shivas_guard",--
+				"item_ultimate_scepter_2",
+				"item_octarine_core",--
+				"item_moon_shard",
+				"item_travel_boots_2",--
+			},
+            ['sell_list'] = {
+				"item_quelling_blade", "item_crimson_guard",
+				"item_magic_wand", "item_ultimate_scepter",
+				"item_bracer", sUtilityItem,
+				"item_bracer", "item_black_king_bar",
+				"item_blade_mail", "item_octarine_core",
+			},
+        },
+    },
+    ['pos_4'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_5'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
 }
 
-sRoleItemsBuyList['pos_3'] = {
+local sSelectedBuild = HeroBuild[sRole][RandomInt(1, #HeroBuild[sRole])]
 
-	"item_tango",
-	"item_double_branches",
-	"item_quelling_blade",
-	"item_double_gauntlets",
+local nTalentBuildList = J.Skill.GetTalentBuild(J.Skill.GetRandomBuild(sSelectedBuild.talent))
+local nAbilityBuildList = J.Skill.GetRandomBuild(sSelectedBuild.ability)
 
-	"item_magic_wand",
-	"item_double_bracer",
-	"item_phase_boots",
-	"item_blade_mail",
-	"item_ultimate_scepter",
-	"item_aghanims_shard",
-	"item_black_king_bar",--
-	"item_shivas_guard",--
-	"item_refresher",--
-	"item_sheepstick",--
-	"item_travel_boots",
-	"item_heart",--
-	"item_travel_boots_2",--
-
-	"item_ultimate_scepter_2",
-	"item_moon_shard",
-}
-
-sRoleItemsBuyList['pos_1'] = sRoleItemsBuyList['pos_3']
-
-sRoleItemsBuyList['pos_4'] = {
-	'item_priest_outfit',
-	"item_hand_of_midas",
-	"item_mekansm",
-	"item_glimmer_cape",--
-	"item_guardian_greaves",--
-    "item_basher",
-    "item_monkey_king_bar",--
-	"item_assault",--
-	"item_heavens_halberd",--
-	"item_aghanims_shard",
-    "item_abyssal_blade",--
-	"item_ultimate_scepter",
-	"item_moon_shard",
-	"item_ultimate_scepter_2",
-}
-
-sRoleItemsBuyList['pos_5'] = {
-	'item_priest_outfit',
-	"item_hand_of_midas",
-	"item_mekansm",
-	"item_glimmer_cape",--
-	"item_pipe",--
-    "item_basher",
-    "item_monkey_king_bar",--
-	"item_assault",--
-	"item_heavens_halberd",--
-	"item_aghanims_shard",
-    "item_abyssal_blade",--
-	"item_ultimate_scepter",
-	"item_moon_shard",
-	"item_ultimate_scepter_2",
-}
-
-
-X['sBuyList'] = sRoleItemsBuyList[sRole]
-
-X['sSellList'] = {
-
-	"item_black_king_bar",
-	"item_quelling_blade",
-
-}
+X['sBuyList'] = sSelectedBuild.buy_list
+X['sSellList'] = sSelectedBuild.sell_list
 
 if J.Role.IsPvNMode() or J.Role.IsAllShadow() then X['sBuyList'], X['sSellList'] = { 'PvN_tank' }, {"item_power_treads", 'item_quelling_blade'} end
 
@@ -156,667 +232,661 @@ X['bDeafaultAbility'] = false
 X['bDeafaultItem'] = false
 
 function X.MinionThink(hMinionUnit)
-
-	if Minion.IsValidUnit( hMinionUnit )
-	then
-		Minion.IllusionThink( hMinionUnit )
-	end
+	Minion.IllusionThink(hMinionUnit)
+end
 
 end
 
---[[
-
-npc_dota_hero_kunkka
-
-"Ability1"		"kunkka_torrent"
-"Ability2"		"kunkka_tidebringer"
-"Ability3"		"kunkka_x_marks_the_spot"
-"Ability4"		"kunkka_torrent_storm"
-"Ability5"		"generic_hidden"
-"Ability6"		"kunkka_ghostship"
-"Ability7"		"kunkka_return"
-"Ability10"		"special_bonus_attack_damage_40"
-"Ability11"		"special_bonus_armor_6"
-"Ability12"		"special_bonus_hp_regen_12"
-"Ability13"		"special_bonus_unique_kunkka_2"
-"Ability14"		"special_bonus_unique_kunkka"
-"Ability15"		"special_bonus_strength_25"
-"Ability16"		"special_bonus_unique_kunkka_3"
-"Ability17"		"special_bonus_unique_kunkka_4"
-
-modifier_kunkka_torrent_thinker
-modifier_kunkka_torrent
-modifier_kunkka_torrent_slow
-modifier_kunkka_tidebringer
-modifier_kunkka_x_marks_the_spot
-modifier_kunkka_x_marks_the_spot_marker
-modifier_kunkka_x_marks_the_spot_thinker
-modifier_kunkka_ghost_ship_fleet
-modifier_kunkka_ghost_ship_knockback
-modifier_kunkka_ghost_ship_loaded
-modifier_kunkka_ghost_ship_damage_absorb
-modifier_kunkka_ghost_ship_damage_delay
-
---]]
-
-local abilityQ = bot:GetAbilityByName( sAbilityList[1] )
-local abilityW = bot:GetAbilityByName( sAbilityList[2] )
-local abilityE = bot:GetAbilityByName( sAbilityList[3] )
-local abilityE2 = bot:GetAbilityByName( 'kunkka_return' )
--- local abilityD = bot:GetAbilityByName( sAbilityList[4] )
-local kunkka_tidal_wave = bot:GetAbilityByName( 'kunkka_tidal_wave' )
-local abilityR = bot:GetAbilityByName( sAbilityList[6] )
+local Torrent = bot:GetAbilityByName('kunkka_torrent')
+local Tidebringer = bot:GetAbilityByName('kunkka_tidebringer')
+local XMarksTheSpot = bot:GetAbilityByName('kunkka_x_marks_the_spot')
+local Return = bot:GetAbilityByName('kunkka_return')
+local TidalWave = bot:GetAbilityByName('kunkka_tidal_wave')
+local Ghostship = bot:GetAbilityByName('kunkka_ghostship')
 
 
-local castQDesire, castQLocation
-local castWDesire, castWTarget
-local castEDesire, castETarget
-local castASDesire, castASTarget
-local castE2Desire
-local castDDesire
-local castRDesire, castRLocation
-local Combo1Desire, C1Target, C1Location
-local Combo2Desire, C2Target, C2Location
-local Combo3Desire, C3Target, C3Location
+local TorrentDesire, TorrentLocation
+local TidebringerDesire, TidebringerTarget
+local XMarksTheSpotDesire, XMarksTheSpotTarget
+local ReturnDesire
+local TidalWaveDesire, TidalWaveLocation
+local GhostshipDesire, GhostshipLocation
 
-local nKeepMana, nMP, nHP, nLV, hEnemyHeroList
+local Combo1Desire, Combo1Target, Combo1Location
+local Combo2Desire, Combo2Target, Combo2Location
+local Combo3Desire, Combo3Target, Combo3Location
 
+local kunkka = { combo1 = false, combo2 = false, combo3 = false }
 
-
-local Combo1Time = 0 --X船水  0.4, 0.3, 0.4, 0.4.
-local Combo2Time = 0 --X船
-local Combo3Time = 0 --X水
-
-local C1Delay = 2.25 --2.3MAX
-local C2Delay = 3.35 --3.4MAX
-local C3Delay = 1.95 --2.0MAX 0.4 + 0.4 + 1.6 - 0.4
+local bAttacking = false
+local botTarget, botHP
+local nAllyHeroes, nEnemyHeroes
 
 function X.SkillsComplement()
-
-	if not bot:IsAlive()
-	then
-		Combo1Time = 0
-		Combo2Time = 0
-		Combo3Time = 0
-	end
-
-	if J.CanNotUseAbility( bot ) or bot:IsInvisible() then return end
-
-
-	nKeepMana = 240
-	nMP = bot:GetMana()/bot:GetMaxMana()
-	nHP = bot:GetHealth()/bot:GetMaxHealth()
-	nLV = bot:GetLevel()
-	hEnemyHeroList = J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE )
-
-
-
-	--三连的最后一下
-	if abilityE2:IsHidden() == false
-		and abilityE2:IsFullyCastable()
-		and ( ( Combo3Time ~= 0 and DotaTime() >= Combo3Time + C3Delay )
-			or ( Combo1Time ~= 0 and DotaTime() >= Combo1Time + C1Delay )
-			or ( Combo2Time ~= 0 and DotaTime() >= Combo2Time + C2Delay ) )
-	then
-		Combo1Time = 0
-		Combo2Time = 0
-		Combo3Time = 0
-		bot:Action_UseAbility( abilityE2 )
-		return
-	end
-
-	if abilityE2:IsHidden() == true
-		or abilityE:IsFullyCastable()
-	then
-		Combo1Time = 0
-		Combo2Time = 0
-		Combo3Time = 0
-	end
-
-	--正在连招的过程中
-	if Combo1Time ~= 0
-		or Combo2Time ~= 0
-		or Combo2Time ~= 0
-	then
-		return
-	end
-
-	--连招一 X船水
-	Combo1Desire, C1Target, C1Location = X.ConsiderCombo1()
-	if Combo1Desire > 0
-	then
-		Combo1Time = DotaTime()
-		J.SetQueuePtToINT( bot, true )
-		bot:ActionQueue_UseAbilityOnEntity( abilityE, C1Target )
-		bot:ActionQueue_UseAbilityOnLocation( abilityR, C1Location )
-		bot:ActionQueue_UseAbilityOnLocation( abilityQ, C1Location )
-		return
-	end
-
-	--连招二 X船
-	Combo2Desire, C2Target, C2Location = X.ConsiderCombo2()
-	if Combo2Desire > 0
-	then
-		Combo2Time = DotaTime()
-		J.SetQueuePtToINT( bot, true )
-		bot:ActionQueue_UseAbilityOnEntity( abilityE, C2Target )
-		bot:ActionQueue_UseAbilityOnLocation( abilityR, C2Location )
-		return
-	end
-
-	--连招三 X水
-	Combo3Desire, C3Target, C3Location = X.ConsiderCombo3()
-	if Combo3Desire > 0
-	then
-		Combo3Time = DotaTime()
-		J.SetQueuePtToINT( bot, true )
-		bot:ActionQueue_UseAbilityOnEntity( abilityE, C3Target )
-		bot:ActionQueue_UseAbilityOnLocation( abilityQ, C3Location )
-		return
-	end
-
-	--水
-	castQDesire, castQLocation = X.ConsiderQ()
-	if ( castQDesire > 0 )
-	then
-
-		J.SetQueuePtToINT( bot, true )
-
-		bot:ActionQueue_UseAbilityOnLocation( abilityQ, castQLocation )
-		return
-	end
-
-	--X
-	castEDesire, castETarget = X.ConsiderE()
-	if ( castEDesire > 0 )
-	then
-
-		J.SetQueuePtToINT( bot, false )
-
-		bot:ActionQueue_UseAbilityOnEntity( abilityE, castETarget )
-		return
-	end
-
-	--船
-	castRDesire, castRLocation = X.ConsiderR()
-	if ( castRDesire > 0 )
-	then
-
-		J.SetQueuePtToINT( bot, true )
-
-		bot:ActionQueue_UseAbilityOnLocation( abilityR, castRLocation )
-		return
-
-	end
-
-	--浪
-	-- castDDesire, castDLocation = X.ConsiderD()
-	-- if castDDesire > 0
-	-- then
-	-- 	J.SetQueuePtToINT( bot, true )
-
-	-- 	bot:ActionQueue_UseAbilityOnLocation( abilityD, bot:GetLocation() )
-	-- 	return
-
-	-- end
-	
-	--魔晶
-	castASDesire, castASTarget = X.ConsiderAS()
-	if ( castASDesire > 0 )
-	then
-		
-		J.SetQueuePtToINT( bot, true )
-
-		bot:ActionQueue_UseAbilityOnLocation( kunkka_tidal_wave, castASTarget )
-		return
-
-	end
-
-	--刀
-	castWDesire, castWTarget = X.ConsiderW()
-	if ( castWDesire > 0 )
-	then
-
-		bot:Action_ClearActions( false )
-
-		bot:ActionQueue_UseAbilityOnEntity( abilityW, castWTarget )
-		return
-
-	end
-
-end
-
-
-function X.GetTowardsFountainLocation( unitLoc, distance )
-	local destination = {}
-	if ( GetTeam() == TEAM_RADIANT ) then
-		destination[1] = unitLoc[1] - distance / math.sqrt( 2 )
-		destination[2] = unitLoc[2] - distance / math.sqrt( 2 )
-	end
-
-	if ( GetTeam() == TEAM_DIRE ) then
-		destination[1] = unitLoc[1] + distance / math.sqrt( 2 )
-		destination[2] = unitLoc[2] + distance / math.sqrt( 2 )
-	end
-	return Vector( destination[1], destination[2] )
-end
-
---X船水
-function X.ConsiderCombo1()
-
-	if not abilityQ:IsFullyCastable()
-		or not abilityE:IsFullyCastable()
-		or not abilityR:IsFullyCastable()
-	then
-		return BOT_ACTION_DESIRE_NONE, nil
-	end
-
-	local CurrMana = bot:GetMana()
-
-	local ComboMana = abilityQ:GetManaCost() + abilityE:GetManaCost() + abilityR:GetManaCost()
-
-	if ComboMana > CurrMana then
-		return BOT_ACTION_DESIRE_NONE, nil
-	end
-
-	local nCastRange = abilityE:GetCastRange() + 38
-
-	if J.IsGoingOnSomeone( bot )
-	then
-		local npcTarget = bot:GetTarget()
-		if ( J.IsValidHero( npcTarget )
-			and J.CanCastOnNonMagicImmune( npcTarget )
-			and GetUnitToUnitDistance( npcTarget, bot ) > nCastRange/2
-			and GetUnitToUnitDistance( npcTarget, bot ) < nCastRange )
-		then
-			return BOT_ACTION_DESIRE_HIGH, npcTarget, J.GetFaceTowardDistanceLocation( npcTarget, 30 )
-		end
-	end
-
-	return BOT_ACTION_DESIRE_NONE, nil
-end
-
-
---X船
-function X.ConsiderCombo2()
-
-	if not abilityR:IsFullyCastable() or not abilityE:IsFullyCastable()
-	then
-		return BOT_ACTION_DESIRE_NONE, nil, {}
-	end
-
-	local CurrMana = bot:GetMana()
-
-	local ComboMana = abilityR:GetManaCost() + abilityE:GetManaCost()
-
-	if ComboMana > CurrMana then
-		return BOT_ACTION_DESIRE_NONE, nil, {}
-	end
-
-	local nCastRange = abilityE:GetCastRange() + 38
-
-	if J.IsGoingOnSomeone( bot )
-	then
-		local npcTarget = bot:GetTarget()
-		if ( J.IsValidHero( npcTarget )
-			and J.CanCastOnNonMagicImmune( npcTarget )
-			and GetUnitToUnitDistance( npcTarget, bot ) < nCastRange )
-		then
-			return BOT_ACTION_DESIRE_HIGH, npcTarget, npcTarget:GetLocation()
-		end
-	end
-
-	return BOT_ACTION_DESIRE_NONE, nil, {}
-end
-
-
---X水
-function X.ConsiderCombo3()
-	if not abilityQ:IsFullyCastable() or not abilityE:IsFullyCastable() or abilityR:IsFullyCastable()
-	then
-		return BOT_ACTION_DESIRE_NONE, nil, {}
-	end
-
-	local CurrMana = bot:GetMana()
-
-	local ComboMana = abilityQ:GetManaCost() + abilityE:GetManaCost()
-
-	if ComboMana > CurrMana then
-		return BOT_ACTION_DESIRE_NONE, nil, {}
-	end
-
-	local nCastRange = abilityE:GetCastRange() + 38
-
-	--打断持续施法
-	local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, nCastRange + 200, true, BOT_MODE_NONE )
-	for _, npcEnemy in pairs( tableNearbyEnemyHeroes )
-	do
-		if ( npcEnemy:IsChanneling() )
-		then
-			return BOT_ACTION_DESIRE_MODERATE, npcEnemy, npcEnemy:GetLocation()
-		end
-	end
-
-
-	if J.IsGoingOnSomeone( bot )
-	then
-		local npcTarget = bot:GetTarget()
-		if ( J.IsValidHero( npcTarget )
-			and J.CanCastOnNonMagicImmune( npcTarget )
-			and GetUnitToUnitDistance( npcTarget, bot ) < nCastRange )
-		then
-			return BOT_ACTION_DESIRE_HIGH, npcTarget, J.GetFaceTowardDistanceLocation( npcTarget, 40 )
-		end
-	end
-
-
-	return BOT_ACTION_DESIRE_NONE, nil, {}
-end
-
--- function X.ConsiderD()
-
--- 	if not abilityD:IsFullyCastable()
--- 		or not bot:HasScepter()
--- 	then
--- 		return BOT_ACTION_DESIRE_NONE
--- 	end
-
--- 	if J.IsGoingOnSomeone( bot )
--- 	then
--- 		local npcTarget = J.GetProperTarget( bot )
--- 		if J.IsValidHero( npcTarget )
--- 			and J.IsInRange( bot, npcTarget, 300 )
--- 			and J.CanCastOnNonMagicImmune( npcTarget )
--- 		then
--- 			return BOT_ACTION_DESIRE_HIGH
--- 		end
--- 	end
-
--- 	if J.IsRetreating( bot ) or J.IsInTeamFight( bot, 1200 )
--- 	then
--- 		local nEnemyHeroList = J.GetEnemyList( bot, 1100 )
--- 		for _, enemy in pairs(nEnemyHeroList) do
--- 			if #nEnemyHeroList >= 3
--- 				or ( #nEnemyHeroList >= 2 and nHP <= 0.5 )
--- 				or ( #nEnemyHeroList >= 1 and nHP <= 0.4 and bot:WasRecentlyDamagedByHero( enemy, 3.0 ) )
--- 			then
--- 				return BOT_ACTION_DESIRE_HIGH
--- 			end
--- 		end
--- 	end
-
--- 	return BOT_ACTION_DESIRE_NONE
-
--- end
-
-
-function X.ConsiderQ()
-
-	if not abilityQ:IsFullyCastable()
-	then
-		return BOT_ACTION_DESIRE_NONE, nil
-	end
-
-	local nCastPoint = abilityQ:GetCastPoint()
-	local nDelay = abilityQ:GetSpecialValueFloat( "delay" )
-
-	if ( bot:GetActiveMode() == BOT_MODE_ROSHAN )
-	then
-		local npcTarget = bot:GetAttackTarget()
-		if ( J.IsRoshan( npcTarget ) and J.CanCastOnMagicImmune( npcTarget ) and J.IsInRange( npcTarget, bot, 600 ) )
-		then
-			return BOT_ACTION_DESIRE_LOW, npcTarget:GetLocation()
-		end
-	end
-
-	if abilityE:GetLevel() >= 3
-		and abilityE:IsFullyCastable()
-		and bot:GetMana() > 160
-	then
-		return BOT_ACTION_DESIRE_NONE, nil
-	end
-
-	if J.IsRetreating( bot )
-	then
-		local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1000, true, BOT_MODE_NONE )
-		for _, npcEnemy in pairs( tableNearbyEnemyHeroes )
-		do
-			if ( bot:WasRecentlyDamagedByHero( npcEnemy, 1.0 ) )
-			then
-				return BOT_ACTION_DESIRE_MODERATE, npcEnemy:GetExtrapolatedLocation( ( nDelay + nCastPoint ) * 0.68 )
+	bot = GetBot()
+
+	if J.CanNotUseAbility(bot) then return end
+
+	Torrent = bot:GetAbilityByName('kunkka_torrent')
+	Tidebringer = bot:GetAbilityByName('kunkka_tidebringer')
+	XMarksTheSpot = bot:GetAbilityByName('kunkka_x_marks_the_spot')
+	Return = bot:GetAbilityByName('kunkka_return')
+	TidalWave = bot:GetAbilityByName('kunkka_tidal_wave')
+	Ghostship = bot:GetAbilityByName('kunkka_ghostship')
+
+	bAttacking = J.IsAttacking(bot)
+    botHP = J.GetHP(bot)
+    botTarget = J.GetProperTarget(bot)
+    nAllyHeroes = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
+    nEnemyHeroes = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
+
+	if J.CanCastAbility(Return) then
+		if Torrent and Torrent:IsTrained() and XMarksTheSpot and XMarksTheSpot:IsTrained() then
+			local fTorrentDelay = Torrent:GetSpecialValueFloat('delay')
+			local fReturnCastPoint = Return:GetCastPoint()
+
+			local fTimeRemaining__X = XMarksTheSpot:GetCooldown() - XMarksTheSpot:GetCooldownTimeRemaining()
+			local fTimeRemaining__Torrent = Torrent:GetCooldown() - Torrent:GetCooldownTimeRemaining()
+
+			if kunkka.combo2 then
+				if fTorrentDelay - fTimeRemaining__Torrent > 0 and fTorrentDelay - fTimeRemaining__Torrent < fReturnCastPoint + 0.1 then
+					bot:Action_UseAbility(Return)
+					return
+				end
 			end
-		end
-	end
 
-	--打断持续施法
-	local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1600, true, BOT_MODE_NONE )
-	for _, npcEnemy in pairs( tableNearbyEnemyHeroes )
-	do
-		if ( npcEnemy:IsChanneling() )
-		then
-			return BOT_ACTION_DESIRE_MODERATE, npcEnemy:GetLocation()
-		end
-	end
+			if Ghostship and Ghostship:IsTrained() then
+				local fTimeRemaining__Ghostship = Ghostship:GetCooldown() - Ghostship:GetCooldownTimeRemaining()
 
+				if kunkka.combo1 then
+					if fTorrentDelay - fTimeRemaining__Torrent > 0 and fTorrentDelay - fTimeRemaining__Torrent < fReturnCastPoint + 0.1 then
+						bot:Action_UseAbility(Return)
+						return
+					end
+				end
 
-	if J.IsGoingOnSomeone( bot )
-	then
-		local npcTarget = bot:GetTarget()
-		if ( J.IsValidHero( npcTarget )
-			and not J.IsRunning( npcTarget )
-			and not J.IsMoving( npcTarget )
-			and J.CanCastOnNonMagicImmune( npcTarget )
-			and GetUnitToUnitDistance( npcTarget, bot ) < 700 )
-		then
-			return BOT_ACTION_DESIRE_HIGH, npcTarget:GetExtrapolatedLocation( ( nDelay + nCastPoint ) * 0.68 )
-		end
-	end
-
-	return BOT_ACTION_DESIRE_NONE, {}
-end
-
-
-function X.ConsiderE()
-
-	if not abilityE:IsFullyCastable()
-		or abilityQ:IsFullyCastable()
-		or abilityR:IsFullyCastable()
-	then
-		return BOT_ACTION_DESIRE_NONE, nil
-	end
-
-	local nCastRange = abilityE:GetCastRange()
-
-	if J.IsRetreating( bot )
-	then
-		local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1000, true, BOT_MODE_NONE )
-		for _, npcEnemy in pairs( tableNearbyEnemyHeroes )
-		do
-			if bot:WasRecentlyDamagedByHero( npcEnemy, 1.0 )
-				and J.CanCastOnNonMagicImmune( npcEnemy )
-			then
-				return BOT_ACTION_DESIRE_MODERATE, npcEnemy
-			end
-		end
-	end
-
-	local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1200, true, BOT_MODE_NONE )
-	for _, npcEnemy in pairs( tableNearbyEnemyHeroes )
-	do
-		if ( npcEnemy:IsChanneling()
-			or ( bot:GetActiveMode() == BOT_MODE_ATTACK
-				and #tableNearbyEnemyHeroes == 1
-				and bot:GetLevel() >= 6
-				and bot:IsFacingLocation( npcEnemy:GetLocation(), 30 )
-				and npcEnemy:IsFacingLocation( J.GetEnemyFountain(), 30 ) ) )
-		then
-			return BOT_ACTION_DESIRE_MODERATE, npcEnemy
-		end
-	end
-
-	return BOT_ACTION_DESIRE_NONE, nil
-end
-
-
-function X.ConsiderR()
-
-	if not abilityR:IsFullyCastable() or abilityE:IsFullyCastable() then
-		return BOT_ACTION_DESIRE_NONE, nil
-	end
-
-
-	local nCastRange = abilityR:GetCastRange()
-	local nRadius = abilityR:GetSpecialValueInt( "ghostship_width" )
-
-	if J.IsRetreating( bot )
-	then
-		local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1000, true, BOT_MODE_NONE )
-		for _, npcEnemy in pairs( tableNearbyEnemyHeroes )
-		do
-			if ( bot:WasRecentlyDamagedByHero( npcEnemy, 1.0 ) )
-			then
-				return BOT_ACTION_DESIRE_MODERATE, X.GetTowardsFountainLocation( bot:GetLocation(), nCastRange - 200 )
-			end
-		end
-	end
-
-	--打断持续施法
-	local tableNearbyEnemyHeroes = J.GetNearbyHeroes(bot, 1000, true, BOT_MODE_NONE )
-	for _, npcEnemy in pairs( tableNearbyEnemyHeroes )
-	do
-		if ( npcEnemy:IsChanneling() )
-		then
-			return BOT_ACTION_DESIRE_MODERATE, npcEnemy:GetLocation()
-		end
-	end
-
-
-	--团战AOE
-	if J.IsInTeamFight( bot, 1200 )
-	then
-		local locationAoE = bot:FindAoELocation( true, true, bot:GetLocation(), nCastRange * 0.8, nRadius, 0.8, 0 )
-		local hTrueHeroList = J.GetEnemyList( bot, 1200 )
-		if ( locationAoE.count >= 3 and #hTrueHeroList >= 2 )
-		then
-			return BOT_ACTION_DESIRE_MODERATE, locationAoE.targetloc
-		end
-	end
-
-	return BOT_ACTION_DESIRE_NONE, nil
-end
-
-
-function X.ConsiderW()
-
-	if not J.IsRunning( bot )
-		or abilityW == nil
-		or not abilityW:IsFullyCastable()
-	then return 0 end
-
-	local npcTarget = J.GetProperTarget( bot )
-	if not J.IsValid( npcTarget ) then return 0 end
-
-	local nAttackRange = bot:GetAttackRange() + 40
-
-	if nAttackRange < 200  then nAttackRange = 200  end
-
-	local nNearbyEnemy = X.GetNearbyUnit( bot, npcTarget )
-
-	if J.IsValid( nNearbyEnemy )
-		and GetUnitToUnitDistance( npcTarget, bot ) >  nAttackRange 
-	then
-		return BOT_ACTION_DESIRE_HIGH, nNearbyEnemy
-	end
-
-	return BOT_ACTION_DESIRE_NONE
-
-end
-
-
-function X.GetNearbyUnit( bot, npcTarget )
-
-
-	if bot:IsFacingLocation( npcTarget:GetLocation(), 39 )
-	then
-		local nCreeps = bot:GetNearbyCreeps( 240, true )
-		for _, creep in pairs( nCreeps )
-		do
-			if J.IsValid( creep )
-				and bot:IsFacingLocation( creep:GetLocation(), 38 )
-			then
-				return creep
+				if kunkka.combo3 then
+					local nDelay = Ghostship:GetSpecialValueFloat('tooltip_delay')
+					if nDelay - fTimeRemaining__X > 0 and nDelay - fTimeRemaining__X < fReturnCastPoint + 0.1 then
+						bot:Action_UseAbility(Return)
+						return
+					end
+				end
 			end
 		end
 
-		local nEnemys = J.GetNearbyHeroes(bot, 240, true, BOT_MODE_NONE )
-		for _, enemy  in pairs( nEnemys )
-		do
-			if J.IsValid( enemy )
-				and bot:IsFacingLocation( enemy:GetLocation(), 38 )
-			then
-				return enemy
-			end
-		end
-
+		return
+	else
+		kunkka = { combo1 = false, combo2 = false, combo3 = false }
 	end
 
+	-- X -> Ghostship -> Torrent
+	Combo1Desire, Combo1Target, Combo1Location = X.ConsiderCombo1()
+	if Combo1Desire > 0 then
+		kunkka.combo1 = true
+		bot:Action_ClearActions(true)
+		bot:ActionQueue_UseAbilityOnEntity(XMarksTheSpot, Combo1Target)
+		bot:ActionQueue_UseAbilityOnLocation(Ghostship, Combo1Location)
+		bot:ActionQueue_UseAbilityOnLocation(Torrent, Combo1Location)
+		return
+	end
 
-	return nil
+	-- X -> Torrent
+	Combo2Desire, Combo2Target, Combo2Location = X.ConsiderCombo2()
+	if Combo2Desire > 0 then
+		kunkka.combo2 = true
+		bot:Action_ClearActions(true)
+		bot:ActionQueue_UseAbilityOnEntity(XMarksTheSpot, Combo2Target)
+		bot:ActionQueue_UseAbilityOnLocation(Torrent, Combo2Location)
+		return
+	end
+
+	-- X -> Ghostship
+	Combo3Desire, Combo3Target, Combo3Location = X.ConsiderCombo3()
+	if Combo3Desire > 0 then
+		kunkka.combo3 = true
+		bot:Action_ClearActions(true)
+		bot:ActionQueue_UseAbilityOnEntity(XMarksTheSpot, Combo3Target)
+		bot:ActionQueue_UseAbilityOnLocation(Ghostship, Combo3Location)
+		return
+	end
+
+	TorrentDesire, TorrentLocation = X.ConsiderTorrent()
+	if TorrentDesire > 0 then
+		J.SetQueuePtToINT(bot, false)
+		bot:ActionQueue_UseAbilityOnLocation(Torrent, TorrentLocation)
+		return
+	end
+
+	XMarksTheSpotDesire, XMarksTheSpotTarget = X.ConsiderXMarksTheSpot()
+	if XMarksTheSpotDesire > 0 then
+		J.SetQueuePtToINT(bot, false)
+		bot:ActionQueue_UseAbilityOnEntity(XMarksTheSpot, XMarksTheSpotTarget)
+		return
+	end
+
+	GhostshipDesire, GhostshipLocation = X.ConsiderGhostship()
+	if GhostshipDesire > 0 then
+		J.SetQueuePtToINT(bot, false)
+		bot:ActionQueue_UseAbilityOnLocation(Ghostship, GhostshipLocation)
+		return
+	end
+
+	TidalWaveDesire, TidalWaveLocation = X.ConsiderTidalWave()
+	if TidalWaveDesire > 0 then
+		J.SetQueuePtToINT(bot, false)
+		bot:ActionQueue_UseAbilityOnLocation(TidalWave, TidalWaveLocation)
+		return
+	end
+
+	TidebringerDesire, TidebringerTarget = X.ConsiderTidebringer()
+	if TidebringerDesire > 0 then
+		J.SetQueuePtToINT(bot, false)
+		bot:ActionQueue_UseAbilityOnEntity(Tidebringer, TidebringerTarget)
+		return
+	end
+
+	X.ConsiderReturn()
 end
 
-
-function X.ConsiderAS()
-
-	if not kunkka_tidal_wave:IsTrained()
-		or not kunkka_tidal_wave:IsFullyCastable() 
-	then
+function X.ConsiderTorrent()
+	if not J.CanCastAbility(Torrent) then
 		return BOT_ACTION_DESIRE_NONE, 0
 	end
 
-	local nRadius = 350
-	local nCastRange = 750
-	local nCastPoint = kunkka_tidal_wave:GetCastPoint()
-	local nManaCost = kunkka_tidal_wave:GetManaCost()
+	local nCastRange = Torrent:GetCastRange()
+	local fCastPoint = Torrent:GetCastPoint()
+	local nRadius = Torrent:GetSpecialValueInt('radius')
+	local nDamage = Torrent:GetSpecialValueInt('torrent_damage')
+	local fDelay = Torrent:GetSpecialValueFloat('delay')
+	local nManaCost = Torrent:GetManaCost()
+	local fManaAfter = J.GetManaAfter(nManaCost)
+	local fManaThreshold1 = J.GetManaThreshold(bot, nManaCost, {XMarksTheSpot, TidalWave, Ghostship})
 
-	if J.IsRetreating( bot )
-	then
-		local enemyHeroList = J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE )
-		local targetHero = enemyHeroList[1]
-		if J.IsValidHero( targetHero )
-			and J.CanCastOnNonMagicImmune( targetHero )
+	for _, enemyHero in pairs(nEnemyHeroes) do
+		if J.IsValidHero(enemyHero)
+		and J.IsInRange(bot, enemyHero, nCastRange)
+		and J.CanCastOnNonMagicImmune(enemyHero)
+		and not enemyHero:HasModifier('modifier_necrolyte_reapers_scythe')
 		then
-			return BOT_ACTION_DESIRE_HIGH, targetHero:GetLocation()
-		end		
+			if enemyHero:HasModifier('modifier_teleporting') then
+				if J.GetModifierTime(bot, 'modifier_teleporting') > fCastPoint + fDelay then
+					return BOT_ACTION_DESIRE_HIGH, enemyHero:GetLocation()
+				end
+			elseif enemyHero:IsChanneling() then
+				return BOT_ACTION_DESIRE_HIGH, enemyHero:GetLocation()
+			end
+
+			local vLocation = J.GetCorrectLoc(enemyHero, fCastPoint + fDelay)
+			if GetUnitToLocationDistance(bot, vLocation) <= nCastRange then
+				if J.WillKillTarget(enemyHero, nDamage, DAMAGE_TYPE_MAGICAL, fCastPoint + fDelay)
+				and J.CanBeAttacked(enemyHero)
+				and not enemyHero:HasModifier('modifier_abaddon_borrowed_time')
+				and not enemyHero:HasModifier('modifier_dazzle_shallow_grave')
+				and not enemyHero:HasModifier('modifier_oracle_false_promise')
+				and not enemyHero:HasModifier('modifier_templar_assassin_refraction_absorb')
+				then
+					return BOT_ACTION_DESIRE_HIGH, vLocation
+				end
+			end
+		end
 	end
-	
 
-	if J.IsInTeamFight( bot, 1400 )
-	then
-		local nAoeLoc = J.GetAoeEnemyHeroLocation( bot, nCastRange, nRadius, 2 )
-		if nAoeLoc ~= nil
+	if J.IsGoingOnSomeone(bot) then
+		if J.IsValidHero(botTarget)
+		and J.CanBeAttacked(botTarget)
+		and J.IsInRange(bot, botTarget, nCastRange)
+		and J.CanCastOnNonMagicImmune(botTarget)
+		and not J.IsChasingTarget(bot, botTarget)
+		and not J.CanCastAbilitySoon(XMarksTheSpot, 3.0)
 		then
-			local loc = bot:GetLocation() + (bot:GetLocation() - nAoeLoc)
-			return BOT_ACTION_DESIRE_HIGH, nAoeLoc
-		end		
+			if not J.IsInRange(bot, botTarget, nCastRange * 0.8) and not botTarget:IsFacingLocation(bot:GetLocation(), 90) then
+				return BOT_ACTION_DESIRE_HIGH, J.GetCorrectLoc(botTarget, fCastPoint + fDelay)
+			end
+
+			for i = 0, botTarget:NumModifiers() do
+				local sModifierName = botTarget:GetModifierName(i)
+				if sModifierName then
+					local fRemainingDuration = botTarget:GetModifierRemainingDuration(i)
+					if M['stunned_unique'] and M['stunned_unique'][sModifierName] then
+						if fRemainingDuration > fDelay then
+							return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+						end
+					elseif M['stunned_unique_invulnerable'] and M['stunned_unique_invulnerable'][sModifierName] then
+						if fRemainingDuration < fDelay and fRemainingDuration > fDelay/2 then
+							return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+						end
+					elseif M['hexed'] and M['hexed'][sModifierName] then
+						if fRemainingDuration > fDelay then
+							return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+						end
+					elseif M['rooted'] and M['rooted'][sModifierName] then
+						if fRemainingDuration > fDelay then
+							return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+						end
+					elseif M['stunned'] and M['stunned'][sModifierName] then
+						if fRemainingDuration > fDelay then
+							return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+						end
+					end
+				end
+			end
+
+			if botTarget:GetCurrentMovementSpeed() <= 200 and not botTarget:IsHexed() then
+				return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+			end
+		end
 	end
-	
 
-	if J.IsGoingOnSomeone( bot )
-	then
-		local targetHero = J.GetProperTarget( bot )
-		if J.IsValidHero( targetHero )
-			and J.IsInRange( bot, targetHero, 400 )
-			and J.CanCastOnNonMagicImmune( targetHero )
+	if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
+		for _, enemyHero in pairs(nEnemyHeroes) do
+			if J.IsValidHero(enemyHero)
+			and J.CanBeAttacked(enemyHero)
+			and J.IsInRange(bot, enemyHero, nCastRange)
+			and J.CanCastOnNonMagicImmune(enemyHero)
+			and not enemyHero:IsDisarmed()
+			and not enemyHero:HasModifier('modifier_necrolyte_reapers_scythe')
+			and bot:WasRecentlyDamagedByHero(enemyHero, 2.0)
+			then
+				if J.IsDisabled(enemyHero) then
+					return BOT_ACTION_DESIRE_HIGH, enemyHero:GetLocation()
+				end
+
+				if enemyHero:GetCurrentMovementSpeed() <= 250 then
+					return BOT_ACTION_DESIRE_HIGH, J.VectorTowards(enemyHero:GetLocation(), bot:GetLocation(), nRadius / 2)
+				end
+			end
+		end
+	end
+
+	local nEnemyCreeps = bot:GetNearbyCreeps(800, true)
+
+	if not J.CanCastAbility(Tidebringer) then
+		if J.IsPushing(bot) and fManaAfter > fManaThreshold1 + 0.1 and #nAllyHeroes <= 2 and #nEnemyHeroes == 0 and bAttacking then
+			for _, creep in pairs(nEnemyCreeps) do
+				if J.IsValid(creep) and J.CanBeAttacked(creep) and not J.IsRunning(creep) then
+					local nLocationAoE = bot:FindAoELocation(true, false, creep:GetLocation(), 0, nRadius, 0, 0)
+					if (nLocationAoE.count >= 4) then
+						return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
+					end
+				end
+			end
+		end
+
+		if J.IsDefending(bot) and fManaAfter > fManaThreshold1 and #nEnemyHeroes == 0 and bAttacking then
+			for _, creep in pairs(nEnemyCreeps) do
+				if J.IsValid(creep) and J.CanBeAttacked(creep) and not J.IsRunning(creep) then
+					local nLocationAoE = bot:FindAoELocation(true, false, creep:GetLocation(), 0, nRadius, 0, 0)
+					if (nLocationAoE.count >= 4) then
+						return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
+					end
+				end
+			end
+		end
+
+		if J.IsFarming(bot) and fManaAfter > fManaThreshold1 and #nEnemyHeroes == 0 and bAttacking then
+			for _, creep in pairs(nEnemyCreeps) do
+				if J.IsValid(creep) and J.CanBeAttacked(creep) and not J.IsRunning(creep) then
+					local nLocationAoE = bot:FindAoELocation(true, false, creep:GetLocation(), 0, nRadius, 0, 0)
+					if (nLocationAoE.count >= 3)
+					or (nLocationAoE.count >= 2 and creep:IsAncientCreep())
+					or (nLocationAoE.count >= 1 and creep:GetHealth() >= 800)
+					then
+						return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
+					end
+				end
+			end
+		end
+	end
+
+	if fManaAfter > 0.5 and fManaAfter > fManaThreshold1 and #nEnemyHeroes == 0 and #nAllyHeroes <= 2 then
+		for _, creep in pairs(nEnemyCreeps) do
+			if J.IsValid(creep) and J.CanBeAttacked(creep) and not J.IsRunning(creep) then
+				local nLocationAoE = bot:FindAoELocation(true, false, creep:GetLocation(), 0, nRadius, 0, nDamage)
+				if (nLocationAoE.count >= 4) then
+					return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
+				end
+			end
+		end
+	end
+
+	if J.IsDoingRoshan(bot) then
+		if J.IsRoshan(botTarget)
+		and J.CanBeAttacked(botTarget)
+		and J.CanCastOnNonMagicImmune(botTarget)
+		and J.IsInRange(bot, botTarget, 600)
+		and bAttacking
+		and fManaAfter > 0.5
+		and fManaAfter > fManaThreshold1
 		then
-			local loc = bot:GetLocation() + (bot:GetLocation() - targetHero:GetLocation())
-			return BOT_ACTION_DESIRE_HIGH, loc
+			return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+		end
+	end
+
+	if J.IsDoingTormentor(bot) then
+		if J.IsTormentor(botTarget)
+		and J.IsInRange(bot, botTarget, 600)
+		and bAttacking
+		and fManaAfter > 0.5
+		and fManaAfter > fManaThreshold1
+		then
+			return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
 		end
 	end
 
 	return BOT_ACTION_DESIRE_NONE, 0
-
 end
 
+function X.ConsiderTidebringer()
+	if not J.CanCastAbility(Tidebringer) then
+		return BOT_ACTION_DESIRE_NONE
+	end
+
+	local bIsAutoCasted = Tidebringer:GetAutoCastState()
+
+	if not bIsAutoCasted then
+		Tidebringer:ToggleAutoCast()
+	end
+
+	return BOT_ACTION_DESIRE_NONE
+end
+
+function X.ConsiderXMarksTheSpot()
+	if not J.CanCastAbility(XMarksTheSpot)
+	or J.CanCastAbility(Torrent)
+	or J.CanCastAbility(Ghostship)
+	then
+		return BOT_ACTION_DESIRE_NONE, nil
+	end
+
+	local nCastRange = J.GetProperCastRange(false, bot, XMarksTheSpot:GetCastRange())
+	local fCastPoint = XMarksTheSpot:GetCastPoint()
+	local nDuration_Ally = XMarksTheSpot:GetSpecialValueInt('allied_duration')
+	local nDuration_Enemy = XMarksTheSpot:GetSpecialValueInt('duration')
+
+	for _, enemyHero in pairs(nEnemyHeroes) do
+		if J.IsValidHero(enemyHero)
+		and J.CanBeAttacked(enemyHero)
+		and J.IsInRange(bot, enemyHero, nCastRange)
+		and J.CanCastOnNonMagicImmune(enemyHero)
+		and J.CanCastOnTargetAdvanced(enemyHero)
+		and not enemyHero:HasModifier('modifier_necrolyte_reapers_scythe')
+		then
+			local fModifierTime = J.GetModifierTime(enemyHero, 'modifier_teleporting')
+			if enemyHero:HasModifier('modifier_teleporting') then
+				if  fModifierTime < nDuration_Enemy
+				and fModifierTime > fCastPoint
+				and not J.CanCastAbilitySoon(Torrent, fModifierTime + 0.5)
+				then
+					return BOT_ACTION_DESIRE_HIGH, enemyHero
+				end
+			end
+		end
+	end
+
+	if J.IsGoingOnSomeone(bot) then
+		if J.IsValidHero(botTarget)
+		and J.CanBeAttacked(botTarget)
+		and J.IsInRange(bot, botTarget, nCastRange)
+		and not J.IsInRange(bot, botTarget, nCastRange / 2)
+		and J.CanCastOnNonMagicImmune(botTarget)
+		and J.CanCastOnTargetAdvanced(botTarget)
+		then
+			local nInRangeAlly = J.GetAlliesNearLoc(botTarget:GetLocation(), 500)
+			if #nInRangeAlly == 0 and #J.GetHeroesTargetingUnit(nAllyHeroes, botTarget) >= 2 then
+				return BOT_ACTION_DESIRE_HIGH, botTarget
+			end
+		end
+	end
+
+	if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
+		for _, enemyHero in pairs(nEnemyHeroes) do
+			if J.IsValidHero(enemyHero)
+			and J.IsInRange(bot, enemyHero, nCastRange)
+			and J.CanCastOnNonMagicImmune(enemyHero)
+			and J.CanCastOnTargetAdvanced(enemyHero)
+			and not J.IsDisabled(enemyHero)
+			and not enemyHero:IsDisarmed()
+			and bot:WasRecentlyDamagedByHero(enemyHero, 3.0)
+			then
+				if J.IsChasingTarget(enemyHero, bot) then
+					if bot:GetHealth() > J.GetTotalEstimatedDamageToTarget(nEnemyHeroes, bot, nDuration_Enemy) then
+						return BOT_ACTION_DESIRE_HIGH, enemyHero
+					end
+				end
+			end
+		end
+	end
+
+	return BOT_ACTION_DESIRE_NONE, nil
+end
+
+function X.ConsiderReturn()
+	if not J.CanCastAbility(Return) then
+		return BOT_ACTION_DESIRE_NONE
+	end
+
+	return BOT_ACTION_DESIRE_NONE
+end
+
+function X.ConsiderTidalWave()
+	if not J.CanCastAbility(TidalWave) then
+		return BOT_ACTION_DESIRE_NONE, 0
+	end
+
+	local nCastRange = TidalWave:GetCastRange()
+	local nRadius = TidalWave:GetSpecialValueInt('radius')
+	local nManaCost = TidalWave:GetManaCost()
+	local fManaAfter = J.GetManaAfter(nManaCost)
+	local fManaThreshold1 = J.GetManaThreshold(bot, nManaCost, {Torrent, XMarksTheSpot, Ghostship})
+
+	if Torrent and Torrent:IsTrained() and Torrent:GetCooldown() - Torrent:GetCooldownTimeRemaining() < 3.1 then
+		return BOT_ACTION_DESIRE_NONE, 0
+	end
+
+	if J.IsInTeamFight(bot, 1200) then
+		local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nRadius, nRadius, 0, 0)
+		local nInRangeEnemy = J.GetEnemiesNearLoc(nLocationAoE.targetloc, nRadius)
+		local count = 0
+		for _, enemy in pairs(nInRangeEnemy) do
+			if J.IsValidHero(enemy)
+			and J.CanBeAttacked(enemy)
+			and not J.IsSuspiciousIllusion(enemy)
+			and not enemy:IsMagicImmune()
+			and not enemy:HasModifier('modifier_faceless_void_chronosphere_freeze')
+			and not enemy:HasModifier('modifier_enigma_black_hole_pull')
+			and not enemy:HasModifier('modifier_necrolyte_reapers_scythe')
+			then
+				count = count + 1
+			end
+		end
+
+		if count >= 2 and fManaAfter > fManaThreshold1 then
+			return BOT_ACTION_DESIRE_HIGH, J.VectorAway(bot:GetLocation(), nLocationAoE.targetloc, nRadius)
+		end
+	end
+
+	if J.IsGoingOnSomeone(bot) then
+		if J.IsValidHero(botTarget)
+		and J.CanBeAttacked(botTarget)
+		and J.IsInRange(bot, botTarget, nRadius - 200)
+		and not J.IsSuspiciousIllusion(botTarget)
+		and not botTarget:IsMagicImmune()
+		and not botTarget:HasModifier('modifier_faceless_void_chronosphere_freeze')
+		and not botTarget:HasModifier('modifier_enigma_black_hole_pull')
+		and not botTarget:HasModifier('modifier_necrolyte_reapers_scythe')
+		and fManaAfter > fManaThreshold1
+		then
+			if fManaAfter > fManaThreshold1 or J.IsChasingTarget(bot, botTarget) then
+				return BOT_ACTION_DESIRE_HIGH, J.VectorAway(bot:GetLocation(), botTarget:GetLocation(), nRadius)
+			end
+		end
+	end
+
+	if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
+		for _, enemyHero in pairs(nEnemyHeroes) do
+			if J.IsValidHero(enemyHero)
+			and J.IsInRange(bot, enemyHero, nRadius)
+			and not J.IsSuspiciousIllusion(enemyHero)
+			and not J.IsDisabled(enemyHero)
+			and not enemyHero:IsMagicImmune()
+			and not enemyHero:IsDisarmed()
+			and bot:WasRecentlyDamagedByHero(enemyHero, 2.0)
+			then
+				return BOT_ACTION_DESIRE_HIGH, enemyHero:GetLocation()
+			end
+		end
+	end
+
+	return BOT_ACTION_DESIRE_NONE, 0
+end
+
+function X.ConsiderGhostship()
+	if not J.CanCastAbility(Ghostship)
+	or J.CanCastAbility(XMarksTheSpot)
+	then
+		return BOT_ACTION_DESIRE_NONE, 0
+	end
+
+	local nCastRange = J.GetProperCastRange(false, bot, Ghostship:GetCastRange())
+	local nRadius = Ghostship:GetSpecialValueInt('ghostship_width')
+
+	if J.IsInTeamFight(bot, 1200) then
+		local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nCastRange, nRadius, 0, 0)
+		local nInRangeEnemy = J.GetEnemiesNearLoc(nLocationAoE.targetloc, nRadius)
+		if #nInRangeEnemy >= 2 then
+			local count = 0
+			for _, enemyHero in pairs(nInRangeEnemy) do
+				if J.IsValidHero(enemyHero)
+				and J.CanBeAttacked(enemyHero)
+				and not enemyHero:IsMagicImmune()
+				then
+					count = count + 1
+				end
+			end
+
+			if count >= 2 then
+				return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
+			end
+		end
+	end
+
+	return BOT_ACTION_DESIRE_NONE, 0
+end
+
+function X.ConsiderCombo1()
+	if J.CanCastAbility(Torrent) and J.CanCastAbility(XMarksTheSpot) and J.CanCastAbility(Ghostship) then
+		local nComboMana = Torrent:GetManaCost() + XMarksTheSpot:GetManaCost() + Ghostship:GetManaCost() + 75
+		if nComboMana > bot:GetMana() then
+			return BOT_ACTION_DESIRE_NONE, nil, 0
+		end
+
+		local nCastRange_X = J.GetProperCastRange(false, bot, XMarksTheSpot:GetCastRange())
+
+		if J.IsGoingOnSomeone(bot) then
+			if J.IsValidHero(botTarget)
+			and J.CanBeAttacked(botTarget)
+			and J.CanCastOnNonMagicImmune(botTarget)
+			and J.CanCastOnTargetAdvanced(botTarget)
+			and (GetUnitToUnitDistance(bot, botTarget) <= nCastRange_X + 300)
+			and (GetUnitToLocationDistance( botTarget, J.GetEnemyFountain()) > 600)
+			and not botTarget:HasModifier('modifier_abaddon_borrowed_time')
+			and not botTarget:HasModifier('modifier_enigma_black_hole_pull')
+			and not botTarget:HasModifier('modifier_faceless_void_chronosphere_freeze')
+			and not botTarget:HasModifier('modifier_oracle_false_promise_timer')
+			and not botTarget:HasModifier('modifier_templar_assassin_refraction_absorb')
+			and not botTarget:HasModifier('modifier_item_aeon_disk_buff')
+			and J.GetHP(botTarget) > 0.4
+			then
+				local nInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
+				local nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1200)
+				if not (#nInRangeAlly >= #nInRangeEnemy + 2) or J.IsInTeamFight(bot, 1200) then
+					return BOT_ACTION_DESIRE_HIGH, botTarget, J.GetCorrectLoc(botTarget, XMarksTheSpot:GetCastPoint())
+				end
+			end
+		end
+	end
+
+	return BOT_ACTION_DESIRE_NONE, nil, 0
+end
+
+function X.ConsiderCombo2()
+	if J.CanCastAbility(Torrent) and J.CanCastAbility(XMarksTheSpot) then
+		if J.CanCastAbilitySoon(Ghostship, 10) then
+			return BOT_ACTION_DESIRE_NONE, nil, 0
+		end
+
+		local nComboMana = Torrent:GetManaCost() + XMarksTheSpot:GetManaCost() + 75
+		if nComboMana > bot:GetMana() then
+			return BOT_ACTION_DESIRE_NONE, nil, 0
+		end
+
+		local nCastRange_X = J.GetProperCastRange(false, bot, XMarksTheSpot:GetCastRange())
+
+		if J.IsGoingOnSomeone(bot) then
+			if J.IsValidHero(botTarget)
+			and J.CanBeAttacked(botTarget)
+			and J.CanCastOnNonMagicImmune(botTarget)
+			and J.CanCastOnTargetAdvanced(botTarget)
+			and (GetUnitToUnitDistance(bot, botTarget) <= nCastRange_X + 300)
+			and (GetUnitToLocationDistance( botTarget, J.GetEnemyFountain()) > 600)
+			and not botTarget:HasModifier('modifier_abaddon_borrowed_time')
+			and not botTarget:HasModifier('modifier_enigma_black_hole_pull')
+			and not botTarget:HasModifier('modifier_faceless_void_chronosphere_freeze')
+			and not botTarget:HasModifier('modifier_oracle_false_promise_timer')
+			and not botTarget:HasModifier('modifier_templar_assassin_refraction_absorb')
+			and not botTarget:HasModifier('modifier_item_aeon_disk_buff')
+			then
+				local nInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
+				local nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1200)
+				if not (#nInRangeAlly >= #nInRangeEnemy + 3)
+				or (J.IsChasingTarget(bot, botTarget) and not J.IsInRange(bot, botTarget, nCastRange_X / 2))
+				then
+					return BOT_ACTION_DESIRE_HIGH, botTarget, J.GetCorrectLoc(botTarget, XMarksTheSpot:GetCastPoint())
+				end
+			end
+		end
+	end
+
+	return BOT_ACTION_DESIRE_NONE, nil, 0
+end
+
+function X.ConsiderCombo3()
+	if J.CanCastAbility(XMarksTheSpot) and J.CanCastAbility(Ghostship) then
+		local nComboMana = XMarksTheSpot:GetManaCost() + Ghostship:GetManaCost() + 75
+		if nComboMana > bot:GetMana() then
+			return BOT_ACTION_DESIRE_NONE, nil, 0
+		end
+
+		local nCastRange_X = J.GetProperCastRange(false, bot, XMarksTheSpot:GetCastRange())
+
+		if J.IsGoingOnSomeone(bot) then
+			if J.IsValidHero(botTarget)
+			and J.CanBeAttacked(botTarget)
+			and J.CanCastOnNonMagicImmune(botTarget)
+			and J.CanCastOnTargetAdvanced(botTarget)
+			and (GetUnitToUnitDistance(bot, botTarget) <= nCastRange_X + 300)
+			and (GetUnitToLocationDistance( botTarget, J.GetEnemyFountain()) > 600)
+			and not botTarget:HasModifier('modifier_abaddon_borrowed_time')
+			and not botTarget:HasModifier('modifier_enigma_black_hole_pull')
+			and not botTarget:HasModifier('modifier_faceless_void_chronosphere_freeze')
+			and not botTarget:HasModifier('modifier_oracle_false_promise_timer')
+			and not botTarget:HasModifier('modifier_templar_assassin_refraction_absorb')
+			and not botTarget:HasModifier('modifier_item_aeon_disk_buff')
+			then
+				local nInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
+				local nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1200)
+
+				if not (#nInRangeAlly >= #nInRangeEnemy + 2) then
+					if J.GetTotalEstimatedDamageToTarget(nInRangeAlly, botTarget, 5.0) > botTarget:GetHealth() or J.IsInTeamFight(bot, 1200) then
+						return BOT_ACTION_DESIRE_HIGH, botTarget, J.GetCorrectLoc(botTarget, XMarksTheSpot:GetCastPoint())
+					end
+				end
+			end
+		end
+	end
+
+	return BOT_ACTION_DESIRE_NONE, nil, 0
+end
 
 return X
--- dota2jmz@163.com QQ:2462331592..

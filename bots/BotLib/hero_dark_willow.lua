@@ -1,6 +1,3 @@
--- Currently bugged internally. Just adding her here in case Valve fixes her and (others) in the future...
--- She won't be selected.
-
 local X             = {}
 local bot           = GetBot()
 
@@ -10,99 +7,138 @@ local sTalentList   = J.Skill.GetTalentList( bot )
 local sAbilityList  = J.Skill.GetAbilityList( bot )
 local sRole   = J.Item.GetRoleItemsBuyList( bot )
 
-local tTalentTreeList = {
-						['t25'] = {0, 10},
-						['t20'] = {0, 10},
-						['t15'] = {0, 10},
-						['t10'] = {10, 0},
+if GetBot():GetUnitName() == 'npc_dota_hero_dark_willow'
+then
+
+local RI = require(GetScriptDirectory()..'/FunLib/util_role_item')
+
+local sUtility = {}
+local sUtilityItem = RI.GetBestUtilityItem(sUtility)
+
+local HeroBuild = {
+    ['pos_1'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_2'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_3'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_4'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {
+                    ['t25'] = {0, 10},
+                    ['t20'] = {10, 0},
+                    ['t15'] = {10, 0},
+                    ['t10'] = {10, 0},
+                }
+            },
+            ['ability'] = {
+                [1] = {1,2,1,3,1,6,1,2,2,2,6,3,3,3,6},
+            },
+            ['buy_list'] = {
+                "item_tango",
+                "item_double_branches",
+                "item_magic_stick",
+                "item_blood_grenade",
+                "item_faerie_fire",
+            
+                "item_tranquil_boots",
+                "item_magic_wand",
+                "item_urn_of_shadows",
+                "item_cyclone",
+                "item_spirit_vessel",--
+                "item_glimmer_cape",--
+                "item_boots_of_bearing",--
+                "item_aghanims_shard",
+                "item_octarine_core",--
+                "item_sheepstick",--
+                "item_wind_waker",--
+                "item_ultimate_scepter_2",
+                "item_moon_shard",
+            },
+            ['sell_list'] = {
+                "item_magic_wand", "item_sheepstick",
+            },
+        },
+    },
+    ['pos_5'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {
+                    ['t25'] = {0, 10},
+                    ['t20'] = {10, 0},
+                    ['t15'] = {10, 0},
+                    ['t10'] = {10, 0},
+                }
+            },
+            ['ability'] = {
+                [1] = {1,2,1,3,1,6,1,2,2,2,6,3,3,3,6},
+            },
+            ['buy_list'] = {
+                "item_tango",
+                "item_double_branches",
+                "item_magic_stick",
+                "item_blood_grenade",
+                "item_faerie_fire",
+            
+                "item_arcane_boots",
+                "item_magic_wand",
+                "item_urn_of_shadows",
+                "item_cyclone",
+                "item_spirit_vessel",--
+                "item_glimmer_cape",--
+                "item_guardian_greaves",--
+                "item_aghanims_shard",
+                "item_octarine_core",--
+                "item_sheepstick",--
+                "item_wind_waker",--
+                "item_ultimate_scepter_2",
+                "item_moon_shard",
+            },
+            ['sell_list'] = {
+                "item_magic_wand", "item_sheepstick",
+            },
+        },
+    },
 }
 
-local tAllAbilityBuildList = {
-						{1,2,1,3,1,4,1,2,2,2,4,3,3,3,4},--pos4,5
-}
+local sSelectedBuild = HeroBuild[sRole][RandomInt(1, #HeroBuild[sRole])]
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+local nTalentBuildList = J.Skill.GetTalentBuild(J.Skill.GetRandomBuild(sSelectedBuild.talent))
+local nAbilityBuildList = J.Skill.GetRandomBuild(sSelectedBuild.ability)
 
-local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
-
-local sRoleItemsBuyList = {}
-
-sRoleItemsBuyList['pos_4'] = {
-    "item_double_tango",
-    "item_enchanted_mango",
-    "item_double_branches",
-    "item_blood_grenade",
-
-    "item_boots",
-    "item_magic_wand",
-    "item_arcane_boots",
-    "item_guardian_greaves",--
-    "item_cyclone",
-    "item_aghanims_shard",
-    "item_force_staff",--
-    "item_aether_lens",--
-    "item_ultimate_scepter",--
-    "item_hurricane_pike",--
-    "item_octarine_core",--
-    "item_wind_waker",
-    "item_moon_shard",
-    "item_ultimate_scepter_2",
-}
-
-sRoleItemsBuyList['pos_5'] = {
-    "item_double_tango",
-    "item_enchanted_mango",
-    "item_double_branches",
-    "item_blood_grenade",
-
-    "item_boots",
-    "item_magic_wand",
-    "item_tranquil_boots",
-	"item_pipe",--
-    "item_cyclone",
-    "item_force_staff",--
-    "item_aether_lens",--
-    "item_aghanims_shard",
-    "item_boots_of_bearing",--
-    "item_ultimate_scepter",--
-    "item_hurricane_pike",--
-    "item_octarine_core",--
-    "item_wind_waker",
-    "item_moon_shard",
-    "item_ultimate_scepter_2",
-}
-
-sRoleItemsBuyList['pos_3'] = {
-    "item_double_tango",
-    "item_enchanted_mango",
-    "item_double_branches",
-
-    "item_boots",
-    "item_magic_wand",
-    "item_tranquil_boots",
-    "item_cyclone",
-    "item_aghanims_shard",
-    "item_force_staff",--
-    "item_aether_lens",--
-    "item_boots_of_bearing",--
-    "item_ultimate_scepter",--
-    "item_hurricane_pike",--
-    "item_octarine_core",--
-    "item_wind_waker",
-    "item_moon_shard",
-    "item_ultimate_scepter_2",
-}
-
-sRoleItemsBuyList['pos_1'] = sRoleItemsBuyList['pos_3']
-
-sRoleItemsBuyList['pos_2'] = sRoleItemsBuyList['pos_3']
-
-X['sBuyList'] = sRoleItemsBuyList[sRole]
-
-X['sSellList'] = {
-	"item_ultimate_scepter",
-	"item_magic_wand",
-}
+X['sBuyList'] = sSelectedBuild.buy_list
+X['sSellList'] = sSelectedBuild.sell_list
 
 if J.Role.IsPvNMode() or J.Role.IsAllShadow() then X['sBuyList'], X['sSellList'] = { 'PvN_antimage' }, {} end
 
@@ -117,462 +153,398 @@ function X.MinionThink(hMinionUnit)
 	Minion.MinionThink(hMinionUnit)
 end
 
+end
+
 local BrambleMaze   = bot:GetAbilityByName('dark_willow_bramble_maze')
 local ShadowRealm   = bot:GetAbilityByName('dark_willow_shadow_realm')
-local CurseCrown    = bot:GetAbilityByName('dark_willow_cursed_crown')
+local CursedCrown    = bot:GetAbilityByName('dark_willow_cursed_crown')
 local Bedlam        = bot:GetAbilityByName('dark_willow_bedlam')
 local Terrorize     = bot:GetAbilityByName('dark_willow_terrorize')
 
 local BrambleMazeDesire, BrambleMazeLocation
 local ShadowRealmDesire
 local CurseCrownDesire, CurseCrownTarget
-local BedlamDesire, BedlamTarget
+local BedlamDesire
 local TerrorizeDesire, TerrorizeLocation
 
-local BedlamTime    = 0
-local TerrorizeTime = 0
+local bAttacking = false
+local botTarget, botHP
+local nAllyHeroes, nEnemyHeroes
 
 function X.SkillsComplement()
-	if J.CanNotUseAbility(bot)
-    then
+    bot = GetBot()
+
+    if Terrorize and Terrorize:IsInAbilityPhase() and TerrorizeLocation then
+        local nRadius = Terrorize:GetSpecialValueInt('destination_radius')
+        local nInRangeEnemy = J.GetEnemiesNearLoc(TerrorizeLocation, nRadius)
+        if #nInRangeEnemy == 0 then
+            bot:Action_ClearActions(true)
+            return
+        end
+    end
+
+	if J.CanNotUseAbility(bot) then return end
+
+    BrambleMaze   = bot:GetAbilityByName('dark_willow_bramble_maze')
+    ShadowRealm   = bot:GetAbilityByName('dark_willow_shadow_realm')
+    CursedCrown    = bot:GetAbilityByName('dark_willow_cursed_crown')
+    Bedlam        = bot:GetAbilityByName('dark_willow_bedlam')
+    Terrorize     = bot:GetAbilityByName('dark_willow_terrorize')
+
+    bAttacking = J.IsAttacking(bot)
+    botHP = J.GetHP(bot)
+    botTarget = J.GetProperTarget(bot)
+    nAllyHeroes = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
+    nEnemyHeroes = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
+
+    TerrorizeDesire, TerrorizeLocation = X.ConsiderTerrorize()
+    if TerrorizeDesire > 0 then
+        J.SetQueuePtToINT(bot, false)
+        bot:ActionQueue_UseAbilityOnLocation(Terrorize, TerrorizeLocation)
+        return
+    end
+
+    CurseCrownDesire, CurseCrownTarget = X.ConsiderCursedCrown()
+    if CurseCrownDesire > 0 then
+        J.SetQueuePtToINT(bot, false)
+        bot:ActionQueue_UseAbilityOnEntity(CursedCrown, CurseCrownTarget)
         return
     end
 
     BrambleMazeDesire, BrambleMazeLocation = X.ConsiderBrambleMaze()
-    if BrambleMazeDesire > 0
-    then
-        bot:Action_UseAbilityOnLocation(BrambleMaze, BrambleMazeLocation)
+    if BrambleMazeDesire > 0 then
+        J.SetQueuePtToINT(bot, false)
+        bot:ActionQueue_UseAbilityOnLocation(BrambleMaze, BrambleMazeLocation)
         return
     end
 
-    BedlamDesire, BedlamTarget = X.ConsiderBedlam()
-    if BedlamDesire > 0
-    then
-        bot:Action_UseAbility(Bedlam)
-        BedlamTime = DotaTime()
+    BedlamDesire = X.ConsiderBedlam()
+    if BedlamDesire > 0 then
+        J.SetQueuePtToINT(bot, false)
+        bot:ActionQueue_UseAbility(Bedlam)
         return
     end
 
     ShadowRealmDesire = X.ConsiderShadowRealm()
-    if ShadowRealmDesire > 0
-    then
-        bot:Action_UseAbility(ShadowRealm)
-    end
-
-    CurseCrownDesire, CurseCrownTarget = X.ConsiderCurseCrown()
-    if CurseCrownDesire > 0
-    then
-        bot:Action_UseAbilityOnEntity(CurseCrown, CurseCrownTarget)
-        return
-    end
-
-    TerrorizeDesire, TerrorizeLocation = X.ConsiderTerrorize()
-    if TerrorizeDesire > 0
-    then
-        bot:Action_UseAbilityOnLocation(Terrorize, TerrorizeLocation)
-        TerrorizeTime = DotaTime()
+    if ShadowRealmDesire > 0 then
+        J.SetQueuePtToINT(bot, false)
+        bot:ActionQueue_UseAbility(ShadowRealm)
         return
     end
 end
 
 function X.ConsiderBrambleMaze()
-    if not BrambleMaze:IsFullyCastable()
-    then
+    if not J.CanCastAbility(BrambleMaze) then
         return BOT_ACTION_DESIRE_NONE, 0
     end
 
-	local nCastRange = BrambleMaze:GetCastRange()
-	local nEnemyHeroes = J.GetNearbyHeroes(bot,nCastRange, true, BOT_MODE_NONE)
-    local botTarget = J.GetProperTarget(bot)
+	local nCastRange = J.GetProperCastRange(false, bot, BrambleMaze:GetCastRange())
+    local nRadius = BrambleMaze:GetSpecialValueInt('placement_range')
+    local nManaCost = BrambleMaze:GetManaCost()
+	local fManaAfter = J.GetManaAfter(nManaCost)
+	local fManaThreshold1 = J.GetManaThreshold(bot, nManaCost, {ShadowRealm, CursedCrown, Bedlam, Terrorize})
 
-	for _, enemyHero in pairs(nEnemyHeroes)
-	do
-		if J.IsValid(enemyHero)
-		and (enemyHero:IsChanneling() or J.IsCastingUltimateAbility(enemyHero))
-        and J.CanCastOnNonMagicImmune(enemyHero)
-        and not J.IsSuspiciousIllusion(enemyHero)
-		then
-			return BOT_ACTION_DESIRE_HIGH, enemyHero:GetLocation()
-		end
-	end
-
-	if J.IsGoingOnSomeone(bot)
-	then
-		if J.IsValidTarget(botTarget)
-        and J.CanCastOnNonMagicImmune(botTarget)
+	if J.IsGoingOnSomeone(bot) then
+		if  J.IsValidHero(botTarget)
+        and J.CanBeAttacked(botTarget)
         and J.IsInRange(bot, botTarget, nCastRange)
-        and J.IsMoving(botTarget)
+        and J.CanCastOnNonMagicImmune(botTarget)
         and not J.IsDisabled(botTarget)
-        and not J.IsSuspiciousIllusion(botTarget)
+        and not botTarget:HasModifier('modifier_faceless_void_chronosphere_freeze')
+        and not botTarget:HasModifier('modifier_necrolyte_reapers_scythe')
 		then
-			return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+            local nLocationAoE = bot:FindAoELocation(true, true, botTarget:GetLocation(), 0, nRadius, 0, 0)
+            if J.IsInTeamFight(bot, 1200) then
+                if nLocationAoE.count >= 2 then
+                    return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
+                end
+            end
+
+            if J.IsChasingTarget(bot, botTarget) then
+                return BOT_ACTION_DESIRE_HIGH, botTarget:GetLocation()
+            end
 		end
 	end
 
-	if J.IsRetreating(bot)
-    and	J.IsValid(nEnemyHeroes[1])
-    and J.CanCastOnNonMagicImmune(nEnemyHeroes[1])
-    and not J.IsDisabled(nEnemyHeroes[1])
-    and not J.IsRealInvisible(bot)
-    and not J.IsSuspiciousIllusion(nEnemyHeroes[1])
-	then
-		return BOT_ACTION_DESIRE_HIGH, nEnemyHeroes[1]:GetLocation()
-	end
+    if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
+        for _, enemy in pairs(nEnemyHeroes) do
+            if J.IsValidHero(enemy)
+            and J.CanBeAttacked(enemy)
+            and J.IsInRange(bot, enemy, nCastRange)
+            and J.CanCastOnNonMagicImmune(enemy)
+            and not J.IsDisabled(enemy)
+            and bot:WasRecentlyDamagedByHero(enemy, 3.0)
+            then
+                if J.IsChasingTarget(enemy, bot)
+                or #nEnemyHeroes > #nAllyHeroes
+                then
+                    return BOT_ACTION_DESIRE_HIGH, enemy:GetLocation()
+                end
+            end
+        end
+    end
+
+    if J.IsDefending(bot) and fManaAfter > fManaThreshold1 then
+        local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nCastRange, nRadius, 0, 0)
+        if nLocationAoE.count >= 2 then
+            return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
+        end
+    end
 
     return BOT_ACTION_DESIRE_NONE, 0
 end
 
 function X.ConsiderShadowRealm()
-    if not ShadowRealm:IsFullyCastable()
+    if not J.CanCastAbility(ShadowRealm)
+    or J.IsRealInvisible(bot)
+    or bot:HasModifier('modifier_dark_willow_shadow_realm_buff')
+    or not J.CanBeAttacked(bot)
     then
         return BOT_ACTION_DESIRE_NONE
     end
 
-	local nRangeBonus = ShadowRealm:GetSpecialValueInt('attack_range_bonus')
-    local nAttackRange = bot:GetAttackRange()
-    local nEnemyHeroes = J.GetNearbyHeroes(bot,nAttackRange + nRangeBonus, true, BOT_MODE_NONE)
-    local botTarget = J.GetProperTarget(bot)
+    local nManaCost = BrambleMaze:GetManaCost()
+	local fManaAfter = J.GetManaAfter(nManaCost)
+	local fManaThreshold1 = J.GetManaThreshold(bot, nManaCost, {BrambleMaze, CursedCrown, Bedlam, Terrorize})
 
-	if J.IsGoingOnSomeone(bot)
-	then
-		if J.GetHP(bot) < 0.5
-        and J.IsValidHero(botTarget)
-        and J.CanCastOnMagicImmune(botTarget)
-        and J.IsInRange(bot, botTarget, bot:GetAttackRange())
-        and not J.IsSuspiciousIllusion(botTarget)
-        and not botTarget:HasModifier('modifier_abaddon_borrowed_time')
-        and not J.IsRealInvisible(bot)
-        and nEnemyHeroes ~= nil and #nEnemyHeroes >= 2
+    if bot:HasModifier('modifier_fountain_aura_buff') and botHP < 0.75 and #nEnemyHeroes == 0 then
+        return BOT_ACTION_DESIRE_HIGH
+    end
+
+	if not bot:IsMagicImmune() and fManaAfter > fManaThreshold1 then
+		if (J.IsStunProjectileIncoming(bot, 350))
+		or (J.IsUnitTargetProjectileIncoming(bot, 350))
+		or (J.IsWillBeCastUnitTargetSpell(bot, 400) and not bot:HasModifier('modifier_sniper_assassinate'))
 		then
 			return BOT_ACTION_DESIRE_HIGH
 		end
 	end
 
-	if (J.IsRetreating(bot) or (J.IsRetreating(bot) and J.GetHP(bot) < 0.6 and bot:WasRecentlyDamagedByAnyHero(2)))
-    and not J.IsRealInvisible(bot)
-    and nEnemyHeroes ~= nil and #nEnemyHeroes >= 1
-	then
-        if (J.DidEnemyCastAbility() or J.GetHP(bot) < 0.5 or J.IsStunProjectileIncoming(bot, 800))
+    if J.IsGoingOnSomeone(bot) then
+        if bot:WasRecentlyDamagedByAnyHero(1.0) and botHP < 0.5 then
+            return BOT_ACTION_DESIRE_HIGH
+        end
+    end
+
+    if J.IsRetreating(bot) and bot:WasRecentlyDamagedByAnyHero(3.0) then
+        for _, enemy in pairs(nEnemyHeroes) do
+            if J.IsValidHero(enemy)
+            and J.IsInRange(bot, enemy, 1200)
+            and not J.IsSuspiciousIllusion(enemy)
+            then
+                if (J.IsChasingTarget(enemy, bot) and botHP < 0.6)
+                or (bot:IsRooted() and bot:WasRecentlyDamagedByHero(enemy, 3.0))
+                or (#nEnemyHeroes > #nAllyHeroes and bot:IsFacingLocation(J.GetTeamFountain(), 20) and J.IsRunning(bot))
+                then
+                    return BOT_ACTION_DESIRE_HIGH
+                end
+            end
+        end
+    end
+
+    if J.IsDoingRoshan(bot) then
+        if  J.IsRoshan(botTarget)
+        and J.IsInRange(bot, botTarget, 800)
+        and botHP < 0.25
+        then
+            if botTarget:GetAttackTarget() == bot or botHP < 0.15 then
+                return BOT_ACTION_DESIRE_HIGH
+            end
+        end
+    end
+
+    if J.IsDoingTormentor(bot) then
+        if  J.IsTormentor(botTarget)
+        and J.IsInRange(bot, botTarget, 800)
+        and botHP < 0.25
+        then
+            if botTarget:GetAttackTarget() == bot or botHP < 0.15 then
+                return BOT_ACTION_DESIRE_HIGH
+            end
+        end
+    end
+
+    if botHP < 0.2 and not J.IsInTeamFight(bot, 800) then
+        if bot:WasRecentlyDamagedByAnyHero(1.0)
+        or bot:WasRecentlyDamagedByCreep(1.0)
+        or bot:WasRecentlyDamagedByTower(1.0)
         then
             return BOT_ACTION_DESIRE_HIGH
         end
-
-		return BOT_ACTION_DESIRE_MODERATE
-	end
+    end
 
     return BOT_ACTION_DESIRE_NONE
 end
 
-function X.ConsiderCurseCrown()
-	if not CurseCrown:IsFullyCastable()
-    then
+function X.ConsiderCursedCrown()
+	if not J.CanCastAbility(CursedCrown) then
 		return BOT_ACTION_DESIRE_NONE, nil
 	end
 
-	local nCastRange = J.GetProperCastRange(false, bot, CurseCrown:GetCastRange())
-    local nMana = bot:GetMana() / bot:GetMaxMana()
-	local nEnemysHeroesInRange = J.GetNearbyHeroes(bot,nCastRange + 50, true, BOT_MODE_NONE)
-	local nEnemysHeroesInBonus = J.GetNearbyHeroes(bot,nCastRange + 150, true, BOT_MODE_NONE)
-	local nWeakestEnemyHeroInRange = J.GetWeakestUnit(nEnemysHeroesInRange)
-	local nWeakestEnemyHeroInBonus = J.GetWeakestUnit(nEnemysHeroesInBonus)
+	local nCastRange = J.GetProperCastRange(false, bot, CursedCrown:GetCastRange())
+    local nCastPoint = CursedCrown:GetCastPoint()
+    local nDelay = CursedCrown:GetSpecialValueInt('delay')
+    local nManaCost = CursedCrown:GetManaCost()
+	local fManaAfter = J.GetManaAfter(nManaCost)
+	local fManaThreshold1 = J.GetManaThreshold(bot, nManaCost, {BrambleMaze, ShadowRealm, Bedlam, Terrorize})
 
-	local nTowers = bot:GetNearbyTowers(900, true)
+    for _, enemyHero in pairs(nEnemyHeroes) do
+        if  J.IsValidHero(enemyHero)
+        and J.CanBeAttacked(enemyHero)
+        and J.IsInRange(bot, enemyHero, nCastRange)
+        and J.CanCastOnNonMagicImmune(enemyHero)
+        and J.CanCastOnTargetAdvanced(enemyHero)
+        then
+            if enemyHero:HasModifier('modifier_teleporting') then
+                if J.GetModifierTime(enemyHero, 'modifier_teleporting') > nDelay + nCastPoint then
+                    return BOT_ACTION_DESIRE_HIGH, enemyHero
+                end
+            elseif enemyHero:IsChanneling() and fManaAfter > fManaThreshold1 then
+                local nAllyHeroesAttackingTarget = J.GetHeroesTargetingUnit(nAllyHeroes, enemyHero)
+                if #nAllyHeroesAttackingTarget >= 2 then
+                    return BOT_ACTION_DESIRE_HIGH, enemyHero
+                end
+            end
+        end
+    end
 
-	if J.IsInTeamFight(bot, 1200)
-	then
-		local npcMostDangerousEnemy = nil
-		local nMostDangerousDamage = 0
-		local nEnemyHeroes = J.GetNearbyHeroes(bot,nCastRange + 100, true, BOT_MODE_NONE)
+    if J.IsGoingOnSomeone(bot) then
+        local hTarget = nil
+        local hTargetDamage = 0
+        for _, enemy in pairs(nEnemyHeroes) do
+            if J.IsValidHero(enemy)
+            and J.CanBeAttacked(enemy)
+            and J.IsInRange(bot, enemy, nCastRange + 300)
+            and J.CanCastOnNonMagicImmune(enemy)
+            and J.CanCastOnTargetAdvanced(enemy)
+            and not J.IsDisabled(enemy)
+            and not enemy:HasModifier('modifier_necrolyte_reapers_scythe')
+            and not enemy:HasModifier('modifier_legion_commander_duel')
+            then
+                local enemyDamage = enemy:GetEstimatedDamageToTarget(false, bot, 5.0, DAMAGE_TYPE_ALL)
+                if hTargetDamage < enemyDamage then
+                    hTarget = enemy
+                    hTargetDamage = enemyDamage
+                end
+            end
+        end
 
-		for _, enemyHero in pairs(nEnemyHeroes)
-		do
-			if J.IsValidHero(enemyHero)
-            and J.CanCastOnNonMagicImmune(enemyHero)
-            and J.CanCastOnTargetAdvanced(enemyHero)
-            and not J.IsDisabled(enemyHero)
-			then
-				local npcEnemyDamage = enemyHero:GetEstimatedDamageToTarget(false, bot, 3.5, DAMAGE_TYPE_ALL)
-
-				if npcEnemyDamage > nMostDangerousDamage
-				then
-					nMostDangerousDamage = npcEnemyDamage
-					npcMostDangerousEnemy = enemyHero
-				end
-			end
-		end
-
-		if npcMostDangerousEnemy ~= nil
-		then
-			return BOT_ACTION_DESIRE_HIGH, npcMostDangerousEnemy
-		end
+        if hTarget then
+            return BOT_ACTION_DESIRE_HIGH, hTarget
+        end
 	end
 
-    if J.IsGoingOnSomeone(bot)
-	then
-		local botTarget = J.GetProperTarget(bot)
-
-		if J.IsValidTarget(botTarget)
-        and J.CanCastOnNonMagicImmune(botTarget)
-        and J.CanCastOnTargetAdvanced(botTarget)
-        and J.IsInRange(bot, botTarget, nCastRange)
-        and not J.IsDisabled(botTarget)
-        and not J.IsSuspiciousIllusion(botTarget)
-		then
-			return BOT_ACTION_DESIRE_HIGH, botTarget
-		end
-	end
-
-	if J.IsRetreating(bot)
-	then
-		for _, enemyHero in pairs(nEnemysHeroesInRange)
-		do
-			if J.IsValidHero(enemyHero)
-            and J.CanCastOnNonMagicImmune(enemyHero)
-            and J.CanCastOnTargetAdvanced(enemyHero)
+    if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
+        for _, enemyHero in pairs(nEnemyHeroes) do
+            if  J.IsValidHero(enemyHero)
+            and J.CanBeAttacked(enemyHero)
             and J.IsInRange(bot, enemyHero, nCastRange)
-            and bot:WasRecentlyDamagedByHero(enemyHero, 3.5)
-            and bot:IsFacingLocation(enemyHero:GetLocation(), 45)
-            and not J.IsDisabled(enemyHero)
-            and not J.IsSuspiciousIllusion(enemyHero)
-			then
-				return BOT_ACTION_DESIRE_HIGH, enemyHero
-			end
-		end
-	end
-
-	if bot:WasRecentlyDamagedByAnyHero(2)
-    and nEnemysHeroesInRange[1] ~= nil
-    and #nEnemysHeroesInRange >= 1
-	then
-		for _, enemyHero in pairs(nEnemysHeroesInRange)
-		do
-			if J.IsValidHero(enemyHero)
             and J.CanCastOnNonMagicImmune(enemyHero)
             and J.CanCastOnTargetAdvanced(enemyHero)
-            and bot:IsFacingLocation(enemyHero:GetLocation(), 30)
             and not J.IsDisabled(enemyHero)
-            and not J.IsSuspiciousIllusion(enemyHero)
-			then
-				return BOT_ACTION_DESIRE_HIGH, enemyHero
-			end
-		end
+            and not enemyHero:IsDisarmed()
+            and bot:WasRecentlyDamagedByHero(enemyHero, 2.0)
+            then
+                return BOT_ACTION_DESIRE_HIGH, enemyHero
+            end
+        end
 	end
 
-
-	if (J.IsLaning(bot) and #nTowers == 0) or DotaTime() > 12 * 60
-	then
-		if nMana > 0.7
-		then
-			if J.IsValidHero(nWeakestEnemyHeroInRange)
-            and not J.IsDisabled(nWeakestEnemyHeroInRange)
-			then
-                return BOT_ACTION_DESIRE_HIGH, nWeakestEnemyHeroInRange
-			end
-		end
-
-		if nMana > 0.88
-		then
-			local nEnemysCreeps = bot:GetNearbyCreeps(1200, true)
-
-			if J.IsValidHero(nWeakestEnemyHeroInBonus)
-            and J.GetHP(bot) > 0.6
-            and #nTowers == 0
-            and ((#nEnemysCreeps + #nEnemysHeroesInBonus ) <= 5 or DotaTime() > 12 * 60)
-            and not J.IsDisabled(nWeakestEnemyHeroInBonus)
-			then
-                return BOT_ACTION_DESIRE_HIGH, nWeakestEnemyHeroInBonus
-			end
-		end
-
-		if J.IsValidHero(nWeakestEnemyHeroInRange)
-        and J.GetHP(nWeakestEnemyHeroInRange) < 0.4
-		then
-            return BOT_ACTION_DESIRE_HIGH, nWeakestEnemyHeroInRange
-		end
-	end
+    if not J.IsRetreating(bot) and not J.IsRealInvisible(bot) and fManaAfter > fManaThreshold1 then
+        for _, allyHero in pairs(nAllyHeroes) do
+            if J.IsValidHero(allyHero)
+            and bot ~= allyHero
+            and J.IsRetreating(allyHero)
+            and not J.IsSuspiciousIllusion(allyHero)
+            and not J.IsInTeamFight(bot, 1200)
+            then
+                for _, enemyHero in pairs(nEnemyHeroes) do
+                    if  J.IsValidHero(enemyHero)
+                    and J.CanBeAttacked(enemyHero)
+                    and J.IsInRange(bot, enemyHero, nCastRange)
+                    and J.CanCastOnNonMagicImmune(enemyHero)
+                    and J.CanCastOnTargetAdvanced(enemyHero)
+                    and J.IsChasingTarget(enemyHero, allyHero)
+                    and not J.IsDisabled(enemyHero)
+                    and not enemyHero:IsDisarmed()
+                    and allyHero:WasRecentlyDamagedByHero(enemyHero, 3.0)
+                    then
+                        return BOT_ACTION_DESIRE_HIGH, enemyHero
+                    end
+                end
+            end
+        end
+    end
 
 	return BOT_ACTION_DESIRE_NONE, nil
 end
 
 function X.ConsiderBedlam()
-    if not Bedlam:IsFullyCastable()
-    then
-        return BOT_ACTION_DESIRE_NONE, nil
+    if not J.CanCastAbility(Bedlam) then
+        return BOT_ACTION_DESIRE_NONE
     end
 
-    if Terrorize:IsTrained()
-    then
-        local nFearDuration = Bedlam:GetSpecialValueInt('destination_status_duration')
-        if DotaTime() - TerrorizeTime <= nFearDuration
-        then
-            return BOT_ACTION_DESIRE_NONE, nil
+    local nRadius = Bedlam:GetSpecialValueInt('attack_radius')
+    local nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), bot:GetAttackRange() + nRadius)
+
+    if J.IsValidHero(nInRangeEnemy[1]) then
+        if J.IsInTeamFight(bot, 1200) then
+            return BOT_ACTION_DESIRE_HIGH
+        end
+
+        if #nAllyHeroes >= #nEnemyHeroes or bot:HasModifier('modifier_dark_willow_shadow_realm_buff') then
+            for _, enemyHero in pairs(nInRangeEnemy) do
+                if J.IsValidHero(enemyHero)
+                and J.CanBeAttacked(enemyHero)
+                and not enemyHero:HasModifier('modifier_abaddon_borrowed_time')
+                and not enemyHero:HasModifier('modifier_dazzle_shallow_grave')
+                and not enemyHero:HasModifier('modifier_faceless_void_chronosphere_freeze')
+                and not enemyHero:HasModifier('modifier_necrolyte_reapers_scythe')
+                and not enemyHero:HasModifier('modifier_oracle_false_promise_timer')
+                and not enemyHero:HasModifier('modifier_item_blade_mail_reflect')
+                then
+                    if J.GetHP(enemyHero) < 0.5
+                    or J.IsDisabled(enemyHero)
+                    or enemyHero:HasModifier('modifier_legion_commander_duel')
+                   then
+                       return BOT_ACTION_DESIRE_HIGH
+                   end
+                end
+            end
         end
     end
 
-    local nCastRange = J.GetProperCastRange(false, bot, Bedlam:GetCastRange())
-    local botTarget = J.GetProperTarget(bot)
-    local nEnemyHeroes = J.GetNearbyHeroes(bot,nCastRange, true, BOT_MODE_NONE)
-
-	if J.IsInTeamFight(bot, 1200)
-	then
-        if #nEnemyHeroes >= 1
-        then
-            return BOT_ACTION_DESIRE_HIGH, bot
-        end
-	end
-
-    if J.IsGoingOnSomeone(bot)
-	then
-        if J.IsInRange(bot, botTarget, nCastRange)
-        and J.IsValidTarget(botTarget)
-        then
-            return BOT_ACTION_DESIRE_HIGH, allyTarget
-        end
-	end
-
-    return BOT_ACTION_DESIRE_NONE, nil
+    return BOT_ACTION_DESIRE_NONE
 end
 
 function X.ConsiderTerrorize()
-    if not Terrorize:IsFullyCastable()
-    or DotaTime() - BedlamTime <= 5
-    then
+    if not J.CanCastAbility(Terrorize) then
         return BOT_ACTION_DESIRE_NONE, 0
     end
 
 	local nCastRange = J.GetProperCastRange(false, bot, Terrorize:GetCastRange())
+    local nCastPoint = Terrorize:GetCastPoint()
 	local nRadius   = Terrorize:GetSpecialValueInt('destination_radius')
-	local nEnemysHeroesInBonus = J.GetNearbyHeroes(bot, nCastRange + 150, true, BOT_MODE_NONE)
 
-	if J.IsInTeamFight(bot, 1200)
-	then
-        local nTeamFightLocation = J.GetTeamFightLocation(bot)
-		local nAllyHeroes = J.GetNearbyHeroes(bot,nCastRange, false, BOT_MODE_NONE)
-        local nDisabledAllies = 0
-        local nInArenaEnemy = 0
-        local IsCoreAllyInChronosphere = false
-        local nChronodAlly = nil
-
-        if nTeamFightLocation ~= nil
-        then
-            nAllyHeroes = J.GetAlliesNearLoc(nTeamFightLocation, nRadius)
-        end
-
-        -----
-        local nEnemyHeroes = J.GetNearbyHeroes(bot,1200, true, BOT_MODE_NONE)
-        for _, enemyHero in pairs(nEnemyHeroes)
-        do
-            if J.IsValidHero(enemyHero)
-            and not J.IsSuspiciousIllusion(enemyHero)
-            and enemyHero:HasModifier('modifier_mars_arena_of_blood')
-            then
-                nInArenaEnemy = nInArenaEnemy + 1
-            end
-        end
-
-        if nInArenaEnemy >= 2
-        then
-			local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nCastRange, nRadius, 0, 0)
-
-			if nLocationAoE.count >= 2
-			then
-				return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
-			end
-		end
-        -----
-
-		for _, allyHero in pairs(nAllyHeroes)
-        do
-			if J.IsValidHero(allyHero)
-            and J.IsDisabled(allyHero)
-            and not allyHero:IsIllusion()
-            then
-				nDisabledAllies = nDisabledAllies + 1
-			end
-
-            -----
-            if J.IsValidHero(allyHero)
-            and J.IsCore(allyHero)
-            and allyHero:HasModifier('modifier_faceless_void_chronosphere_freeze')
-            then
-                local nNearbyEnemyWithAlly = J.GetNearbyHeroes(allyHero, 400, true, BOT_MODE_NONE)
-
-                if nNearbyEnemyWithAlly ~= nil and #nNearbyEnemyWithAlly >= 1
+    if J.IsInTeamFight(bot, 1200) then
+        local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nCastRange, nRadius, 0, 0)
+        local nInRangeEnemy = J.GetEnemiesNearLoc(nLocationAoE.targetloc, nRadius)
+        if #nInRangeEnemy >= 2 then
+            local count = 0
+            for _, enemyHero in pairs(nInRangeEnemy) do
+                if  J.IsValidHero(enemyHero)
+                and J.CanBeAttacked(enemyHero)
+                and J.CanCastOnNonMagicImmune(enemyHero)
+                and not J.IsChasingTarget(bot, enemyHero)
+                and not J.IsDisabled(enemyHero)
                 then
-                    IsCoreAllyInChronosphere = true
-                    nChronodAlly = allyHero
-                    break
+                    count = count + 1
                 end
             end
-            -----
-		end
 
-        -----
-        if nChronodAlly ~= nil
-        and IsCoreAllyInChronosphere
-        then
-            return BOT_ACTION_DESIRE_HIGH, ChronodAlly:GetLocation()
-        end
-        -----
-
-		if nDisabledAllies >= 2
-        then
-			local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nCastRange, nRadius, 0, 0)
-
-			if nLocationAoE.count >= 2
-			then
-				return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
-			end
-		end
-	end
-
-	if J.IsRetreating(bot)
-	then
-		local nEnemyHeroes = J.GetNearbyHeroes(bot,nCastRange, true, BOT_MODE_NONE)
-
-		if bot:WasRecentlyDamagedByAnyHero(2.0)
-        and #nEnemyHeroes >= 2
-		then
-			local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nCastRange, nRadius, 0, 0)
-
-			if nLocationAoE.count >= 2
-			then
-				return BOT_ACTION_DESIRE_MODERATE, nLocationAoE.targetloc
-			end
-		end
-	end
-
-	--打断
-	for _, npcEnemy in pairs( nEnemysHeroesInBonus )
-	do
-		if J.IsValid( npcEnemy )
-			and (npcEnemy:IsChanneling() or npcEnemy:HasModifier( 'modifier_teleporting' ))
-			and J.CanCastOnNonMagicImmune( npcEnemy )
-			and J.CanCastOnTargetAdvanced( npcEnemy )
-		then
-            local nLocationAoE = bot:FindAoELocation(true, true, bot:GetLocation(), nCastRange, 300, 0, 0)
-            if nLocationAoE.count >= 2
-            then
+            if count >= 2 then
                 return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
             end
-			return BOT_ACTION_DESIRE_HIGH, npcEnemy:GetLocation()
-		end
-	end
-
-    local nAllyHeroes = J.GetNearbyHeroes(bot,1200, false, BOT_MODE_NONE)
-    for _, allyHero in pairs(nAllyHeroes)
-    do
-        if J.IsValidHero(allyHero)
-        and J.IsRetreating(allyHero) or (J.IsRetreating(allyHero) and J.GetHP(allyHero) < 0.4)
-        and J.IsCore(allyHero)
-        and allyHero:WasRecentlyDamagedByAnyHero(2)
-        then
-            local nLocationAoE = bot:FindAoELocation(true, true, allyHero:GetLocation(), nCastRange, nRadius, 0, 0)
-
-			if nLocationAoE.count >= 2
-			then
-				return BOT_ACTION_DESIRE_HIGH, nLocationAoE.targetloc
-			end
         end
     end
 

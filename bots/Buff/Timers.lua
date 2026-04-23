@@ -1,7 +1,7 @@
 TIMERS_THINK = 0.01
 
 if Timers == nil then
-    -- print ( '[Timers] creating Timers' )
+    print ( '[Timers] creating Timers' )
     Timers = {}
     setmetatable(Timers, {
       __call = function(t, ...)
@@ -26,7 +26,7 @@ if Timers == nil then
     --end
 
     -- Track game time, since the dt passed in to think is actually wall-clock time not simulation time.
-    -- local now = GameRules:GetGameTime()
+    local now = GameRules:GetGameTime()
 
     -- Process timers
     for k,v in pairs(Timers.timers) do
@@ -57,13 +57,14 @@ if Timers == nil then
 
         -- Run the callback
         local status, nextCall
+        local errHandler = debug and debug.traceback or tostring
         if v.context then
           status, nextCall = xpcall(function() return v.callback(v.context, v) end, function (msg)
-                                      return msg..'\n'..debug.traceback()..'\n'
+                                      return msg..'\n'..errHandler('Traceback: ')..'\n'
                                     end)
         else
           status, nextCall = xpcall(function() return v.callback(v) end, function (msg)
-                                      return msg..'\n'..debug.traceback()..'\n'
+                                      return msg..'\n'..errHandler('Traceback: ')..'\n'
                                     end)
         end
 

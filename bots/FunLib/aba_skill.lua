@@ -1,10 +1,16 @@
-local Utils = require( GetScriptDirectory()..'/FunLib/utils' )
+----------------------------------------------------------------------------------------------------
+--- The Creation Come From: BOT EXPERIMENT Credit:FURIOUSPUPPY
+--- BOT EXPERIMENT Author: Arizona Fauzie
+--- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=837040016
+--- Refactor: 决明子 Email: dota2jmz@163.com 微博@Dota2_决明子
+--- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=1573671599
+--- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=1627071163
+----------------------------------------------------------------------------------------------------
+
 
 local X = {}
 
-local generic_hidden = 'generic_hidden'
 
-if DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE == nil then DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE = 64 end
 X['sAllyUnitAbilityIndex'] = {
 
 		["bloodseeker_bloodrage"] = true,
@@ -66,7 +72,7 @@ X['sStunProjectileAbilityIndex'] = {
 function X.GetTalentList( bot )
 
 	local sTalentList = {}
-	for i = 0, 25
+	for i = 0, 23
 	do
 		local hAbility = bot:GetAbilityInSlot( i )
 		if hAbility ~= nil and hAbility:IsTalent()
@@ -79,49 +85,20 @@ function X.GetTalentList( bot )
 
 end
 
+
 function X.GetAbilityList( bot )
-	local sAbilityList = { }
-	local totalUpgradeableAbilities = 10
-	local unitName = bot:GetUnitName()
-	for slot = 0, totalUpgradeableAbilities
+
+	local sAbilityList = {}
+	for slot = 0, 6
 	do
-		local ability = bot:GetAbilityInSlot(slot)
-		if ability then
-			local name = ability:GetName()
-			--print(unitName..' has ability name= '..name..', at slot idx= '..slot)
-			if name == generic_hidden then
-				-- if we dont check slots but just dropping generic_hidden, it can cause some others fail to learn abilities correctly, e.g. chen.
-				if slot ~= 0 then
-					--print('[WARN] The ability '..name..' on slot '..slot..' cannot be accessed for hero: '..unitName)
-					table.insert(sAbilityList, generic_hidden)
-				else
-					print('[WARN] The ability '..name..' on slot '..slot..' does not make sense. Check if there is anything wrong with this hero: '..unitName)
-				end
-			elseif Utils.AbilityBehaviorHasFlag(ability:GetBehavior(), DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE) and ability:IsHidden() then
-				--print('[WARN] The ability '..name..' on slot '..slot..' is not learnable (e.g. innate like) for hero: '..unitName)
-			elseif ability:IsUltimate() and slot >= 4 then
-				-- print('[INFO] The ability '..name..' on slot '..slot..' is the ultimate for hero: '..unitName)
-				if Utils.AbilityBehaviorHasFlag(ability:GetBehavior(), DOTA_ABILITY_BEHAVIOR_NOT_LEARNABLE) or ability:IsHidden() then
-					print('[WARN] The ability '..name..' on slot '..slot..' seems to be an ultimate for hero: '..unitName..'. But it is not learnable OR hidden. Check if there is anything wrong with this hero.')
-				else
-					sAbilityList[6] = name
-					--print(unitName..' loaded ultimate ability with name= '..name..', at idx= '..slot)
-				end
-				-- if slot > 5 then
-				-- 	print('[WARN] The ability '..name..' on slot '..slot..' is another ultimate for hero: '..unitName..'. Wrong slot detected. Check if there is anything wrong with this hero.')
-				-- end
-			elseif not ability:IsTalent() then
-				table.insert(sAbilityList, name)
-				--print(unitName..' loaded ability with name= '..name..', at idx= '..slot)
-			else
-				print(unitName..' failed to load ability with name= '..name..', at idx= '..slot)
-			end
-		else
-			print('[WARN] It seems there is no ability on slot '..slot..' for '..unitName)
+		local hAbility = bot:GetAbilityInSlot( slot )
+		if hAbility ~= nil then
+			table.insert( sAbilityList, bot:GetAbilityInSlot( slot ):GetName() )
 		end
 	end
 
 	return sAbilityList
+
 end
 
 
@@ -149,101 +126,173 @@ function X.GetTalentBuild( tTalentTreeList )
 
 end
 
-
 function X.GetSkillList( sAbilityList, nAbilityBuildList, sTalentList, nTalentBuildList )
-	local botName = GetBot():GetUnitName()
-	-- build it to not hard code here anymore as it's annoying patch changes
 	local sSkillList = {}
-	-- Default dynamic mapping for heroes with standard progressions
-	local talent_idx = 1
-	local ability_idx = 1
-	-- Calculate total slots based on available abilities and talents.
-	local totalSlots = #nAbilityBuildList + #nTalentBuildList
-	for i = 1, totalSlots do
-		-- Insert a talent when it's a talent slot or when all abilities have been used.
-		if (i >= 10 and (i % 5 == 0 or ability_idx > #nAbilityBuildList)) then
-			sSkillList[i] = sTalentList[nTalentBuildList[talent_idx]]
-			talent_idx = talent_idx + 1
-		else
-			if ability_idx <= #nAbilityBuildList then
-				sSkillList[i] = sAbilityList[nAbilityBuildList[ability_idx]]
-				ability_idx = ability_idx + 1
-			end
-		end
-	end
+	local botName = GetBot():GetUnitName()
+	local bMoreMeepoFacet = botName == 'npc_dota_hero_meepo' and true
 
-	if botName == 'npc_dota_hero_meepo'
-	then
+	--[[
+	7.40+ broke "ActionImmediate_LevelAbility"
+	ability points are different server side; the distribution is also "wrong", except invoker
+	~for most heroes:             (now)					 (before?)
+					level  1-17 : 14 points (other 15)   16 points
+					level 18-22 :  1 points				 2 points
+					level 23-30 :  8 points      		 5 points
+	
+	will level talents last
+	]]
+
+	sSkillList = {
+		[ 1] = {done = false, name = sAbilityList[nAbilityBuildList[1]]},
+		[ 2] = {done = false, name = sAbilityList[nAbilityBuildList[2]]},
+		[ 3] = {done = false, name = sAbilityList[nAbilityBuildList[3]]},
+		[ 4] = {done = false, name = sAbilityList[nAbilityBuildList[4]]},
+		[ 5] = {done = false, name = sAbilityList[nAbilityBuildList[5]]},
+		[ 6] = {done = false, name = sAbilityList[nAbilityBuildList[6]]},
+		[ 7] = {done = false, name = sAbilityList[nAbilityBuildList[7]]},
+		[ 8] = {done = false, name = sAbilityList[nAbilityBuildList[8]]},
+		[ 9] = {done = false, name = sAbilityList[nAbilityBuildList[9]]},
+		[10] = {done = false, name = sAbilityList[nAbilityBuildList[10]]},
+		[11] = {done = false, name = sAbilityList[nAbilityBuildList[12]]},
+		[12] = {done = false, name = sAbilityList[nAbilityBuildList[11]]},
+		[13] = {done = false, name = sAbilityList[nAbilityBuildList[13]]},
+		[14] = {done = false, name = sAbilityList[nAbilityBuildList[14]]},
+		[15] = {done = false, name = nil},
+		[16] = {done = false, name = nil},
+		[17] = {done = false, name = nil},
+		[18] = {done = false, name = sAbilityList[nAbilityBuildList[15]]},
+		[19] = {done = false, name = nil},
+		[20] = {done = false, name = nil},
+		[21] = {done = false, name = nil},
+		[22] = {done = false, name = nil},
+		[23] = {done = false, name = sTalentList[nTalentBuildList[1]]},
+		[24] = {done = false, name = sTalentList[nTalentBuildList[2]]},
+		[25] = {done = false, name = sTalentList[nTalentBuildList[3]]},
+		[26] = {done = false, name = sTalentList[nTalentBuildList[4]]},
+		[27] = {done = false, name = sTalentList[nTalentBuildList[5]]},
+		[28] = {done = false, name = sTalentList[nTalentBuildList[6]]},
+		[29] = {done = false, name = sTalentList[nTalentBuildList[7]]},
+		[30] = {done = false, name = sTalentList[nTalentBuildList[8]]},
+	}
+
+	if botName == 'npc_dota_hero_lone_druid_bear' then
 		sSkillList = {
-						[1] = sAbilityList[nAbilityBuildList[1]],
-						[2] = sAbilityList[nAbilityBuildList[2]],
-						[3] = sAbilityList[nAbilityBuildList[3]],
-						[4] = sAbilityList[nAbilityBuildList[4]],
-						[5] = sAbilityList[nAbilityBuildList[5]],
-						[6] = sAbilityList[nAbilityBuildList[6]],
-						[7] = sAbilityList[nAbilityBuildList[7]],
-						[8] = sAbilityList[nAbilityBuildList[8]],
-						[9] = sAbilityList[nAbilityBuildList[9]],
-						[10] = sAbilityList[nAbilityBuildList[10]],
-						[11] = sTalentList[nTalentBuildList[1]],
-						[12] = sAbilityList[nAbilityBuildList[11]],
-						[13] = sAbilityList[nAbilityBuildList[12]],
-						[14] = sAbilityList[nAbilityBuildList[13]],
-						[15] = sTalentList[nTalentBuildList[2]],
-						[16] = sAbilityList[nAbilityBuildList[14]],
-						[17] = sAbilityList[nAbilityBuildList[15]],
-						[18] = sTalentList[nTalentBuildList[3]],
-						[19] = sTalentList[nTalentBuildList[4]],
-						[20] = sTalentList[nTalentBuildList[5]],
-						[21] = sTalentList[nTalentBuildList[6]],
-						[22] = sTalentList[nTalentBuildList[7]],
-						[23] = sTalentList[nTalentBuildList[8]],
-						[24] = sAbilityList[nAbilityBuildList[16]],
-						[25] = sTalentList[nTalentBuildList[3]],
-						[26] = sTalentList[nTalentBuildList[4]],
-						[27] = sTalentList[nTalentBuildList[5]],
-						[28] = sTalentList[nTalentBuildList[6]],
-						[29] = sTalentList[nTalentBuildList[7]],
-						[30] = sTalentList[nTalentBuildList[8]],
+			[10] = {done = false, name = sTalentList[nTalentBuildList[1]]},
+			[15] = {done = false, name = sTalentList[nTalentBuildList[2]]},
+			[20] = {done = false, name = sTalentList[nTalentBuildList[3]]},
+			[25] = {done = false, name = sTalentList[nTalentBuildList[4]]},
+			[27] = {done = false, name = sTalentList[nTalentBuildList[5]]},
+			[28] = {done = false, name = sTalentList[nTalentBuildList[6]]},
+			[29] = {done = false, name = sTalentList[nTalentBuildList[7]]},
+			[30] = {done = false, name = sTalentList[nTalentBuildList[8]]},
 		}
 	end
-	if botName == 'npc_dota_hero_invoker'
-	then
+
+	if botName == 'npc_dota_hero_invoker' then
 		sSkillList = {
-						[1] = sAbilityList[nAbilityBuildList[1]],
-						[2] = sAbilityList[nAbilityBuildList[2]],
-						[3] = sAbilityList[nAbilityBuildList[3]],
-						[4] = sAbilityList[nAbilityBuildList[4]],
-						[5] = sAbilityList[nAbilityBuildList[5]],
-						[6] = sAbilityList[nAbilityBuildList[6]],
-						[7] = sAbilityList[nAbilityBuildList[7]],
-						[8] = sAbilityList[nAbilityBuildList[8]],
-						[9] = sAbilityList[nAbilityBuildList[9]],
-						[10] = sTalentList[nTalentBuildList[1]],
-						[11] = sAbilityList[nAbilityBuildList[10]],
-						[12] = sAbilityList[nAbilityBuildList[11]],
-						[13] = sAbilityList[nAbilityBuildList[12]],
-						[14] = sAbilityList[nAbilityBuildList[13]],
-						[15] = sTalentList[nTalentBuildList[2]],
-						[16] = sAbilityList[nAbilityBuildList[14]],
-						[17] = sAbilityList[nAbilityBuildList[15]],
-						[18] = sAbilityList[nAbilityBuildList[16]],
-						[19] = sAbilityList[nAbilityBuildList[17]],
-						[20] = sTalentList[nTalentBuildList[3]],
-						[21] = sAbilityList[nAbilityBuildList[18]],
-						[22] = sAbilityList[nAbilityBuildList[19]],
-						[23] = sAbilityList[nAbilityBuildList[20]],
-						[24] = sAbilityList[nAbilityBuildList[21]],
-						[25] = sTalentList[nTalentBuildList[4]],
-						[26] = sTalentList[nTalentBuildList[5]],
-						[27] = sTalentList[nTalentBuildList[6]],
-						[28] = sTalentList[nTalentBuildList[7]],
-						[29] = sTalentList[nTalentBuildList[8]],
-					}
+			[ 1] = {done = false, name = sAbilityList[nAbilityBuildList[1]]},
+			[ 2] = {done = false, name = sAbilityList[nAbilityBuildList[2]]},
+			[ 3] = {done = false, name = sAbilityList[nAbilityBuildList[3]]},
+			[ 4] = {done = false, name = sAbilityList[nAbilityBuildList[4]]},
+			[ 5] = {done = false, name = sAbilityList[nAbilityBuildList[5]]},
+			[ 6] = {done = false, name = sAbilityList[nAbilityBuildList[6]]},
+			[ 7] = {done = false, name = sAbilityList[nAbilityBuildList[7]]},
+			[ 8] = {done = false, name = sAbilityList[nAbilityBuildList[8]]},
+			[ 9] = {done = false, name = sAbilityList[nAbilityBuildList[9]]},
+			[10] = {done = false, name = sAbilityList[nAbilityBuildList[10]]},
+			[11] = {done = false, name = sAbilityList[nAbilityBuildList[11]]},
+			[12] = {done = false, name = sAbilityList[nAbilityBuildList[12]]},
+			[13] = {done = false, name = sAbilityList[nAbilityBuildList[13]]},
+			[14] = {done = false, name = sAbilityList[nAbilityBuildList[14]]},
+			[15] = {done = false, name = sAbilityList[nAbilityBuildList[15]]},
+			[16] = {done = false, name = sAbilityList[nAbilityBuildList[16]]},
+			[17] = {done = false, name = sAbilityList[nAbilityBuildList[17]]},
+			[18] = {done = false, name = sAbilityList[nAbilityBuildList[18]]},
+			[19] = {done = false, name = sAbilityList[nAbilityBuildList[19]]},
+			[20] = {done = false, name = sAbilityList[nAbilityBuildList[20]]},
+			[21] = {done = false, name = sAbilityList[nAbilityBuildList[21]]},
+			[22] = {done = false, name = sTalentList[nTalentBuildList[1]]},
+			[23] = {done = false, name = sTalentList[nTalentBuildList[2]]},
+			[24] = {done = false, name = sTalentList[nTalentBuildList[3]]},
+			[25] = {done = false, name = sTalentList[nTalentBuildList[4]]},
+			[26] = {done = false, name = nil},
+			[27] = {done = false, name = sTalentList[nTalentBuildList[5]]},
+			[28] = {done = false, name = sTalentList[nTalentBuildList[6]]},
+			[29] = {done = false, name = sTalentList[nTalentBuildList[7]]},
+			[30] = {done = false, name = sTalentList[nTalentBuildList[8]]},
+		}
 	end
 
-	-- print("Aba list for: "..botName)
-    -- Utils.PrintTable(sSkillList)
+	if bMoreMeepoFacet then
+		sSkillList = {
+			[ 1] = {done = false, name = sAbilityList[nAbilityBuildList[1]]},
+			[ 2] = {done = false, name = sAbilityList[nAbilityBuildList[2]]},
+			[ 3] = {done = false, name = sAbilityList[nAbilityBuildList[3]]},
+			[ 4] = {done = false, name = sAbilityList[nAbilityBuildList[4]]},
+			[ 5] = {done = false, name = sAbilityList[nAbilityBuildList[5]]},
+			[ 6] = {done = false, name = sAbilityList[nAbilityBuildList[6]]},
+			[ 7] = {done = false, name = sAbilityList[nAbilityBuildList[7]]},
+			[ 8] = {done = false, name = sAbilityList[nAbilityBuildList[8]]},
+			[ 9] = {done = false, name = sAbilityList[nAbilityBuildList[9]]},
+			[10] = {done = false, name = sAbilityList[nAbilityBuildList[10]]},
+			[11] = {done = false, name = sAbilityList[nAbilityBuildList[11]]},
+			[12] = {done = false, name = sAbilityList[nAbilityBuildList[12]]},
+			[13] = {done = false, name = sAbilityList[nAbilityBuildList[13]]},
+			[14] = {done = false, name = sAbilityList[nAbilityBuildList[14]]},
+			[15] = {done = false, name = nil},
+			[16] = {done = false, name = nil},
+			[17] = {done = false, name = nil},
+			[18] = {done = false, name = sAbilityList[nAbilityBuildList[15]]},
+			[19] = {done = false, name = nil},
+			[20] = {done = false, name = nil},
+			[21] = {done = false, name = nil},
+			[22] = {done = false, name = sTalentList[nTalentBuildList[1]]},
+			[23] = {done = false, name = sTalentList[nTalentBuildList[2]]},
+			[24] = {done = false, name = sAbilityList[nAbilityBuildList[16]]},
+			[25] = {done = false, name = sTalentList[nTalentBuildList[3]]},
+			[26] = {done = false, name = sTalentList[nTalentBuildList[4]]},
+			[27] = {done = false, name = sTalentList[nTalentBuildList[5]]},
+			[28] = {done = false, name = sTalentList[nTalentBuildList[6]]},
+			[29] = {done = false, name = sTalentList[nTalentBuildList[7]]},
+			[30] = {done = false, name = sTalentList[nTalentBuildList[8]]},
+		}
+	end
+
+	if not bMoreMeepoFacet and #nAbilityBuildList == 16 then
+		sSkillList = {
+			[ 1] = {done = false, name = sAbilityList[nAbilityBuildList[1]]},
+			[ 2] = {done = false, name = sAbilityList[nAbilityBuildList[2]]},
+			[ 3] = {done = false, name = sAbilityList[nAbilityBuildList[3]]},
+			[ 4] = {done = false, name = sAbilityList[nAbilityBuildList[4]]},
+			[ 5] = {done = false, name = sAbilityList[nAbilityBuildList[5]]},
+			[ 6] = {done = false, name = sAbilityList[nAbilityBuildList[6]]},
+			[ 7] = {done = false, name = sAbilityList[nAbilityBuildList[7]]},
+			[ 8] = {done = false, name = sAbilityList[nAbilityBuildList[8]]},
+			[ 9] = {done = false, name = sAbilityList[nAbilityBuildList[9]]},
+			[10] = {done = false, name = sAbilityList[nAbilityBuildList[10]]},
+			[11] = {done = false, name = sAbilityList[nAbilityBuildList[12]]},
+			[12] = {done = false, name = sAbilityList[nAbilityBuildList[11]]},
+			[13] = {done = false, name = sAbilityList[nAbilityBuildList[13]]},
+			[14] = {done = false, name = sAbilityList[nAbilityBuildList[14]]},
+			[15] = {done = false, name = nil},
+			[16] = {done = false, name = nil},
+			[17] = {done = false, name = sAbilityList[nAbilityBuildList[15]]},
+			[18] = {done = false, name = sAbilityList[nAbilityBuildList[16]]},
+			[19] = {done = false, name = nil},
+			[20] = {done = false, name = nil},
+			[21] = {done = false, name = nil},
+			[22] = {done = false, name = nil},
+			[23] = {done = false, name = sTalentList[nTalentBuildList[1]]},
+			[24] = {done = false, name = sTalentList[nTalentBuildList[2]]},
+			[25] = {done = false, name = sTalentList[nTalentBuildList[3]]},
+			[26] = {done = false, name = sTalentList[nTalentBuildList[4]]},
+			[27] = {done = false, name = sTalentList[nTalentBuildList[5]]},
+			[28] = {done = false, name = sTalentList[nTalentBuildList[6]]},
+			[29] = {done = false, name = sTalentList[nTalentBuildList[7]]},
+			[30] = {done = false, name = sTalentList[nTalentBuildList[8]]},
+		}
+	end
+
 	return sSkillList
 end
 

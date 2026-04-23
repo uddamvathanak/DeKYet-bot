@@ -7,95 +7,115 @@ local sTalentList = J.Skill.GetTalentList( bot )
 local sAbilityList = J.Skill.GetAbilityList( bot )
 local sRole = J.Item.GetRoleItemsBuyList( bot )
 
-local tTalentTreeList = {
-						['t25'] = {0, 10},
-						['t20'] = {10, 0},
-						['t15'] = {10, 0},
-						['t10'] = {10, 0},
+if GetBot():GetUnitName() == 'npc_dota_hero_life_stealer'
+then
+
+local RI = require(GetScriptDirectory()..'/FunLib/util_role_item')
+
+local sUtility = {}
+local sUtilityItem = RI.GetBestUtilityItem(sUtility)
+
+local HeroBuild = {
+    ['pos_1'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {
+                    ['t25'] = {10, 0},
+                    ['t20'] = {10, 0},
+                    ['t15'] = {0, 10},
+                    ['t10'] = {10, 0},
+                }
+            },
+            ['ability'] = {
+                [1] = {2,3,1,3,3,6,3,2,2,2,1,6,1,1,6},
+            },
+            ['buy_list'] = {
+                "item_tango",
+                "item_double_branches",
+                "item_quelling_blade",
+                "item_double_gauntlets",
+            
+                "item_magic_wand",
+                "item_phase_boots",
+                "item_armlet",
+                "item_radiance",--
+                "item_sange_and_yasha",--
+                "item_aghanims_shard",
+                "item_basher",
+                "item_bloodthorn",--
+                "item_abyssal_blade",--
+                "item_skadi",--
+                "item_moon_shard",
+                "item_ultimate_scepter_2",
+                "item_travel_boots_2",--
+            },
+            ['sell_list'] = {
+                "item_gauntlets", "item_radiance",
+                "item_gauntlets", "item_sange_and_yasha",
+                "item_quelling_blade", "item_basher",
+                "item_quelling_blade", "item_abyssal_blade",
+                "item_magic_wand", "item_bloodthorn",
+                "item_armlet", "item_skadi"
+            },
+        },
+    },
+    ['pos_2'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_3'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_4'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
+    ['pos_5'] = {
+        [1] = {
+            ['talent'] = {
+                [1] = {},
+            },
+            ['ability'] = {
+                [1] = {},
+            },
+            ['buy_list'] = {},
+            ['sell_list'] = {},
+        },
+    },
 }
 
-local tAllAbilityBuildList = {
-						{2,3,1,3,3,6,3,2,2,2,1,6,1,1,6},--pos1
-						-- {2,3,3,3,6,3,2,2,2,6,6},--pos1
-}
+local sSelectedBuild = HeroBuild[sRole][RandomInt(1, #HeroBuild[sRole])]
 
-local nAbilityBuildList = J.Skill.GetRandomBuild( tAllAbilityBuildList )
+local nTalentBuildList = J.Skill.GetTalentBuild(J.Skill.GetRandomBuild(sSelectedBuild.talent))
+local nAbilityBuildList = J.Skill.GetRandomBuild(sSelectedBuild.ability)
 
-local nTalentBuildList = J.Skill.GetTalentBuild( tTalentTreeList )
-
-local sRandom = RandomInt(1, 2) == 1 and "item_radiance" or "item_desolator"
-
-local sRoleItemsBuyList = {}
-
-sRoleItemsBuyList['pos_1'] = {
-    "item_tango",
-    "item_branches",
-    "item_faerie_fire",
-    "item_quelling_blade",
-    "item_double_gauntlets",
-
-    "item_orb_of_corrosion",
-	"item_magic_wand",
-    "item_phase_boots",
-    "item_armlet",
-    sRandom,--
-    "item_aghanims_shard",
-    "item_assault",--
-    "item_basher",
-    "item_nullifier",--
-    "item_monkey_king_bar",--
-    "item_travel_boots",
-    "item_abyssal_blade",--
-    "item_moon_shard",
-    "item_travel_boots_2",--
-    "item_ultimate_scepter_2",
-}
-
-sRoleItemsBuyList['pos_2'] = sRoleItemsBuyList['pos_1']
-
-sRoleItemsBuyList['pos_3'] = sRoleItemsBuyList['pos_1']
-
-sRoleItemsBuyList['pos_4'] = {
-	'item_priest_outfit',
-	"item_hand_of_midas",
-	"item_mekansm",
-	"item_glimmer_cape",--
-	"item_guardian_greaves",--
-    "item_basher",
-    "item_monkey_king_bar",--
-	"item_assault",--
-	"item_heavens_halberd",--
-	"item_aghanims_shard",
-    "item_abyssal_blade",--
-	"item_ultimate_scepter",
-	"item_moon_shard",
-	"item_ultimate_scepter_2",
-}
-
-sRoleItemsBuyList['pos_5'] = {
-	'item_priest_outfit',
-	"item_hand_of_midas",
-	"item_mekansm",
-	"item_glimmer_cape",--
-	"item_pipe",--
-    "item_basher",
-    "item_monkey_king_bar",--
-	"item_assault",--
-	"item_heavens_halberd",--
-	"item_aghanims_shard",
-    "item_abyssal_blade",--
-	"item_ultimate_scepter",
-	"item_moon_shard",
-	"item_ultimate_scepter_2",
-}
-
-X['sBuyList'] = sRoleItemsBuyList[sRole]
-
-X['sSellList'] = {
-
-	"item_black_king_bar",
-	"item_quelling_blade",
-}
+X['sBuyList'] = sSelectedBuild.buy_list
+X['sSellList'] = sSelectedBuild.sell_list
 
 if J.Role.IsPvNMode() or J.Role.IsAllShadow() then X['sBuyList'], X['sSellList'] = { 'PvN_mid' }, {} end
 
@@ -106,96 +126,37 @@ X['sSkillList'] = J.Skill.GetSkillList( sAbilityList, nAbilityBuildList, sTalent
 X['bDeafaultAbility'] = false
 X['bDeafaultItem'] = false
 
-local botTarget, infestTarget, infestTargetType
-local nAllyHeroes, nEnemyHeroes
-
 function X.MinionThink(hMinionUnit)
-    local botHp = J.GetHP(bot)
-
-    -- Control ability: lets LS take over the infested creep
-    local hControl = hMinionUnit:GetAbilityByName('life_stealer_control')
-    if hControl and not hControl:IsHidden() and hControl:IsFullyCastable() then
-        hMinionUnit:Action_UseAbility(hControl)
-        return
-    end
-
-    -- Consume (burst out of host)
-    local hConsume = hMinionUnit:GetAbilityByName('life_stealer_consume')
-    if hConsume and hConsume:IsFullyCastable() then
-        local nNearbyEnemy = hMinionUnit:GetNearbyHeroes(1200, true, BOT_MODE_NONE)
-        local bIsHeroHost = hMinionUnit:IsHero()
-
-        -- Track infest time for anti-stuck timeout
-        if not bot._infestTime then bot._infestTime = DotaTime() end
-        local nInfestDuration = DotaTime() - bot._infestTime
-
-        -- === CONSUME CONDITIONS (ordered by priority) ===
-
-        -- 1. Pop out at fountain (we're healed, go fight)
-        if botHp > 0.9 and hMinionUnit:HasModifier('modifier_fountain_aura_buff') then
-            hMinionUnit:Action_UseAbility(hConsume)
-            bot._infestTime = nil
-            return
-        end
-
-        -- 2. Teamfight burst: pop out for AoE damage when healthy and enemies present
-        if nNearbyEnemy and #nNearbyEnemy >= 2 and botHp > 0.7 then
-            hMinionUnit:Action_UseAbility(hConsume)
-            bot._infestTime = nil
-            return
-        end
-
-        -- 3. Fully healed: no reason to stay inside
-        if botHp > 0.95 and nInfestDuration > 2 then
-            hMinionUnit:Action_UseAbility(hConsume)
-            bot._infestTime = nil
-            return
-        end
-
-        -- 4. Creep host: move toward fight, pop when enemies are close
-        if not bIsHeroHost then
-            if nNearbyEnemy and #nNearbyEnemy > 0 and botHp > 0.5 then
-                -- Enemies in range and healthy enough — burst out for damage
-                hMinionUnit:Action_UseAbility(hConsume)
-                bot._infestTime = nil
+    for i = 0, 5 do
+        local hAbility = hMinionUnit:GetAbilityInSlot(i)
+        if hAbility ~= nil and hAbility:GetName() == 'life_stealer_consume' then
+            local nInRangeEnemy = hMinionUnit:GetNearbyHeroes(1200, true, BOT_MODE_NONE)
+            if hMinionUnit:HasModifier('modifier_fountain_aura_buff')
+            or (J.GetHP(bot) > 0.9 and #nInRangeEnemy <= 1)
+            then
+                hMinionUnit:Action_UseAbility(hAbility)
                 return
             end
-            -- Move creep toward teamfight or fountain
-            local nTeamFightLocation = J.GetTeamFightLocation(bot)
-            if nTeamFightLocation and botHp > 0.5 then
-                hMinionUnit:Action_MoveToLocation(nTeamFightLocation)
+
+            if bot.infest_target == 'creep' then
+                if J.IsInTeamFight(bot, 1600) and J.GetHP(bot) > 0.55 then
+                    local nTeamFightLocation = J.GetTeamFightLocation(bot)
+                    if nTeamFightLocation ~= nil then
+                        hMinionUnit:Action_MoveToLocation(nTeamFightLocation)
+                        return
+                    end
+                else
+                    hMinionUnit:Action_MoveToLocation(J.GetTeamFountain())
+                    return
+                end
             else
-                hMinionUnit:Action_MoveToLocation(J.GetTeamFountain())
-            end
-            return
-        end
-
-        -- 5. Hero host: pop out when healed enough and action is happening
-        if bIsHeroHost then
-            -- Pop out to fight alongside ally when healthy
-            if botHp > 0.75 and nNearbyEnemy and #nNearbyEnemy > 0 then
-                hMinionUnit:Action_UseAbility(hConsume)
-                bot._infestTime = nil
                 return
             end
-            -- Pop out when fully healed (even if no enemies — don't ride ally forever)
-            if botHp > 0.85 and nInfestDuration > 4 then
-                hMinionUnit:Action_UseAbility(hConsume)
-                bot._infestTime = nil
-                return
-            end
-        end
-
-        -- 6. Anti-stuck timeout: if inside for 15+ seconds, pop out regardless
-        -- (Infest heals 3-5% HP/sec, 15 sec = 45-75% HP restored — should be enough)
-        if nInfestDuration > 15 then
-            hMinionUnit:Action_UseAbility(hConsume)
-            bot._infestTime = nil
-            return
         end
     end
-
     Minion.MinionThink(hMinionUnit)
+end
+
 end
 
 local Rage          = bot:GetAbilityByName('life_stealer_rage')
@@ -204,8 +165,6 @@ local Rage          = bot:GetAbilityByName('life_stealer_rage')
 local OpenWounds    = bot:GetAbilityByName('life_stealer_open_wounds')
 local Infest        = bot:GetAbilityByName('life_stealer_infest')
 local Consume       = bot:GetAbilityByName('life_stealer_consume')
-local Control       = bot:GetAbilityByName('life_stealer_control')
-
 
 local RageDesire
 local OpenWoundsDesire, OpenWoundsTarget
@@ -213,14 +172,16 @@ local InfestDesire, InfestTarget
 local ConsumeDesire
 
 local bAttacking = false
-local botHP, botMaxMana, botManaRegen
+local botTarget, botHP, botMaxMana, botManaRegen
+local nAllyHeroes, nEnemyHeroes
 
 function X.SkillsComplement()
-    -- Re-fetch ability handles each tick for safety
-    Rage       = bot:GetAbilityByName('life_stealer_rage')
-    OpenWounds = bot:GetAbilityByName('life_stealer_open_wounds')
-    Infest     = bot:GetAbilityByName('life_stealer_infest')
-    Consume    = bot:GetAbilityByName('life_stealer_consume')
+    bot = GetBot()
+
+    Rage          = bot:GetAbilityByName('life_stealer_rage')
+    OpenWounds    = bot:GetAbilityByName('life_stealer_open_wounds')
+    Infest        = bot:GetAbilityByName('life_stealer_infest')
+    Consume       = bot:GetAbilityByName('life_stealer_consume')
 
     bAttacking = J.IsAttacking(bot)
     botHP = J.GetHP(bot)
@@ -230,16 +191,18 @@ function X.SkillsComplement()
     nAllyHeroes = bot:GetNearbyHeroes(1600, false, BOT_MODE_NONE)
     nEnemyHeroes = bot:GetNearbyHeroes(1600, true, BOT_MODE_NONE)
 
-    ConsumeDesire = X.ConsiderConsume()
-    if ConsumeDesire > 0 then
-        bot:Action_UseAbility(Consume)
-        return
-    end
+    -- broken with 7.40+; it removed lifestealer's instance when infesting
+    -- ConsumeDesire = X.ConsiderConsume()
+    -- if ConsumeDesire > 0 then
+    --     bot:Action_UseAbility(Consume)
+    --     return
+    -- end
 
     if not bot:HasModifier('modifier_life_stealer_infest') then
         if J.CanNotUseAbility(bot) then return end
     end
 
+    -- broken with 7.40+; it removed lifestealer's instance when infesting
     -- InfestDesire, InfestTarget = X.ConsiderInfest()
     -- if InfestDesire > 0 then
     --     bot:Action_UseAbilityOnEntity(Infest, InfestTarget)
@@ -271,63 +234,43 @@ function X.ConsiderRage()
     end
 
     local nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1200)
+	local bIsGoingOnSomeone = J.IsGoingOnSomeone(bot)
+	local bIsRetreating = J.IsRetreating(bot)
 
-    if #nInRangeEnemy > 0 then
-        -- Spell/projectile dodge: only use Rage if recently damaged (don't burn it at full HP)
-        if bot:WasRecentlyDamagedByAnyHero(3.0) and not J.IsRealInvisible(bot) then
-            if J.IsNotAttackProjectileIncoming(bot, 350)
-            or J.IsWillBeCastUnitTargetSpell(bot, 500)
-            or J.IsWillBeCastPointSpell(bot, 500)
-            then
-                if (J.IsGoingOnSomeone(bot) and J.IsValidTarget(botTarget) and not J.IsInRange(bot, botTarget, bot:GetAttackRange()))
-                or (J.IsRetreating(bot) and botHP < 0.55) then
-                    return BOT_ACTION_DESIRE_HIGH
-                end
-            end
+	if #nInRangeEnemy > 0 and (bIsGoingOnSomeone or bIsRetreating) and not bot:IsMagicImmune() then
+		if bot:IsRooted() then
+			if (bIsGoingOnSomeone and J.IsValidHero(botTarget) and not J.IsInRange(bot, botTarget, bot:GetAttackRange() + 150))
+			or (bIsRetreating and (bot:WasRecentlyDamagedByAnyHero(2.0) or #nEnemyHeroes > #nAllyHeroes or botHP < 0.15))
+			then
+				return BOT_ACTION_DESIRE_HIGH
+			end
+		end
 
-            -- Stun-specific projectile dodge (higher priority)
-            if J.IsStunProjectileIncoming and J.IsStunProjectileIncoming(bot, 550) then
-                return BOT_ACTION_DESIRE_HIGH
-            end
-        end
+		if  bot:IsSilenced()
+		and not bot:HasModifier('modifier_item_mask_of_madness_berserk')
+		and J.GetEnemyCount(bot, 800) >= 2
+		and bIsGoingOnSomeone
+		then
+			return BOT_ACTION_DESIRE_HIGH
+		end
 
-        if (J.IsGoingOnSomeone(bot) or (J.IsRetreating(bot) and not J.IsRealInvisible(bot))) then
-            -- Rooted: use Rage only if target is out of attack range (going) or retreating
-            if bot:IsRooted() then
-                if J.IsRetreating(bot) then
-                    return BOT_ACTION_DESIRE_HIGH
-                elseif J.IsGoingOnSomeone(bot) and J.IsValidTarget(botTarget)
-                and not J.IsInRange(bot, botTarget, bot:GetAttackRange()) then
-                    return BOT_ACTION_DESIRE_HIGH
-                end
-            end
+		if bot:WasRecentlyDamagedByAnyHero(3.0) then
+			if (J.IsWillBeCastUnitTargetSpell(bot, 800))
+			or (J.IsWillBeCastPointSpell(bot, 800))
+			or (J.IsStunProjectileIncoming(bot, 550))
+			then
+				if (bIsGoingOnSomeone and J.IsValidHero(botTarget) and not J.IsInRange(bot, botTarget, bot:GetAttackRange() + 150))
+				or (bIsRetreating and botHP < 0.55)
+				then
+					return BOT_ACTION_DESIRE_HIGH
+				end
+			end
+		end
 
-            nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 600)
-            if bot:IsSilenced()
-            and #nInRangeEnemy >= 2
-            and J.IsGoingOnSomeone(bot)
-            and not bot:HasModifier('modifier_item_mask_of_madness_berserk')
-            then
-                return BOT_ACTION_DESIRE_HIGH
-            end
-
-            local nInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
-            if #nInRangeEnemy >= #nInRangeAlly
-            and botHP < 0.6
-            and J.IsValidHero(nInRangeEnemy[1])
-            and (J.IsChasingTarget(nInRangeEnemy[1], bot) or nInRangeEnemy[1]:GetAttackTarget() == bot)
-            then
-                return BOT_ACTION_DESIRE_HIGH
-            end
-
-            -- FIX: #table is always truthy in Lua (returns a number). Use > 0 explicitly.
-            if #nInRangeEnemy >= 3 and J.IsInTeamFight(bot, 1200)
-            and #J.GetHeroesTargetingUnit(nInRangeEnemy, bot) > 0
-            and not J.IsRealInvisible(bot) then
-                return BOT_ACTION_DESIRE_HIGH
-            end
-        end
-    end
+		if J.GetEnemyCount(bot, 800) >= 3 and (J.IsInTeamFight(bot, 1200) or not J.IsRealInvisible(bot)) then
+			return BOT_ACTION_DESIRE_HIGH
+		end
+	end
 
     if bot:HasModifier('modifier_jakiro_macropyre_burn')
     or bot:HasModifier('modifier_lich_chainfrost_slow')
@@ -350,29 +293,28 @@ function X.ConsiderOpenWounds()
         return BOT_ACTION_DESIRE_NONE, nil
     end
 
-	local nCastRange = J.GetProperCastRange(false, bot, OpenWounds:GetCastRange())
+	local nCastRange = OpenWounds:GetCastRange()
     local nManaCost = OpenWounds:GetManaCost()
     local fManaAfter = J.GetManaAfter(nManaCost)
     local fManaThreshold1 = J.GetManaThreshold(bot, nManaCost, {Rage, Infest})
 
 	if J.IsGoingOnSomeone(bot) then
-        if  J.IsValidTarget(botTarget)
+        if  J.IsValidHero(botTarget)
         and J.CanBeAttacked(botTarget)
+        and J.IsInRange(bot, botTarget, nCastRange)
         and J.CanCastOnNonMagicImmune(botTarget)
         and J.CanCastOnTargetAdvanced(botTarget)
-        and J.IsInRange(bot, botTarget, nCastRange)
         and not J.IsDisabled(botTarget)
         and not botTarget:HasModifier('modifier_abaddon_borrowed_time')
         and not botTarget:HasModifier('modifier_dazzle_shallow_grave')
         and not botTarget:HasModifier('modifier_necrolyte_reapers_scythe')
         and not botTarget:HasModifier('modifier_templar_assassin_refraction_absorb')
+        and fManaAfter > fManaThreshold1
 		then
             if J.IsChasingTarget(bot, botTarget)
             or (#J.GetHeroesTargetingUnit(nAllyHeroes, botTarget) >= 2 and J.GetHP(botTarget) > 0.2)
             then
-                if fManaAfter > fManaThreshold1 then
-                    return BOT_ACTION_DESIRE_HIGH, botTarget
-                end
+                return BOT_ACTION_DESIRE_HIGH, botTarget
             end
         end
 	end
@@ -380,25 +322,24 @@ function X.ConsiderOpenWounds()
     if J.IsRetreating(bot) and not J.IsRealInvisible(bot) then
         for _, enemy in pairs(nEnemyHeroes) do
             if J.IsValidHero(enemy)
+            and J.CanBeAttacked(enemy)
             and J.IsInRange(bot, enemy, nCastRange)
             and J.CanCastOnNonMagicImmune(enemy)
             and J.CanCastOnTargetAdvanced(enemy)
             and bot:WasRecentlyDamagedByHero(enemy, 3.0)
-            and J.IsChasingTarget(enemy, bot)
+            and enemy:IsFacingLocation(bot:GetLocation(), 45)
             and not J.IsDisabled(enemy)
             and not enemy:IsDisarmed()
             then
-                if J.IsChasingTarget(enemy, bot) or #nEnemyHeroes > #nAllyHeroes and botHP < 0.5 then
-                    return BOT_ACTION_DESIRE_HIGH, enemy
-                end
+                return BOT_ACTION_DESIRE_HIGH, enemy
             end
         end
     end
 
 	if (J.IsPushing(bot) or J.IsDefending(bot) or J.IsFarming(bot)) and botHP < 0.5 and (fManaAfter > fManaThreshold1 or botHP < 0.2) and bAttacking then
-		if J.IsValid(botTarget)
+		if  J.IsValid(botTarget)
         and J.CanBeAttacked(botTarget)
-        and botTarget:IsCreep()
+        and (botTarget:IsCreep() or botTarget:IsHero())
         and J.GetHP(botTarget) >= 0.75
         and not J.CanKillTarget(botTarget, bot:GetAttackDamage() * 4, DAMAGE_TYPE_PHYSICAL)
         then
@@ -409,8 +350,8 @@ function X.ConsiderOpenWounds()
 	if J.IsDoingRoshan(bot) then
         if  J.IsRoshan(botTarget)
         and J.CanBeAttacked(botTarget)
-        and J.CanCastOnTargetAdvanced(botTarget)
         and J.IsInRange(bot, botTarget, nCastRange)
+        and J.CanCastOnTargetAdvanced(botTarget)
         and J.GetHP(botTarget) > 0.2
         and bAttacking
         and botHP < 0.5

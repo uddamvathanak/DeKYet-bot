@@ -1,5 +1,12 @@
-require( GetScriptDirectory()..'/FunLib/aba_global_overrides' )
-local Role = require( GetScriptDirectory()..'/FunLib/aba_role' )
+----------------------------------------------------------------------------------------------------
+--- The Creation Come From: BOT EXPERIMENT Credit:FURIOUSPUPPY
+--- BOT EXPERIMENT Author: Arizona Fauzie
+--- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=837040016
+--- Refactor: 决明子 Email: dota2jmz@163.com 微博@Dota2_决明子
+--- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=1573671599
+--- Link:http://steamcommunity.com/sharedfiles/filedetails/?id=1627071163
+----------------------------------------------------------------------------------------------------
+
 
 local Item = {}
 
@@ -76,7 +83,7 @@ local sNeedDebugItemList =
 --	"item_magic_wand",
 	"item_manta",
 --	"item_mask_of_madness",
---	"item_medallion_of_courage", -- removed from game
+	"item_medallion_of_courage",
 	"item_mekansm",
 	"item_meteor_hammer",
 	"item_mjollnir",
@@ -125,6 +132,7 @@ Item['sBasicItems'] = {
 	'item_blade_of_alacrity',
 	'item_blades_of_attack',
 	'item_blight_stone',
+	'item_orb_of_frost',
 	'item_blink',
 	'item_boots',
 	'item_bottle',
@@ -158,7 +166,7 @@ Item['sBasicItems'] = {
 	'item_mithril_hammer',
 	'item_mystic_staff',
 	'item_ogre_axe',
-	'item_orb_of_frost',
+	'item_orb_of_venom',
 	'item_platemail',
 	'item_point_booster',
 	'item_quarterstaff',
@@ -190,10 +198,6 @@ Item['sBasicItems'] = {
 	'item_voodoo_mask', --巫毒面具
 	'item_fluffy_hat', --毛毛帽
 	'item_blood_grenade',
-	'item_wizard_hat',
-	'item_chasm_stone',
-	'item_splintmail',
-	'item_shawl',
 }
 
 Item['sSeniorItems'] = {
@@ -208,17 +212,15 @@ Item['sSeniorItems'] = {
 	'item_dragon_lance',
 	'item_force_staff',
 	'item_headdress',
---	'item_hood_of_defiance', -- removed from game
+	'item_hood_of_defiance',
 	'item_invis_sword',
 	'item_kaya',
 	'item_lesser_crit',
 	'item_maelstrom',
---	'item_medallion_of_courage', -- removed from game
+	'item_medallion_of_courage',
 	'item_mekansm',
---	'item_necronomicon', -- removed from game
---	'item_necronomicon_2', -- removed from game
-	'item_essence_distiller',
-	'item_specialists_array',
+	'item_necronomicon',
+	'item_necronomicon_2',
 	'item_ring_of_basilius',
 	'item_sange',
 	'item_soul_booster',
@@ -282,10 +284,10 @@ Item['sTopItems'] = {
 	'item_monkey_king_bar',
 	'item_moon_shard',
 	'item_meteor_hammer',
---	'item_necronomicon_3', -- removed from game
+	'item_necronomicon_3',
 	'item_null_talisman',
 	'item_nullifier',
-	'item_orb_of_frost',
+	'item_orb_of_venom',
 	'item_phase_boots',
 	'item_pipe',
 	'item_power_treads',
@@ -312,13 +314,10 @@ Item['sTopItems'] = {
 	
 	'item_revenants_brooch',
 	'item_boots_of_bearing',
---	'item_wraith_pact', -- removed from game
-
-	'item_essence_distiller',
-	'item_specialists_array',
-	'item_hydras_breath',
-	'item_consecrated_wraps',
-	'item_crellas_crozier',
+	'item_wraith_pact',
+	
+	
+	
 }
 
 local tTopItemList = {}
@@ -328,57 +327,17 @@ do
 end
 
 Item['tEarlyItem'] = {
-	 'item_clarity',
-	 'item_faerie_fire',
-	 'item_tango',
-	 'item_flask',
-	 'item_infused_raindrop',
-	 -- 'item_magic_stick',
-	 -- 'item_orb_of_frost',
-	 'item_bracer',
-	 'item_wraith_band',
-	 'item_null_talisman',
-	 'item_bottle',
-	 'item_soul_ring',
-	 -- 'item_magic_wand',
-	 -- 'item_ancient_janggo',
-	 'item_refresher_shard',
-	 'item_cheese',
-	 'item_blood_grenade',
-	 'item_branches',
-	 'item_gauntlets',
-	 'item_slippers',
-	 'item_circlet',
-	 'item_mantle',
-}
-
-Item['tEarlyConsumableItem'] = {
-	 'item_clarity',
-	 'item_faerie_fire',
-	 'item_tango',
-	 'item_enchanted_mango',
-	 'item_flask',
-	 'item_infused_raindrop',
-	 'item_magic_stick',
-	 'item_quelling_blade', -- for bf.
-	 'item_branches',
-	 -- 'item_magic_wand',
-	 'item_blood_grenade',
-	 'item_gauntlets',
-	 'item_slippers',
-	 'item_circlet',
-	 'item_mantle',
-	 'item_magic_wand',
-	 'item_recipe_magic_wand',
-	 'item_magic_stick',
-	 'item_smoke_of_deceit'
-	--  'item_dust',
-	--  'item_ward_sentry',
-	--  'item_ward_observer',
+	'item_faerie_fire',
+	'item_tango',
+	'item_blood_grenade',
+	'item_clarity',
+	-- 'item_enchanted_mango',
+	-- 'item_flask',
+	'item_infused_raindrop',
 }
 
 Item['tEarlyBoots'] = {
-	'item_boots',
+	-- 'item_boots',
 	'item_phase_boots',
 	'item_power_treads',
 	'item_tranquil_boots',
@@ -391,75 +350,8 @@ Item['sCanNotSwitchItems'] = {
 		'item_cheese',
 		'item_bloodstone',
 		'item_gem',
-		'item_moon_shard',
-		'item_black_king_bar', -- prevent keep swapping with critical items in other settings
-		-- 'item_ward_sentry', -- prevent keep swapping with critical items in other settings
-		'item_famango',            -- Healing Lotus: ally-castable, higher value than wand
-		'item_great_famango',      -- Great Healing Lotus
-		'item_greater_famango',    -- Greater Healing Lotus: very valuable for supports
+		'item_rapier',
 }
-
-Item['sSellList'] = {
-	"item_black_king_bar",
-	"item_quelling_blade",
-
-	"item_ultimate_scepter",
-	"item_magic_wand",
-
-	"item_cyclone",
-	"item_magic_wand",
-
-	"item_shivas_guard",
-	'item_magic_wand',
-
-	"item_lotus_orb",
-	"item_quelling_blade",
-
-	"item_assault",
-	"item_magic_wand",
-
-	"item_assault",
-	"item_quelling_blade",
-
-	"item_assault",
-	"item_orb_of_corrosion",
-
-	"item_travel_boots",
-	"item_magic_wand",
-
-	"item_travel_boots",
-	"item_phase_boots",
-
-	"item_travel_boots_2",
-	"item_phase_boots",
-
-	"item_travel_boots",
-	"item_arcane_boots",
-
-	"item_assault",
-	"item_ancient_janggo",
-
-	"item_vladmir",
-	"item_magic_wand",
-
-	"item_solar_crest",
-	"item_pavise",
-
-	"item_boots_of_bearing",
-	"item_drum_of_endurance",
-
-	"item_spirit_vessel",
-	"item_urn_of_shadows",
-
-	"item_magic_wand",
-	"item_recipe_magic_wand",
-	
-	-- ... existing entries ...
-    'item_splintmail', 'item_chainmail',
-    'item_shawl', 'item_cloak',
-    'item_wizard_hat', 'item_circlet',
-}
-
 local tCanNotSwitchItemList = {}
 for _, sItem in pairs( Item['sCanNotSwitchItems'] )
 do
@@ -492,6 +384,7 @@ for _, sItem in pairs( sConsumableList )
 do
 	tConsumableItemList[sItem] = true
 end
+
 
 local sNotSellItemList = {
 	'item_abyssal_blade',
@@ -586,7 +479,7 @@ Item['item_ancient_janggo']	= GetItemComponents( 'item_ancient_janggo' )[1]
 Item['item_aeon_disk']	= GetItemComponents( 'item_aeon_disk' )[1]
 
 Item['item_bfury']	= GetItemComponents( 'item_bfury' )[1]
-	
+
 Item['item_black_king_bar']	= GetItemComponents( 'item_black_king_bar' )[1]
 
 Item['item_blade_mail']	= GetItemComponents( 'item_blade_mail' )[1]
@@ -599,7 +492,7 @@ Item['item_bracer']	= GetItemComponents( 'item_bracer' )[1]
 
 Item['item_buckler']	= GetItemComponents( 'item_buckler' )[1]
 
-Item['item_butterfly']	= GetItemComponents( 'item_butterfly' )[1]
+Item['item_butterfly']	= {"item_talisman_of_evasion", "item_claymore", "item_eagle"}
 
 Item['item_basher']	= GetItemComponents( 'item_basher' )[1]
 
@@ -631,7 +524,7 @@ Item['item_force_staff']	= GetItemComponents( 'item_force_staff' )[1]
 
 Item['item_glimmer_cape']	= GetItemComponents( 'item_glimmer_cape' )[1]
 
-Item['item_guardian_greaves']	= GetItemComponents( 'item_guardian_greaves' )[1]
+Item['item_guardian_greaves']	= {"item_arcane_boots", "item_mekansm", "item_recipe_guardian_greaves"}
 
 Item['item_greater_crit']	= GetItemComponents( 'item_greater_crit' )[1]
 
@@ -645,9 +538,9 @@ Item['item_heavens_halberd']	= GetItemComponents( 'item_heavens_halberd' )[1]
 
 Item['item_helm_of_the_dominator']	= GetItemComponents( 'item_helm_of_the_dominator' )[1]
 
--- Item['item_hood_of_defiance'] removed from game
+Item['item_hood_of_defiance']	= GetItemComponents( 'item_hood_of_defiance' )[1]
 
-Item['item_hurricane_pike']		= GetItemComponents( 'item_hurricane_pike' )[1]
+Item['item_hurricane_pike']		= { 'item_dragon_lance', 'item_force_staff', 'item_recipe_hurricane_pike' }
 
 Item['item_holy_locket']	= GetItemComponents( 'item_holy_locket' )[1]
 
@@ -669,7 +562,7 @@ Item['item_manta']	= GetItemComponents( 'item_manta' )[1]
 
 Item['item_mask_of_madness']	= GetItemComponents( 'item_mask_of_madness' )[1]
 
--- Item['item_medallion_of_courage'] removed from game
+Item['item_medallion_of_courage']	= GetItemComponents( 'item_medallion_of_courage' )[1]
 
 Item['item_mekansm']	= GetItemComponents( 'item_mekansm' )[1]
 
@@ -693,13 +586,13 @@ Item['item_nullifier']	= GetItemComponents( 'item_nullifier' )[1]
 
 Item['item_oblivion_staff']	= GetItemComponents( 'item_oblivion_staff' )[1]
 
-Item['item_octarine_core']	= GetItemComponents( 'item_octarine_core' )[1]
+Item['item_octarine_core']	= {"item_soul_booster", "item_tiara_of_selemene", "item_recipe_octarine_core"}
 
 Item['item_orchid']	= GetItemComponents( 'item_orchid' )[1]
 
 Item['item_pers']	= GetItemComponents( 'item_pers' )[1]
 
-Item['item_phase_boots']	= { 'item_blades_of_attack', 'item_boots', 'item_chainmail' }
+Item['item_phase_boots']	= { 'item_boots', 'item_blades_of_attack', 'item_chainmail' }
 
 Item['item_pipe']	= GetItemComponents( 'item_pipe' )[1]
 
@@ -727,7 +620,7 @@ Item['item_sange_and_yasha']	= GetItemComponents( 'item_sange_and_yasha' )[1]
 
 Item['item_satanic']	= GetItemComponents( 'item_satanic' )[1]
 
-Item['item_sheepstick']	= GetItemComponents( 'item_sheepstick' )[1]
+Item['item_sheepstick']	= {"item_tiara_of_selemene", "item_mystic_staff", "item_recipe_sheepstick"}
 
 Item['item_sphere']	= GetItemComponents( 'item_sphere' )[1]
 
@@ -753,7 +646,7 @@ Item['item_travel_boots_2']	= GetItemComponents( 'item_travel_boots_2' )[1]
 
 Item['item_urn_of_shadows']	= GetItemComponents( 'item_urn_of_shadows' )[1]
 
-Item['item_ultimate_scepter']	= { 'item_point_booster', 'item_ogre_axe', 'item_blade_of_alacrity', 'item_staff_of_wizardry' }
+Item['item_ultimate_scepter']	= {'item_ogre_axe', 'item_blade_of_alacrity', 'item_staff_of_wizardry', 'item_point_booster'}
 
 Item['item_ultimate_scepter_2']	= GetItemComponents( 'item_ultimate_scepter_2' )[1]
 
@@ -761,7 +654,7 @@ Item['item_vanguard']	= GetItemComponents( 'item_vanguard' )[1]
 
 Item['item_veil_of_discord']	= GetItemComponents( 'item_veil_of_discord' )[1]
 
-Item['item_vladmir']	= GetItemComponents( 'item_vladmir' )[1]
+Item['item_vladmir']	= {"item_ring_of_basilius", "item_lifesteal", "item_buckler", "item_blades_of_attack"}
 
 Item['item_wraith_band']	= GetItemComponents( 'item_wraith_band' )[1]
 
@@ -780,7 +673,7 @@ Item['item_gungir']	= GetItemComponents( 'item_gungir' )[1]
 
 Item['item_mage_slayer']	= GetItemComponents( 'item_mage_slayer' )[1]
 
--- Item['item_eternal_shroud'] removed from game in 7.41
+Item['item_eternal_shroud']	= GetItemComponents( 'item_eternal_shroud' )[1]
 
 Item['item_helm_of_the_overlord']	= GetItemComponents( 'item_helm_of_the_overlord' )[1]
 
@@ -797,7 +690,7 @@ Item['item_revenants_brooch']	= GetItemComponents( 'item_revenants_brooch' )[1]
 
 Item['item_boots_of_bearing']	= GetItemComponents( 'item_boots_of_bearing' )[1]
 
--- Item['item_wraith_pact'] removed from game
+Item['item_wraith_pact']	= GetItemComponents( 'item_wraith_pact' )[1]
 
 ---------- 7.33 NEW ITEMS ---------------
 Item["item_pavise"] 							= GetItemComponents( 'item_pavise' )[1]
@@ -807,15 +700,15 @@ Item["item_disperser"] 							= GetItemComponents( 'item_disperser' )[1]
 Item["item_blood_grenade"] 						= GetItemComponents( 'item_blood_grenade' )[1]
 
 ---------- 7.35 NEW ITEMS ---------------
-Item["item_angels_demise"] 						= GetItemComponents( 'item_angels_demise' )[1] --绝刃
-Item["item_devastator"] 						= GetItemComponents( 'item_devastator' )[1] --圣斧
+Item["item_angels_demise"] 						= GetItemComponents( 'item_angels_demise' )[1]
+Item["item_devastator"] 						= GetItemComponents( 'item_devastator' )[1]
 
----------- 7.41 NEW ITEMS ---------------
-Item["item_essence_distiller"]				= GetItemComponents( 'item_essence_distiller' )[1]
-Item["item_specialists_array"]				= GetItemComponents( 'item_specialists_array' )[1]
-Item["item_hydras_breath"]					= GetItemComponents( 'item_hydras_breath' )[1]
-Item["item_consecrated_wraps"]				= GetItemComponents( 'item_consecrated_wraps' )[1]
-Item["item_crellas_crozier"]				= GetItemComponents( 'item_crellas_crozier' )[1]
+-- 7.41
+Item["item_consecrated_wraps"] = GetItemComponents( 'item_consecrated_wraps' )[1]
+Item["item_crellas_crozier"] = GetItemComponents( 'item_crellas_crozier' )[1]
+Item["item_essence_distiller"] = GetItemComponents( 'item_essence_distiller' )[1]
+Item["item_specialists_array"] = GetItemComponents( 'item_specialists_array' )[1]
+Item["item_hydras_breath"] = GetItemComponents( 'item_hydras_breath' )[1]
 
 --新自定义物品
 Item['item_new_1']	= GetItemComponents( 'item_new_1' )[1]
@@ -959,7 +852,7 @@ Item['item_dragon_knight_outfit']		= { 'item_tango', 'item_flask', 'item_quellin
 
 --------------------------------------------------------------------------
 
-Item['item_priest_outfit']				= { 'item_tango', 'item_tango', 'item_branches', 'item_magic_stick', 'item_branches', 'item_arcane_boots', 'item_recipe_magic_wand', 'item_flask', 'item_urn_of_shadows' }
+Item['item_priest_outfit']				= { 'item_tango', 'item_tango', 'item_branches', 'item_circlet', 'item_magic_stick', 'item_branches', 'item_boots', 'item_recipe_magic_wand', 'item_flask', 'item_ring_of_protection', 'item_sobi_mask', 'item_recipe_urn_of_shadows', 'item_ring_of_basilius', 'item_recipe_arcane_boots' }
 
 -----------------------------------------------------------------------------
 
@@ -1037,7 +930,7 @@ end
 function Item.GetMinTeamNeutralItemLevel()
 
 	local nMinItemLevel = 999
-	for i = 1, #GetTeamPlayers( GetTeam() )
+	for i = 1, 5
 	do
 		local member = GetTeamMember( i )
 		if	member ~= nil
@@ -1130,22 +1023,16 @@ function Item.HasItem( bot, itemName )
 
 end
 
-function Item.HasItemWithName( bot, iname )
-	for i = 0, 8 do
-		local item = bot:GetItemInSlot( i )
-		if item ~= nil then
-			if string.find(item:GetName(), iname) then return true end
-		end
-	end
-	return false
-end
-
 
 function Item.IsItemInHero( sItemName )
-	return Item.IsItemInTargetHero( sItemName, GetBot() )
-end
 
-function Item.IsItemInTargetHero( sItemName, bot )
+	local bot = GetBot()
+	if bot:GetUnitName() == 'npc_dota_hero_lone_druid' and bot.bearItems ~= nil then
+		for i = 0, 8 do
+			if bot.bearItems[i] == sItemName then return true end
+		end
+	end
+	
 	--7.33
 	if sItemName == 'item_double_flask'
 	then return Item.IsItemInHero( 'item_flask' ) end
@@ -1171,6 +1058,7 @@ function Item.IsItemInTargetHero( sItemName, bot )
 	local nItemSolt = bot:FindItemSlot( sItemName )
 
 	return nItemSolt >= 0 and ( nItemSolt <= 8 or Item.IsTopItem( sItemName ) )
+
 end
 
 --获取物品当前不重复基础构造
@@ -1207,9 +1095,7 @@ function Item.GetBasicItems( sItemList )
 
 end
 
--- function Item.ItemBasicItemsNotInHeroSlots(finalItem, bot)
-	
--- end
+
 
 function Item.GetMainInvLessValItemSlot( bot )
 
@@ -1239,33 +1125,6 @@ function Item.GetMainInvLessValItemSlot( bot )
 
 end
 
-function Item.GetBodyInvLessValItemSlot( bot )
-	local minPrice = 10000
-	local minSlot = - 1
-	for i = 0, 8
-	do
-		local item = bot:GetItemInSlot( i )
-		
-		if item == nil
-		then
-			return i, -1
-		end
-		
-		if item ~= nil
-			and not Item.IsCanNotSwitchItem( item:GetName() )
-		then
-			local cost = GetItemCost( item:GetName() )
-			if cost < minPrice then
-				minPrice = cost
-				minSlot = i
-			end
-		end
-	end
-
-	return minSlot, minPrice
-
-end
-
 
 function Item.GetItemCharges( bot, itemName )
 
@@ -1276,6 +1135,19 @@ function Item.GetItemCharges( bot, itemName )
 		if item ~= nil and item:GetName() == itemName
 		then
 			charges = charges + item:GetCurrentCharges()
+		end
+	end
+
+	if (itemName == 'item_ward_observer' or itemName == 'item_ward_sentry') and charges == 0 then
+		for i = 0, 8 do
+			local item = bot:GetItemInSlot(i)
+			if item and item:GetName() == 'item_ward_dispenser' then
+				if itemName == 'item_ward_observer' then
+					charges = charges + item:GetCurrentCharges()
+				elseif itemName == 'item_ward_sentry' then
+					charges = charges + item:GetSecondaryCharges()
+				end
+			end
 		end
 	end
 
@@ -1323,22 +1195,6 @@ function Item.GetEmptyInventoryAmount( bot )
 
 end
 
-function Item.GetEmptyNonBackpackInventoryAmount( bot )
-
-	local amount = 0
-	for i = 0, 5
-	do
-		local item = bot:GetItemInSlot( i )
-		if item == nil
-		then
-			amount = amount + 1
-		end
-	end
-
-	return amount
-
-end
-
 
 function Item.GetEmptyNeutralBackpackAmount( bot )
 
@@ -1357,16 +1213,6 @@ function Item.GetEmptyNeutralBackpackAmount( bot )
 
 end
 
-function Item.GetEmptyBackpackSlot( bot )
-	for i = 6, 8
-	do
-		if bot:GetItemInSlot( i ) == nil
-		then
-			return i
-		end
-	end
-	return -1
-end
 
 function Item.GetItemCount( unit, itemName )
 
@@ -1455,18 +1301,6 @@ function Item.HasBootsInMainSolt( bot )
 
 end
 
-function Item.GetItemTotalWorthInSlots(unit)
-	local totalValue = 0
-	for i = 0, 16
-	do
-		local item = unit:GetItemInSlot( i )
-		if item ~= nil
-		then
-			totalValue = totalValue + GetItemCost(item:GetName())
-		end
-	end
-	return totalValue
-end
 
 function Item.GetTheItemSolt( bot, nSlotMin, nSlotMax, bMaxCost )
 
@@ -1509,119 +1343,30 @@ function Item.GetTheItemSolt( bot, nSlotMin, nSlotMax, bMaxCost )
 
 end
 
-function Item.GetOutfitType( bot )
-	local sOutfitTypeList = {
-		[1] = 'outfit_mid',
-		[2] = 'outfit_tank',
-		[3] = 'outfit_carry',
-		[4] = 'outfit_mage',
-		[5] = 'outfit_priest',
+
+function Item.GetRoleItemsBuyList( bot )
+
+	local sRole = {
+		[1] = 'pos_2',
+		[2] = 'pos_3',
+		[3] = 'pos_1',
+		[4] = 'pos_5',
+		[5] = 'pos_4',
 	}
+
 	local nTeamPlayerIDs = GetTeamPlayers( GetTeam() )
-	for i = 1, #GetTeamPlayers( GetTeam() )
+	for i = 1, 5
 	do
 		local memberID = nTeamPlayerIDs[i]
 		if bot:GetPlayerID() == memberID
 		then
-			return sOutfitTypeList[i]
+			return sRole[i]
 		end
 	end
-	return 'outfit_carry'
+	
+	return 'pos_1'
+
 end
-
--- returns pos_1, pos_2, pos_3, depends on the roles...
-function Item.GetRoleItemsBuyList( bot )
-	-- local nTeamPlayerIDs = GetTeamPlayers( GetTeam() )
-	-- for i = 1, #GetTeamPlayers( GetTeam() )
-	-- do
-	-- 	local memberID = nTeamPlayerIDs[i]
-	-- 	if bot:GetPlayerID() == memberID
-	-- 	then
-	-- 		local team = GetTeam() == TEAM_RADIANT and 'TEAM_RADIANT' or 'TEAM_DIRE'
-	-- 		return 'pos_'..tostring(Role.RoleAssignment[team][i])
-	-- 	end
-	-- end
-	return 'pos_'..tostring(Role.GetPosition(bot))
-end
-
-function Item.HasTargetItemCompositByItems(bot, items)
-	local purchased = {}
-	for i = 0, 8
-	do
-		local item = bot:GetItemInSlot( i )
-		if item ~= nil
-		then
-			local basicItems = Item.GetBasicItems( {item:GetName()} )
-			local intersection, built = Item.GetIntersection(items, basicItems)
-			if built then
-				purchased = Item.MergeLists(purchased, intersection)
-			end
-		end
-	end
-	return purchased
-end
-
-function Item.GetReducedPurchaseList(bot, items)
-	local purchasedList = Item.HasTargetItemCompositByItems(bot, items)
-	return Item.RemoveIntersectedItems(items, purchasedList)
-end
-
--- returns: interection of t1 and t2, and whether t2 is in t1
-function Item.GetIntersection(list1, list2)
-    -- Create a lookup table for quick membership testing in list1
-    local set1 = {}
-    for _, value in ipairs(list1) do
-        set1[value] = true
-    end
-
-    local intersection = {}
-    local containsAll = true
-
-    -- Check each element in list2: add to intersection if in list1,
-    -- and determine if list1 contains every element from list2.
-    for _, value in ipairs(list2) do
-        if set1[value] then
-            table.insert(intersection, value)
-        else
-            containsAll = false
-        end
-    end
-
-    return intersection, containsAll
-end
-
-function Item.MergeLists(list1, list2)
-    local merged = {}
-    -- Append elements from the first list
-    for _, value in ipairs(list1) do
-        table.insert(merged, value)
-    end
-    -- Append elements from the second list
-    for _, value in ipairs(list2) do
-        table.insert(merged, value)
-    end
-    return merged
-end
-
--- remove l2 from l1
-function Item.RemoveIntersectedItems(list1, list2)
-    -- Build a lookup table for elements in list2
-    local set2 = {}
-    for _, value in ipairs(list2) do
-        set2[value] = true
-    end
-
-    local result = {}
-    -- Add elements from list1 only if they are not in list2
-    for _, value in ipairs(list1) do
-        if not set2[value] then
-            table.insert(result, value)
-        end
-    end
-
-    return result
-end
-
 
 function Item.GetItemWardSolt()
 

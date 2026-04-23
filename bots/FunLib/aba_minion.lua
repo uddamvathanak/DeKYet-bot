@@ -1,18 +1,92 @@
 local X = {}
 
 local bot = GetBot()
-if bot == nil or bot:IsInvulnerable() or not bot:IsHero() or not string.find(bot:GetUnitName(), "hero") then return end
+local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+local U = require(GetScriptDirectory()..'/FunLib/MinionLib/utils')
 
-local U = require(GetScriptDirectory()..'/FunLib/minion_lib/utils')
+local AttackingWards = dofile(GetScriptDirectory()..'/FunLib/MinionLib/attacking_wards')
+local BrewLink = dofile(GetScriptDirectory()..'/FunLib/MinionLib/brew_link')
+local Familiars = dofile(GetScriptDirectory()..'/FunLib/MinionLib/familiars')
+local Illusion = dofile(GetScriptDirectory()..'/FunLib/MinionLib/illusions')
+local MinionWithSkill = dofile(GetScriptDirectory()..'/FunLib/MinionLib/minion_with_skill')
+local VengefulSprit = dofile(GetScriptDirectory()..'/FunLib/MinionLib/vengeful_spirit')
 
-local AttackingWards = dofile(GetScriptDirectory()..'/FunLib/minion_lib/attacking_wards')
-local PrimalSplit = dofile(GetScriptDirectory()..'/FunLib/minion_lib/primal_split')
-local Familiars = dofile(GetScriptDirectory()..'/FunLib/minion_lib/familiars')
-local Illusion = dofile(GetScriptDirectory()..'/FunLib/minion_lib/illusions')
-local MinionWithSkill = dofile(GetScriptDirectory()..'/FunLib/minion_lib/minion_with_skill')
-local VengefulSprit = dofile(GetScriptDirectory()..'/FunLib/minion_lib/vengeful_spirit')
-local Jugg = dofile(GetScriptDirectory()..'/FunLib/minion_lib/jugg')
-local Customize = require(GetScriptDirectory()..'/Customize/general')
+local nTeamAncient = GetAncient(GetTeam());
+local vTeamAncientLoc = nil;
+if nTeamAncient ~= nil then vTeamAncientLoc = nTeamAncient:GetLocation() end;
+
+function X.HealingWardThink(minion)
+
+	local nEnemyHeroes = minion:GetNearbyHeroes( 1200, true, BOT_MODE_DESIRE_NONE )
+
+	local targetLocation = nil
+	local weakestHero = nil
+	local weakestHP = 0.99
+	for i = 1, 5
+	do 
+		local allyHero = GetTeamMember( i )
+		if allyHero ~= nil
+			and allyHero:IsAlive()
+			and GetUnitToUnitDistance( allyHero, minion ) <= 1200
+		then
+			local allyHP = allyHero:GetHealth()/allyHero:GetMaxHealth()
+			if allyHP < weakestHP
+			then
+				weakestHP = allyHP
+				weakestHero = allyHero
+			end
+		end
+	end
+
+	if #nEnemyHeroes == 0
+	then
+	
+		local nAoeHeroTable = minion:FindAoELocation( false, true, minion:GetLocation(), 1000, 400 , 0, 0);
+		if nAoeHeroTable.count >= 2
+		then
+			targetLocation = nAoeHeroTable.targetloc
+		end
+		
+		if targetLocation == nil
+		then			
+			if weakestHero ~= nil
+			then
+				targetLocation = weakestHero:GetLocation()
+			end
+		end
+
+		if targetLocation == nil
+		then			
+			local nAoeCreepTable = minion:FindAoELocation( false, false, minion:GetLocation(), 800, 400 , 0, 0);
+			if nAoeCreepTable.count >= 1
+			then
+				targetLocation = nAoeCreepTable.targetloc
+			end			
+		end
+		
+	else
+		if weakestHero ~= nil
+		then
+			targetLocation = weakestHero:GetLocation()
+		end	
+	end
+
+	
+
+	if targetLocation ~= nil
+	then
+		if targetLocation == GetBot():GetLocation()
+		then
+		--自动人棒合一
+			return
+		else
+			minion:Action_MoveToLocation( targetLocation )
+		end
+	else
+		minion:Action_MoveToLocation( vTeamAncientLoc )
+	end
+
+end
 
 -- For now
 function X.IllusionThink(hMinionUnit)
@@ -23,17 +97,8 @@ function X.IsValidUnit(hMinionUnit)
 	return U.IsValidUnit(hMinionUnit)
 end
 
-function X.HealingWardThink(minion)
-	Jugg.HealingWardThink(minion)
-end
-
 -- MINION THINK
 function X.MinionThink(hMinionUnit)
-	if not hMinionUnit or hMinionUnit:IsNull() or not hMinionUnit:IsAlive() then return end
-	if hMinionUnit.lastItemFrameProcessTime == nil then hMinionUnit.lastItemFrameProcessTime = 0 end
-	if DotaTime() - hMinionUnit.lastItemFrameProcessTime < 0.5 * (1 + Customize.ThinkLess) then return end
-	hMinionUnit.lastItemFrameProcessTime = DotaTime()
-
 	if bot == nil then bot = GetBot() end
 
 	if U.IsValidUnit(hMinionUnit)
@@ -45,11 +110,10 @@ function X.MinionThink(hMinionUnit)
 		end
 
 		-- Illusions; No Spells
-		if (hMinionUnit:IsHero() and hMinionUnit:IsIllusion() and hMinionUnit:GetUnitName() ~= 'npc_dota_hero_vengefulspirit')
+		if (hMinionUnit:IsIllusion() and hMinionUnit:GetUnitName() ~= 'npc_dota_hero_vengefulspirit')
 		or U.IsMinionWithNoSkill(hMinionUnit)
 		then
 			Illusion.Think(bot, hMinionUnit)
-			return
 		end
 
 		-- Vengeful Spirit Aghanim's Scepter Illusion
@@ -57,30 +121,19 @@ function X.MinionThink(hMinionUnit)
 		and hMinionUnit:GetUnitName() == 'npc_dota_hero_vengefulspirit'
 		then
 			VengefulSprit.Think(bot, hMinionUnit)
-			return
 		end
 
 		-- Attacking Wards
-		if U.IsAttackingWard(hMinionUnit) then
-			AttackingWards.Think(bot, hMinionUnit)
-			return
-		end
-
-		-- Brewmaster's PrimalSplit
-		if U.IsPrimalSplit(hMinionUnit) then
-			PrimalSplit.MinionThink(bot, hMinionUnit)
-			return
-		end
-
-		-- [BROKEN (7.37+)] Visage's Familiars
-		if U.IsFamiliar(hMinionUnit) then
-			Familiars.Think(bot, hMinionUnit)
-			return
-		end
+		if U.IsAttackingWard(hMinionUnit) then AttackingWards.Think(bot, hMinionUnit) end
 
 		-- Spell Casting Minions
-		MinionWithSkill.Think(bot, hMinionUnit)
-		return
+		if U.IsMinionWithSkill(hMinionUnit) then MinionWithSkill.Think(bot, hMinionUnit) end
+
+		-- Brewmaster's BrewLink
+		if U.IsBrewLink(hMinionUnit) then BrewLink.Think(bot, hMinionUnit) end
+
+		-- [BROKEN (7.37+)] Visage's Familiars
+		if U.IsFamiliar(hMinionUnit) then Familiars.Think(bot, hMinionUnit) end
 	end
 end
 

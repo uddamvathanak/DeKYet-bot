@@ -1,3 +1,5 @@
+local neutrals_data = require('bots/Buff/script/neutrals_data')
+
 if NeutralItems == nil
 then
     NeutralItems = {}
@@ -8,36 +10,38 @@ local isTierTwoDone   = false
 local isTierThreeDone = false
 local isTierFourDone  = false
 local isTierFiveDone  = false
-local DOTA_ITEM_NEUTRAL_SLOT = 16
+
+-- Neutrals
 
 local Tier1NeutralItems = {
-    -- --[[Trusty Shovel]]         "item_trusty_shovel",        -- removed in 7.41
+    -- --[[Trusty Shovel]]         "item_trusty_shovel",
     -- --[[Arcane Ring]]           "item_arcane_ring",
     -- --[[Fairy's Trinket]]       "item_mysterious_hat",
-    -- --[[Pig Pole]]              "item_unstable_wand",        -- removed in 7.41
+    -- --[[Pig Pole]]              "item_unstable_wand",
     -- --[[Safety Bubble]]         "item_safety_bubble",
-    -- --[[Seeds of Serenity]]     "item_seeds_of_serenity",    -- moved to T2 in 7.41
+    -- --[[Seeds of Serenity]]     "item_seeds_of_serenity",
     -- --[[Lance of Pursuit]]      "item_lance_of_pursuit",
     --[[Occult Bracelet]]       "item_occult_bracelet",
     --[[Duelist Gloves]]        "item_duelist_gloves",
     -- --[[Broom Handle]]          "item_broom_handle",
     -- --[[Royal Jelly]]           "item_royal_jelly",
     -- --[[Faded Broach]]          "item_faded_broach",
-    -- --[[Spark Of Courage]]      "item_spark_of_courage",     -- removed in 7.41
+    -- --[[Spark Of Courage]]      "item_spark_of_courage",
     -- --[[Ironwood Tree]]         "item_ironwood_tree",
-    -- --[[Mana Draught]]          "item_mana_draught",         -- moved to T2 in 7.41
+    -- --[[Mana Draught]]          "item_mana_draught",
     --[[Polliwog Charm]]        "item_polliwog_charm",
-    -- --[[Ripper's Lash]]         "item_rippers_lash",         -- removed in 7.41
-    -- --[[Orb of Destruction]]    "item_orb_of_destruction",   -- removed in 7.41
-    --[[Kobold Cup]]            "item_kobold_cup",
+    -- --[[Ripper's Lash]]         "item_rippers_lash",
+    -- -- [[Orb of Destruction]]    "item_orb_of_destruction",
     --[[Chipped Vest]]          "item_chipped_vest",
     --[[Dormant Curio]]         "item_dormant_curio",
-    --[[Weighted Dice]]         "item_weighted_dice",
+    --[[Kobold Cup]]            "item_kobold_cup",
+    -- --[[Sister's Shroud]]       "item_sisters_shroud",
     --[[Ash Legion Shield]]     "item_ash_legion_shield",
-    --[[Dagger of Ristul]]      "item_dagger_of_ristul",
-    --[[Stonefeather Satchel]]  "item_stonefeather_satchel",
+    --[[Weighted Dice]]         "item_weighted_dice",
+    --[[Dagger Of Ristul]]      "item_dagger_of_ristul",
+    --[[Forager's Kit]]         "item_foragers_kit",
     --[[Possessed Mask]]        "item_possessed_mask",
-    -- --[[Forager's Kit]]         "item_foragers_kit",         -- active: plant tree (complex)
+    --[[Stonefeather Satchel]]  "item_stonefeather_satchel",
 }
 
 local Tier2NeutralItems = {
@@ -51,12 +55,12 @@ local Tier2NeutralItems = {
     -- --[[Specialist's Array]]    "item_specialists_array",
     -- --[[Eye of the Vizier]]     "item_eye_of_the_vizier",
     -- --[[Vampire Fangs]]         "item_vampire_fangs",
-    -- --[[Gossamer's Cape]]       "item_gossamer_cape",    -- removed in 7.41
+    -- --[[Gossamer's Cape]]       "item_gossamer_cape",
     -- --[[Light Collector]]       "item_light_collector",
-    -- --[[Iron Talon]]            "item_iron_talon",       -- removed in 7.41
+    -- --[[Iron Talon]]            "item_iron_talon",
     --[[Essence Ring]]          "item_essence_ring",
     --[[Searing Signet]]        "item_searing_signet",
-    -- --[[Brigand's Blade]]       "item_misericorde",      -- removed in 7.41
+    -- --[[Brigand's Balde]]       "item_misericorde",
     --[[Tumbler's Toy]]         "item_pogo_stick",
     --[[Mana Draught]]          "item_mana_draught",
     --[[Poor Man's Shield]]     "item_poor_mans_shield",
@@ -67,29 +71,29 @@ local Tier2NeutralItems = {
 }
 
 local Tier3NeutralItems = {
-    -- --[[Defiant Shell]]         "item_defiant_shell",        -- moved to T2 in 7.41
+    -- --[[Defiant Shell]]         "item_defiant_shell",
     -- --[[Paladin Sword]]         "item_paladin_sword",
-    -- --[[Nemesis Curse]]         "item_nemesis_curse",        -- removed in 7.41
+    -- --[[Nemesis Curse]]         "item_nemesis_curse",
     -- --[[Vindicator's Axe]]      "item_vindicators_axe",
-    -- --[[Dandelion Amulet]]      "item_dandelion_amulet",    -- moved to T4 in 7.41
+    -- --[[Dandelion Amulet]]      "item_dandelion_amulet",
     -- --[[Craggy Coat]]           "item_craggy_coat",
     -- --[[Enchanted Quiver]]      "item_enchanted_quiver",
     -- --[[Elven Tunic]]           "item_elven_tunic",
     --[[Cloak of Flames]]       "item_cloak_of_flames",
     -- --[[Ceremonial Robe]]       "item_ceremonial_robe",
-    -- --[[Psychic Headband]]      "item_psychic_headband",    -- active: push (complex)
+    --[[Psychic Headband]]      "item_psychic_headband",
     -- --[[Doubloon]]              "item_doubloon",
     -- --[[Vambrace]]              "item_vambrace",
-    -- --[[Whisper of the Dread]]  "item_whisper_of_the_dread", -- removed in 7.41
-    --[[Serrated Shiv]]         "item_serrated_shiv",
-    -- --[[Gale Guard]]            "item_gale_guard",           -- removed in 7.41
-    --[[Gunpowder Gauntlets]]   "item_gunpowder_gauntlets",
-    -- --[[Ninja Gear]]            "item_ninja_gear",           -- removed in 7.41
+    -- --[[Whisper of the Dread]]  "item_whisper_of_the_dread",
+    --[[Serrrated Shiv]]        "item_serrated_shiv",
+    -- --[[Gale Guard]]            "item_gale_guard",
+    --[[Gunpowder Gauntlet]]    "item_gunpowder_gauntlets",
+    -- --[[Ninja Gear]]            "item_ninja_gear",
     --[[Jidi Pollen Bag]]       "item_jidi_pollen_bag",
     --[[Unrelenting Eye]]       "item_unrelenting_eye",
+    --[[Partisan's Brand]]      "item_partisans_brand",
     --[[Spellslinger]]          "item_spellslinger",
     --[[Stormcrafter]]          "item_stormcrafter",
-    --[[Partisan's Brand]]      "item_partisans_brand",
 }
 
 local Tier4NeutralItems = {
@@ -99,25 +103,27 @@ local Tier4NeutralItems = {
     -- --[[Ninja Gear]]            "item_ninja_gear",
     -- --[[Telescope]]             "item_spy_gadget",
     -- --[[Trickster Cloak]]       "item_trickster_cloak",
-    -- --[[Stormcrafter]]          "item_stormcrafter",         -- moved to T3 in 7.41
+    -- --[[Stormcrafter]]          "item_stormcrafter",
     -- --[[Ancient Guardian]]      "item_ancient_guardian",
     -- --[[Havoc Hammer]]          "item_havoc_hammer",
-    -- --[[Mind Breaker]]          "item_mind_breaker",         -- removed in 7.41
+    -- --[[Mind Breaker]]          "item_mind_breaker",
     -- --[[Martyr's Plate]]        "item_martyrs_plate",
     --[[Rattlecage]]            "item_rattlecage",
-    -- --[[Ogre Seal Totem]]       "item_ogre_seal_totem",      -- removed in 7.41
-    -- --[[Crippling Crossbow]]    "item_crippling_crossbow",   -- moved to T2 in 7.41
-    -- --[[Magnifying Monocle]]    "item_magnifying_monocle",   -- removed in 7.41
-    -- --[[Ceremonial Robe]]       "item_ceremonial_robe",      -- removed in 7.41
-    -- --[[Pyrrhic Cloak]]         "item_pyrrhic_cloak",        -- removed in 7.41
-    --[[Giant Maul]]            "item_giant_maul",
-    --[[Idol of Screeauk]]      "item_idol_of_screeauk",
+    -- --[[Ogre Seal Totem]]       "item_ogre_seal_totem",
+    -- --[[Crippling Crossbow]]    "item_crippling_crossbow",
+    -- --[[Magnifying Monocle]]    "item_magnifying_monocle",
+    -- --[[Ceremonial Robe]]       "item_ceremonial_robe",
+    -- --[[Pyrrhic Cloak]]         "item_pyrrhic_cloak",
+    -- --[[Dezun Bloodrite]]       "item_dezun_bloodrite",
+    --[[Giant's Maul]]          "item_giant_maul",
+    -- --[[Outworld Staff]]        "item_outworld_staff",
     --[[Flayer's Bota]]         "item_flayers_bota",
+    --[[Idol of Scree'Auk]]     "item_idol_of_screeauk",
     --[[Metamorphic Mandible]]  "item_metamorphic_mandible",
+    --[[Conjurer's Catalyst]]   "item_conjurers_catalyst",
     --[[Dandelion Amulet]]      "item_dandelion_amulet",
     --[[Enchanter's Bauble]]    "item_enchanters_bauble",
     --[[Prophet's Pendulum]]    "item_prophets_pendulum",
-    --[[Conjurer's Catalyst]]   "item_conjurers_catalyst",
 }
 
 local Tier5NeutralItems = {
@@ -128,239 +134,331 @@ local Tier5NeutralItems = {
     -- --[[Apex]]                  "item_apex",
     --[[Book of the Dead]]      "item_demonicon",
     -- --[[Arcanist's Armor]]      "item_force_field",
-    -- --[[Pirate Hat]]            "item_pirate_hat",           -- removed in 7.41
+    -- --[[Pirate Hat]]            "item_pirate_hat",
     -- --[[Giant's Ring]]          "item_giants_ring",
     -- --[[Unwavering Condition]]  "item_unwavering_condition",
     -- --[[Book of Shadows]]       "item_book_of_shadows",
-    -- --[[Magic Lamp]]            "item_panic_button",         -- removed in 7.41
+    -- --[[Magic Lamp]]            "item_panic_button",
     --[[Fallen Sky]]            "item_fallen_sky",
     --[[Minotaur Horn]]         "item_minotaur_horn",
     --[[Spider Legs]]           "item_spider_legs",
-    -- --[[Unrelenting Eye]]       "item_unrelenting_eye",      -- moved to T3 in 7.41
-    --[[Riftshadow Prism]]      "item_riftshadow_prism",
-    --[[Dezun Bloodrite]]       "item_dezun_bloodrite",
+    -- --[[Unrelenting Eye]]       "item_unrelenting_eye",
     --[[Divine Regalia]]        "item_divine_regalia",
+    -- -- [[Disgraced Regalia]]     "item_divine_regalia_broken", -- what 'item_divine_regalia' turns into
+    -- --[[Helm of the Undying]]   "item_helm_of_the_undying",
+    --[[Dezun Bloodrite]]       "item_dezun_bloodrite",
+    --[[Riftshadow Prism]]      "item_riftshadow_prism",
     --[[Harmonizer]]            "item_harmonizer",
-    --[[Heavy Blade]]           "item_heavy_blade",
+    --[[Witchbane]]             "item_heavy_blade",
 }
 
-local enhancements = {
-    -- Tier 1 enhancements
-    { name = "item_enhancement_mystical", tier = 1, roles = {1, 1, 1, 1, 1}, realName = "Mystical Enhancement" },
-    { name = "item_enhancement_brawny",    tier = 1, roles = {1, 1, 3, 2, 2}, realName = "Brawny Enhancement" },
-    { name = "item_enhancement_alert",     tier = 1, roles = {1, 2, 1, 1, 1}, realName = "Alert Enhancement" },
-    { name = "item_enhancement_tough",     tier = 1, roles = {1, 1, 2, 2, 1}, realName = "Tough Enhancement" },
-    { name = "item_enhancement_quickened", tier = 1, roles = {1, 1, 1, 2, 1}, realName = "Quickened Enhancement" },
-    { name = "item_enhancement_vital",     tier = 1, roles = {1, 1, 1, 1, 1}, realName = "Vital Enhancement" },
-
-    -- Tier 2 enhancements
-    { name = "item_enhancement_mystical", tier = 2, roles = {1, 1, 1, 1, 1}, realName = "Mystical Enhancement" },
-    { name = "item_enhancement_brawny",    tier = 2, roles = {1, 1, 3, 2, 2}, realName = "Brawny Enhancement" },
-    { name = "item_enhancement_alert",     tier = 2, roles = {1, 2, 1, 1, 1}, realName = "Alert Enhancement" },
-    { name = "item_enhancement_tough",     tier = 2, roles = {1, 1, 2, 2, 1}, realName = "Tough Enhancement" },
-    { name = "item_enhancement_quickened", tier = 2, roles = {1, 1, 1, 2, 1}, realName = "Quickened Enhancement" },
-    { name = "item_enhancement_keen_eyed", tier = 2, roles = {1, 1, 1, 1, 2}, realName = "Keen Eyed Enhancement" },
-    { name = "item_enhancement_vast",      tier = 2, roles = {1, 1, 1, 1, 1}, realName = "Vast Enhancement" },
-    { name = "item_enhancement_greedy",    tier = 2, roles = {1, 1, 1, 2, 2}, realName = "Greedy Enhancement" },
-    { name = "item_enhancement_vampiric",  tier = 2, roles = {1, 1, 1, 1, 1}, realName = "Vampiric Enhancement" },
-    { name = "item_enhancement_nimble",    tier = 2, roles = {1, 1, 1, 1, 1}, realName = "Nimble Enhancement" },
-    { name = "item_enhancement_crude",     tier = 2, roles = {1, 1, 1, 1, 1}, realName = "Crude Enhancement" },
-    { name = "item_enhancement_titanic",   tier = 2, roles = {1, 1, 1, 1, 1}, realName = "Titanic Enhancement" },
-
-    -- Tier 3 enhancements
-    { name = "item_enhancement_mystical", tier = 3, roles = {1, 1, 1, 1, 1}, realName = "Mystical Enhancement" },
-    { name = "item_enhancement_brawny",    tier = 3, roles = {1, 1, 3, 2, 2}, realName = "Brawny Enhancement" },
-    { name = "item_enhancement_alert",     tier = 3, roles = {1, 2, 1, 1, 1}, realName = "Alert Enhancement" },
-    { name = "item_enhancement_tough",     tier = 3, roles = {1, 1, 2, 2, 1}, realName = "Tough Enhancement" },
-    { name = "item_enhancement_quickened", tier = 3, roles = {1, 1, 1, 2, 1}, realName = "Quickened Enhancement" },
-    { name = "item_enhancement_keen_eyed", tier = 3, roles = {1, 1, 1, 1, 2}, realName = "Keen Eyed Enhancement" },
-    { name = "item_enhancement_vast",      tier = 3, roles = {1, 1, 1, 1, 1}, realName = "Vast Enhancement" },
-    { name = "item_enhancement_greedy",    tier = 3, roles = {1, 1, 1, 2, 2}, realName = "Greedy Enhancement" },
-    { name = "item_enhancement_vampiric",  tier = 3, roles = {1, 1, 1, 1, 1}, realName = "Vampiric Enhancement" },
-    { name = "item_enhancement_nimble",    tier = 3, roles = {1, 1, 1, 1, 1}, realName = "Nimble Enhancement" },
-    { name = "item_enhancement_crude",     tier = 3, roles = {1, 1, 1, 1, 1}, realName = "Crude Enhancement" },
-    { name = "item_enhancement_titanic",   tier = 3, roles = {1, 1, 1, 1, 1}, realName = "Titanic Enhancement" },
-
-    -- Tier 4 enhancements
-    { name = "item_enhancement_mystical", tier = 4, roles = {1, 1, 1, 1, 1}, realName = "Mystical Enhancement" },
-    { name = "item_enhancement_brawny",    tier = 4, roles = {1, 1, 3, 2, 2}, realName = "Brawny Enhancement" },
-    { name = "item_enhancement_alert",     tier = 4, roles = {1, 2, 1, 1, 1}, realName = "Alert Enhancement" },
-    { name = "item_enhancement_tough",     tier = 4, roles = {1, 1, 2, 2, 1}, realName = "Tough Enhancement" },
-    { name = "item_enhancement_quickened", tier = 4, roles = {1, 1, 1, 2, 1}, realName = "Quickened Enhancement" },
-    { name = "item_enhancement_vampiric",  tier = 4, roles = {1, 1, 1, 1, 1}, realName = "Vampiric Enhancement" },
-    { name = "item_enhancement_timeless", tier = 4, roles = {1, 1, 1, 1, 1}, realName = "Timeless Enhancement" },
-    { name = "item_enhancement_nimble",   tier = 4, roles = {1, 1, 1, 1, 1}, realName = "Nimble Enhancement" },
-    { name = "item_enhancement_crude",    tier = 4, roles = {1, 1, 1, 1, 1}, realName = "Crude Enhancement" },
-    { name = "item_enhancement_titanic",  tier = 4, roles = {1, 1, 1, 1, 1}, realName = "Titanic Enhancement" },
-
-    -- Tier 5 enhancements
-    { name = "item_enhancement_timeless", tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Timeless Enhancement" },
-    { name = "item_enhancement_feverish", tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Feverish Enhancement" },
-    { name = "item_enhancement_fleetfooted", tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Fleetfooted Enhancement" },
-    { name = "item_enhancement_audacious", tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Audacious Enhancement" },
-    { name = "item_enhancement_evolved",  tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Evolved Enhancement" },
-    { name = "item_enhancement_boundless", tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Boundless Enhancement" },
-    { name = "item_enhancement_wise",     tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Wise Enhancement" },
-    { name = "item_enhancement_hulking",  tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Hulking Enhancement" },
-    { name = "item_enhancement_manic",    tier = 5, roles = {1, 1, 1, 1, 1}, realName = "Manic Enhancement" },
+local hNeutralItemsList = {
+    [1] = Tier1NeutralItems,
+    [2] = Tier2NeutralItems,
+    [3] = Tier3NeutralItems,
+    [4] = Tier4NeutralItems,
+    [5] = Tier5NeutralItems,
 }
 
-function NeutralItems:GetRandomEnhanByTier(tier)
-    local filtered = {}
-    for _, enh in ipairs(enhancements) do
-        if enh.tier == tier then
-            table.insert(filtered, enh)
-        end
+-- Enhancements
+
+local TierEnhancements = {
+    [1] = {
+        "item_enhancement_alert",
+        "item_enhancement_brawny",
+        "item_enhancement_mystical",
+        "item_enhancement_quickened",
+        "item_enhancement_tough",
+        "item_enhancement_vital",
+    },
+    [2] = {
+        "item_enhancement_alert",
+        "item_enhancement_brawny",
+        "item_enhancement_mystical",
+        "item_enhancement_quickened",
+        "item_enhancement_tough",
+
+        -- "item_enhancement_vast",
+        "item_enhancement_greedy",
+        "item_enhancement_keen_eyed",
+        -- "item_enhancement_vampiric",
+        "item_enhancement_crude",
+        "item_enhancement_nimble",
+        "item_enhancement_titanic",
+    },
+    [3] = {
+        "item_enhancement_alert",
+        "item_enhancement_brawny",
+        "item_enhancement_mystical",
+        "item_enhancement_quickened",
+        "item_enhancement_tough",
+
+        -- "item_enhancement_vast",
+        "item_enhancement_greedy",
+        "item_enhancement_keen_eyed",
+        -- "item_enhancement_vampiric",
+        "item_enhancement_crude",
+        "item_enhancement_nimble",
+        "item_enhancement_titanic",
+    },
+    [4] = {
+        "item_enhancement_alert",
+        "item_enhancement_brawny",
+        "item_enhancement_mystical",
+        "item_enhancement_quickened",
+        "item_enhancement_tough",
+
+        "item_enhancement_keen_eyed",
+        -- "item_enhancement_vampiric",
+        "item_enhancement_crude",
+        "item_enhancement_nimble",
+        "item_enhancement_titanic",
+
+        "item_enhancement_timeless",
+        "item_enhancement_titanic",
+        -- "item_enhancement_crude",
+    },
+    [5] = {
+        "item_enhancement_timeless",
+        -- "item_enhancement_titanic",
+
+        "item_enhancement_feverish",
+        "item_enhancement_fleetfooted",
+        "item_enhancement_audacious",
+        "item_enhancement_evolved",
+        -- "item_enhancement_boundless",
+        -- "item_enhancement_wise",
+        "item_enhancement_vampiric",
+        "item_enhancement_hulking",
+        "item_enhancement_manic",
+    }
+}
+
+local function DoGive(hero, nTier)
+    local sItemName = ''
+    local heroData = neutrals_data[hero:GetUnitName()]['neutral']
+    if heroData and heroData[nTier] then
+        sItemName = NeutralItems.SelectItem(heroData[nTier])
+    else
+        sItemName = hNeutralItemsList[nTier][RandomInt(1, #hNeutralItemsList[nTier])]
     end
 
-    if #filtered == 0 then
-        return nil  -- No enhancement found for this tier
-    end
-
-    -- Return a random enhancement from the filtered list.
-    return filtered[math.random(#filtered)]
-end
-
-
--- Just give out random for now.
--- Will work out a decent algorithm later to better assign suitable items.
-function NeutralItems.GiveNeutralItems(TeamRadiant, TeamDire)
-    local isTurboMode = Helper.IsTurboMode()
-
-    -- Tier 1 Neutral Items
-    if (isTurboMode and Helper.DotaTime() >= 0 or Helper.DotaTime() >= 0)
-    and not isTierOneDone
-    then
-        GameRules:SendCustomMessage('Bots receiving Tier 1 Neutral Items...', 0, 0)
-
-        for _, h in pairs(TeamRadiant) do
-            NeutralItems.GiveItem(Tier1NeutralItems[RandomInt(1, #Tier1NeutralItems)], h, isTierOneDone, 1)
-        end
-
-        for _, h in pairs(TeamDire) do
-            NeutralItems.GiveItem(Tier1NeutralItems[RandomInt(1, #Tier1NeutralItems)], h, isTierOneDone, 1)
-        end
-
-        isTierOneDone = true
-    end
-
-    -- Tier 2 Neutral Items
-    if (isTurboMode and Helper.DotaTime() >= 8.5 * 60 or Helper.DotaTime() >= 17 * 60)
-    and not isTierTwoDone
-    then
-        GameRules:SendCustomMessage('Bots receiving Tier 2 Neutral Items...', 0, 0)
-
-        for _, h in pairs(TeamRadiant) do
-            NeutralItems.GiveItem(Tier2NeutralItems[RandomInt(1, #Tier2NeutralItems)], h, isTierOneDone, 2)
-        end
-
-        for _, h in pairs(TeamDire) do
-            NeutralItems.GiveItem(Tier2NeutralItems[RandomInt(1, #Tier2NeutralItems)], h, isTierOneDone, 2)
-        end
-
-        isTierTwoDone = true
-    end
-
-    -- Tier 3 Neutral Items
-    if (isTurboMode and Helper.DotaTime() >= 13.5 * 60 or Helper.DotaTime() >= 27 * 60)
-    and not isTierThreeDone
-    then
-        GameRules:SendCustomMessage('Bots receiving Tier 3 Neutral Items...', 0, 0)
-
-        for _, h in pairs(TeamRadiant) do
-            NeutralItems.GiveItem(Tier3NeutralItems[RandomInt(1, #Tier3NeutralItems)], h, isTierTwoDone, 3)
-        end
-
-        for _, h in pairs(TeamDire) do
-            NeutralItems.GiveItem(Tier3NeutralItems[RandomInt(1, #Tier3NeutralItems)], h, isTierTwoDone, 3)
-        end
-
-        isTierThreeDone = true
-    end
-
-    -- Tier 4 Neutral Items
-    if (isTurboMode and Helper.DotaTime() >= 18.5 * 60 or Helper.DotaTime() >= 37 * 60)
-    and not isTierFourDone
-    then
-        GameRules:SendCustomMessage('Bots receiving Tier 4 Neutral Items...', 0, 0)
-
-        for _, h in pairs(TeamRadiant) do
-            NeutralItems.GiveItem(Tier4NeutralItems[RandomInt(1, #Tier4NeutralItems)], h, isTierThreeDone, 4)
-        end
-
-        for _, h in pairs(TeamDire) do
-            NeutralItems.GiveItem(Tier4NeutralItems[RandomInt(1, #Tier4NeutralItems)], h, isTierThreeDone, 4)
-        end
-
-        isTierFourDone = true
-    end
-
-    -- Tier 5 Neutral Items
-    if (isTurboMode and Helper.DotaTime() >= 30 * 60 or Helper.DotaTime() >= 60 * 60)
-    and not isTierFiveDone
-    then
-        GameRules:SendCustomMessage('Bots receiving Tier 5 Neutral Items...', 0, 0)
-
-        for _, h in pairs(TeamRadiant) do
-            NeutralItems.GiveItem(Tier5NeutralItems[RandomInt(1, #Tier5NeutralItems)], h, isTierFourDone, 5)
-        end
-
-        for _, h in pairs(TeamDire) do
-            NeutralItems.GiveItem(Tier5NeutralItems[RandomInt(1, #Tier5NeutralItems)], h, isTierFourDone, 5)
-        end
-
-        isTierFiveDone = true
+    if sItemName ~= '' then
+        NeutralItems.GiveItem(sItemName, hero, nTier, true, true)
+        -- something green
+        GameRules:SendCustomMessage("<font color='#70EA71'>"..string.gsub(hero:GetUnitName(), 'npc_dota_hero_', '').."</font>"..' recieved a Tier '..tostring(nTier)..' neutral item!', -1, 0)
+        hero.neutral_items[nTier].assigned = true
     end
 end
 
-function NeutralItems.GiveItem(itemName, hero, isTierDone, nTier)
-    NeutralItems:RemoveEnhan(hero)
-    if hero:HasRoomForItem(itemName, true, true)
-    then
-        local item = CreateItem(itemName, hero, hero)
+-- with 11/10/25 update, this will override (or get overriden), since valve made bots craft items
+local bInitTimes = false
+function NeutralItems.GiveNeutralItems(hHeroList)
+    local bTurboMode = Helper.IsTurboMode()
+    local fCurrentTime = Helper.DotaTime()
+    local nCurrentTierWindow = NeutralItems.GetCurrentTierWindow(bTurboMode, fCurrentTime)
+
+    if not bInitTimes and #hHeroList > 0 then
+        for _, hero in pairs(hHeroList) do
+            if hero.neutral_items == nil then
+                hero.neutral_items = {
+                    [1] = { assign_time = 0, assigned = false, items = { neutral = '', enhancement = '' } },
+                    [2] = { assign_time = 0, assigned = false, items = { neutral = '', enhancement = '' } },
+                    [3] = { assign_time = 0, assigned = false, items = { neutral = '', enhancement = '' } },
+                    [4] = { assign_time = 0, assigned = false, items = { neutral = '', enhancement = '' } },
+                    [5] = { assign_time = 0, assigned = false, items = { neutral = '', enhancement = '' } },
+                }
+            end
+
+            if hero.neutral_items then
+                -- range; to feel more natural
+                if bTurboMode then
+                    hero.neutral_items[1].assign_time = RandomFloat( 0.0,  1.5)
+                    hero.neutral_items[2].assign_time = RandomFloat( 7.5,  9.5)
+                    hero.neutral_items[3].assign_time = RandomFloat(12.5, 14.5)
+                    hero.neutral_items[4].assign_time = RandomFloat(17.5, 19.5)
+                    hero.neutral_items[5].assign_time = RandomFloat(30.0, 32.0)
+                else
+                    hero.neutral_items[1].assign_time = RandomFloat( 0,  3)
+                    hero.neutral_items[2].assign_time = RandomFloat(15, 18)
+                    hero.neutral_items[3].assign_time = RandomFloat(25, 28)
+                    hero.neutral_items[4].assign_time = RandomFloat(35, 38)
+                    hero.neutral_items[5].assign_time = RandomFloat(60, 63)
+                end
+            end
+        end
+
+        bInitTimes = true
+    end
+
+    -- Give Neutral Items
+    for _, hero in pairs(hHeroList) do
+        if hero.neutral_items then
+            if hero.neutral_items[nCurrentTierWindow].assigned == false and fCurrentTime >= hero.neutral_items[nCurrentTierWindow].assign_time * 60 then
+                DoGive(hero, nCurrentTierWindow)
+            end
+
+            -- change back to ^ Buff item; valve's default is too random
+            if hero.neutral_items[nCurrentTierWindow].assigned == true  and fCurrentTime >= hero.neutral_items[nCurrentTierWindow].assign_time * 60 then
+                local hItem1 = hero:GetItemInSlot(16)
+                local hItem2 = hero:GetItemInSlot(17)
+                if hItem1 and hItem2 then
+                    local sItemName1 = hItem1:GetName()
+                    local sItemName2 = hItem2:GetName()
+
+                    if sItemName1 ~= 'item_divine_regalia_broken' then
+                        local sNeutralName = hero.neutral_items[nCurrentTierWindow].items.neutral
+                        local sEnhancementName = hero.neutral_items[nCurrentTierWindow].items.enhancement
+
+                        if sItemName1 ~= sNeutralName or sItemName2 ~= sEnhancementName then
+                            NeutralItems.GiveItem(sNeutralName, hero, nCurrentTierWindow, true, false)
+                            NeutralItems.GiveItem(sEnhancementName, hero, nCurrentTierWindow, false, true)
+                            -- GameRules:SendCustomMessage("<font color='#70EA71'>"..string.gsub(hero:GetUnitName(), 'npc_dota_hero_', '').."</font>"..' changed back its neutral item!', -1, 0)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    -- replace 'item_divine_regalia_broken'
+    for _, h in pairs(hHeroList) do
+        if h and h:HasItemInInventory('item_divine_regalia_broken') then
+            local sItemName = ''
+            local heroData = neutrals_data[h:GetUnitName()]['neutral']
+            if heroData and heroData[5] then
+                sItemName = NeutralItems.SelectItem(heroData[5])
+            else
+                sItemName = Tier5NeutralItems[RandomInt(1, #Tier5NeutralItems)]
+            end
+
+            if sItemName ~= '' then
+                NeutralItems.GiveItem(sItemName, h, 5, true, true)
+            end
+        end
+    end
+end
+
+function NeutralItems.GiveItem(sItemName, hero, nTier, bNeutral, bEnhancement)
+    if hero:HasRoomForItem(sItemName, true, true) then
+        local item = CreateItem(sItemName, hero, hero)
         item:SetPurchaseTime(0)
 
-        if NeutralItems.HasNeutralItem(hero)
-        and isTierDone
+        if bNeutral then
+            -- neutral item
+            hero:RemoveItem(hero:GetItemInSlot(16))
+            hero:AddItem(item)
+        end
+
+        if (bNeutral and bEnhancement)
+        or (not bNeutral and bEnhancement)
         then
-            hero:RemoveItem(hero:GetItemInSlot(DOTA_ITEM_NEUTRAL_SLOT))
-            NeutralItems:RemoveEnhan(hero)
-            hero:AddItem(item)
-        else
-            hero:AddItem(item)
-        end
-        local enhancement = NeutralItems:GetRandomEnhanByTier(nTier)
-        if enhancement then
-            local enha = CreateItem(enhancement.name, hero, hero)
-            enha:SetPurchaseTime(0)
-            hero:AddItem(enha)
+            -- remove so they don't stick to the next item
+            if hero then
+                local itemEnhancement = hero:GetItemInSlot(17)
+                if itemEnhancement then hero:RemoveItem(itemEnhancement) end
+            end
+
+            -- give some enhancement
+            local eList = TierEnhancements[nTier]
+            if eList then
+                local e = eList[RandomInt(1, #eList)]
+                local heroData = neutrals_data[hero:GetUnitName()]['enhancement']
+                if heroData and heroData[nTier] then
+                    e = NeutralItems.SelectItem(heroData[nTier])
+                end
+
+                if (not bNeutral and bEnhancement) then
+                    e = sItemName
+                end
+
+                if e ~= nil then
+                    item = CreateItem(e, hero, hero)
+
+                    -- check if this enhancement is available in lower tiers
+                    -- if it does, upgrade it n times
+                    local nCount = 0
+                    for i = 1, nTier - 1 do
+                        if TierEnhancements[i] then
+                            for _, prev in pairs(TierEnhancements[i]) do
+                                if prev == e then
+                                    nCount = nCount + 1
+                                end
+                            end
+                        end
+                    end
+
+                    for _ = 1, nCount do
+                        item:UpgradeAbility(true)
+                    end
+
+                    item:SetPurchaseTime(0)
+                    hero:AddItem(item)
+
+                    if (bNeutral and bEnhancement) then
+                        hero.neutral_items[nTier].items.neutral = sItemName
+                        hero.neutral_items[nTier].items.enhancement = e
+                    end
+                end
+            end
         end
     end
 end
 
-function NeutralItems:RemoveEnhan(unit)
-	for idx = 1, 20 do
-		local currentItem = unit:GetItemInSlot(idx)
-		if currentItem ~= nil then
-			if string.find(currentItem:GetName(), "item_enhancement") then
-				unit:RemoveItem(currentItem)
-				-- return
-			end
-		end
-	end
+-- do a simple weighted random selection
+function NeutralItems.SelectItem(hNeutralItemList)
+    local items = {}
+    local weights = {}
+    for item, weight in pairs(hNeutralItemList) do
+        if  item ~= 'item_enhancement_wise'
+        and item ~= 'item_dormant_curio'
+        and item ~= 'item_enchanters_bauble'
+        then
+            table.insert(items,item)
+            table.insert(weights,weight)
+        end
+    end
+
+    local totalWeight = 0
+    for _, weight in pairs(weights) do
+        totalWeight = totalWeight + weight
+    end
+
+    local randVal = (RandomInt(0, 100) / 100) * totalWeight
+    local accumWeight = 0
+    local selectedItem = ''
+
+    for i, weight in ipairs(weights) do
+        accumWeight = accumWeight + weight
+        if randVal <= accumWeight then
+            selectedItem = items[i]
+            break
+        end
+    end
+
+    return selectedItem
 end
 
-function NeutralItems.HasNeutralItem(hero)
-    if not hero then
-        return false
+function NeutralItems.GetCurrentTierWindow(bTurboMode, fCurrentTime)
+    local thresholds = bTurboMode and {0, 7.5, 12.5, 17.5, 30} or {0, 15, 25, 35, 60}
+    for i = #thresholds, 1, -1 do
+        if fCurrentTime >= thresholds[i] * 60 then return i end
     end
 
-    local item = hero:GetItemInSlot(DOTA_ITEM_NEUTRAL_SLOT)
-    if item then
-        return true
+    return 1
+end
+
+function NeutralItems.GetItemTier(sItemName)
+    local itemList = { Tier1NeutralItems, Tier2NeutralItems, Tier3NeutralItems, Tier4NeutralItems, Tier5NeutralItems }
+    for tier, items in pairs(itemList) do
+        for _, item in pairs(items) do
+            if item == sItemName then
+                return tier
+            end
+        end
     end
 
-    return false
+    return -1
 end
 
 return NeutralItems

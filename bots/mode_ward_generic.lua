@@ -7,8 +7,6 @@ local X = {}
 local bot = GetBot()
 local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
 local W = require(GetScriptDirectory() ..'/FunLib/aba_ward_utility')
-local Customize = require(GetScriptDirectory()..'/Customize/general')
-Customize.ThinkLess = Customize.Enable and Customize.ThinkLess or 1
 
 local nObserverWardCastRange = 500
 local nSentryWardCastRange = 500
@@ -20,27 +18,12 @@ local hTargetSpot = nil
 local fLastWardPlantTime = -math.huge
 
 function GetDesire()
-	if J.GetPosition(bot) <= 3 then return false end
-	-- local cacheKey = 'GetWardDesire'..tostring(bot:GetPlayerID())
-	-- local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.6 * (1 + Customize.ThinkLess))
-	-- if DotaTime() > 30 and cachedVar ~= nil then return cachedVar end
-	local res = GetDesireHelper()
-	-- J.Utils.SetCachedVars(cacheKey, res)
-	return RemapValClamped(J.GetHP(bot) * res, 0, 1, BOT_MODE_DESIRE_NONE, res)
-end
-function GetDesireHelper()
     if not X.IsSuitableToWard() then
         return BOT_MODE_DESIRE_NONE
     end
 
-	-- 如果在打高地 就别撤退去干别的
-	if J.Utils.IsTeamPushingSecondTierOrHighGround(bot) then
-		return BOT_MODE_DESIRE_NONE
-	end
-	local enemiesAtAncient = J.Utils.CountEnemyHeroesNear(GetAncient(GetTeam()):GetLocation(), 3200)
-    if enemiesAtAncient >= 1 then
-        return BOT_MODE_DESIRE_NONE
-    end
+	local nInRangeAlly = J.GetAlliesNearLoc(bot:GetLocation(), 1200)
+	local nInRangeEnemy = J.GetEnemiesNearLoc(bot:GetLocation(), 1200)
 
     for i = 0, 5 do
         local hItem = bot:GetItemInSlot(i)
@@ -99,7 +82,7 @@ end
 
 function Think()
 	if J.CanNotUseAction(bot) then return end
-	if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "ward") then return end
+
 	if hTargetSpot then
 		if ObserverWard and J.CanCastAbility(ObserverWard) then
 			if GetUnitToLocationDistance(bot, hTargetSpot.location) <= nObserverWardCastRange then
@@ -117,7 +100,7 @@ function Think()
 				hTargetSpot.plant_time_obs = DotaTime()
 				return
 			else
-				J.IssueMove(bot, hTargetSpot.location)
+				bot:Action_MoveToLocation(hTargetSpot.location)
 				return
 			end
 		end
@@ -143,7 +126,7 @@ function Think()
 				hTargetSpot.plant_time_sentry = DotaTime()
 				return
 			else
-				J.IssueMove(bot, hTargetSpot.location)
+				bot:Action_MoveToLocation(hTargetSpot.location)
 				return
 			end
 		end
@@ -156,7 +139,7 @@ function X.IsSuitableToWard()
 	local botActiveMode = bot:GetActiveMode()
     local botActiveModeDesire = bot:GetActiveModeDesire()
 
-	if (J.IsRetreating(bot) and botActiveModeDesire > 0.75)
+	if (J.IsRetreating(bot) and botActiveModeDesire > BOT_MODE_DESIRE_HIGH)
 	or (botActiveMode == BOT_MODE_RUNE and DotaTime() > 0)
 	or (botActiveMode == BOT_MODE_DEFEND_ALLY)
 	or (nEnemyHeroes ~= nil and #nEnemyHeroes >= 1 and X.IsIBecameTheTarget(nEnemyHeroes))

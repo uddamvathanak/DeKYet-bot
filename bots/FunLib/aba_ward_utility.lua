@@ -72,7 +72,7 @@ local WardLocationsBeforeAllyTowerFall__Radiant = {
 		[1] = { location = Vector(-7923.261719, 1820.198730), plant_time_obs = 0, plant_time_sentry = 0, },
 		[2] = { location = Vector(-4199.289062, 1328.263062), plant_time_obs = 0, plant_time_sentry = 0, },
 		[3] = { location = Vector(-4334.572266, -1036.464844), plant_time_obs = 0, plant_time_sentry = 0, },
-		[4] = { location = Vector(-4245.528320, 357.413574), plant_time_obs = 0, plant_time_sentry = 0, },
+		[4] = { location = Vector(-3993.328125, 330.426453), plant_time_obs = 0, plant_time_sentry = 0, },
 		[5] = { location = Vector(-4562.793457, 1873.175537), plant_time_obs = 0, plant_time_sentry = 0, },
 		[6] = { location = Vector(-7579.524902, 493.309631), plant_time_obs = 0, plant_time_sentry = 0, },
 		[7] = { location = Vector(-3380.673828, 672.909180), plant_time_obs = 0, plant_time_sentry = 0, },
@@ -86,7 +86,7 @@ local WardLocationsBeforeAllyTowerFall__Radiant = {
 		[4] = { location = Vector(104.285484, -3576.448242), plant_time_obs = 0, plant_time_sentry = 0, },
 		[5] = { location = Vector(-3322.988037, -200.036987), plant_time_obs = 0, plant_time_sentry = 0, },
 		[6] = { location = Vector(-2458.159668, -1210.825439), plant_time_obs = 0, plant_time_sentry = 0, },
-		[7] = { location = Vector(-4245.528320, 357.413574), plant_time_obs = 0, plant_time_sentry = 0, },
+		[7] = { location = Vector(-3993.328125, 330.426453), plant_time_obs = 0, plant_time_sentry = 0, },
 	},
 	[TOWER_BOT_2] = {
 		[1] = { location = Vector(2258.137207, -7110.736328), plant_time_obs = 0, plant_time_sentry = 0, },
@@ -337,73 +337,6 @@ function X.GetEarlyGameWardSpots()
 	return GetTeam() == TEAM_RADIANT and WardLocationsEarlyGame__Radiant or WardLocationsEarlyGame__Dire
 end
 
--- #############################################################
--- PRO OBJECTIVE WARD POSITIONS
--- #############################################################
-
--- Roshan pit vision (highest priority in mid/late game)
-local ROSHAN_WARD_POSITIONS = {
-	{ location = Vector(-2600, 1600), plant_time_obs = 0, plant_time_sentry = 0 },   -- Radiant side approach
-	{ location = Vector(-1900, 2100), plant_time_obs = 0, plant_time_sentry = 0 },   -- River entrance
-	{ location = Vector(-2800, 2800), plant_time_obs = 0, plant_time_sentry = 0 },   -- Dire side approach
-}
-
--- Outpost vision
-local OUTPOST_WARD_POSITIONS = {
-	{ location = Vector(-4300, -300), plant_time_obs = 0, plant_time_sentry = 0 },    -- Radiant outpost
-	{ location = Vector(4300, 300), plant_time_obs = 0, plant_time_sentry = 0 },      -- Dire outpost
-}
-
--- Enemy farming triangle wards (carry jungle entrances)
-local RADIANT_FARMING_ROUTE_WARDS = {
-	{ location = Vector(-3200, -4600), plant_time_obs = 0, plant_time_sentry = 0 },   -- Radiant triangle entrance
-	{ location = Vector(-4600, -3800), plant_time_obs = 0, plant_time_sentry = 0 },   -- Radiant jungle entry
-}
-
-local DIRE_FARMING_ROUTE_WARDS = {
-	{ location = Vector(3400, 4400), plant_time_obs = 0, plant_time_sentry = 0 },     -- Dire triangle entrance
-	{ location = Vector(4600, 3600), plant_time_obs = 0, plant_time_sentry = 0 },     -- Dire jungle entry
-}
-
-function X.GetObjectiveWardSpots()
-	local spots = {}
-	local now = DotaTime()
-	local isEarly = J.IsEarlyGame()
-
-	-- Roshan wards: always relevant after laning phase
-	if not isEarly then
-		for _, spot in pairs(ROSHAN_WARD_POSITIONS) do
-			if not X.IsOtherWardClose(spot.location, 'npc_dota_observer_wards', nVisionRadius * 2, true, false)
-			and (spot.plant_time_obs == 0 or now > spot.plant_time_obs + 360) then
-				table.insert(spots, spot)
-			end
-		end
-	end
-
-	-- Outpost wards: after 10 minutes
-	if now > 10 * 60 then
-		for _, spot in pairs(OUTPOST_WARD_POSITIONS) do
-			if not X.IsOtherWardClose(spot.location, 'npc_dota_observer_wards', nVisionRadius * 2, true, false)
-			and (spot.plant_time_obs == 0 or now > spot.plant_time_obs + 360) then
-				table.insert(spots, spot)
-			end
-		end
-	end
-
-	-- Enemy farming route wards: mid/late game to track enemy carry
-	if not isEarly then
-		local farmWards = GetTeam() == TEAM_RADIANT and DIRE_FARMING_ROUTE_WARDS or RADIANT_FARMING_ROUTE_WARDS
-		for _, spot in pairs(farmWards) do
-			if not X.IsOtherWardClose(spot.location, 'npc_dota_observer_wards', nVisionRadius * 2, true, false)
-			and (spot.plant_time_obs == 0 or now > spot.plant_time_obs + 360) then
-				table.insert(spots, spot)
-			end
-		end
-	end
-
-	return spots
-end
-
 local WardSpotRadiant = nil
 local WardSpotDire = nil
 function X.GetGameStartWardSpots()
@@ -555,13 +488,6 @@ function X.GetAvailabeObserverWardSpots(bot)
 				end
 			end
 		end
-	end
-
-	-- Inject high-priority objective wards (Roshan, outpost, farming routes)
-	local objectiveSpots = X.GetObjectiveWardSpots()
-	for _, spot in pairs(objectiveSpots) do
-		-- Insert at the beginning so they're prioritized
-		table.insert(availableSpots, 1, spot)
 	end
 
 	return availableSpots
