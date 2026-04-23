@@ -1,60 +1,47 @@
-# Dota 2 Bot Scripts - Claude Code Guide
+# Dota 2 Bot Scripts — Claude Code Guide
 
 ## Project Overview
 
-This is the **dota2bot-OpenHyperAI** project -- Lua bot scripts for Dota 2 that run in custom lobbies. Currently supports Patch 7.41/7.41a with 127 heroes.
+This is the **DeKYet Bot** repo. The `bots/` folder currently holds an **unmodified copy of [ryndrb / dota2bot (Tinkering ABout)](https://github.com/ryndrb/dota2bot)** as a clean baseline. No DeKYet modifications have been layered on yet.
 
-## Key Documentation
+Supports Patch 7.41 / 7.41a.
 
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** -- Complete codebase architecture, file map, naming conventions, all systems explained
-- **[docs/PATCH_UPDATE_GUIDE.md](docs/PATCH_UPDATE_GUIDE.md)** -- Step-by-step runbook for updating when a new Dota 2 patch drops
+## Architectural rule (very important)
 
-**Read these docs FIRST before making any changes.** They contain everything needed to make targeted updates without scanning the entire repo.
+**Do not rewrite or edit ryndrb's files until the baseline has been verified stable in a lobby.** The whole point of this baseline reset was that our previous OHA-based fork had broken fluidity by rewriting per-tick `Think()` loops. When improvements begin, they go in:
 
-## Common Tasks
+- **New side modules** (e.g. `bots/FunLib/dekyet_*.lua`) that *inform* decisions
+- **`GetDesire()` augmentations** that bias when a mode activates
+- **Never** in the per-tick `Think()` action-emit path
 
-### Check for New Patches
+See [docs/IMPROVEMENTS_ROADMAP.md](docs/IMPROVEMENTS_ROADMAP.md) for the full plan.
 
-To check if there are patches we haven't updated for:
-1. Fetch `https://www.dota2.com/datafeed/patchnoteslist?language=english`
-2. Compare latest version against "Last updated for" in `docs/PATCH_UPDATE_GUIDE.md`
-3. If newer patch exists, follow the update process below
+## Key documentation
 
-### Patch Update (most common)
+- [docs/IMPROVEMENTS_ROADMAP.md](docs/IMPROVEMENTS_ROADMAP.md) — what we plan to add on top of ryndrb, in priority order, with lessons from the OHA attempt
+- [README.md](README.md) — install + play instructions
+- [ryndrb's README](https://github.com/ryndrb/dota2bot) — baseline documentation
 
-When user says "update for patch X.XX" or provides patch notes:
+## Common tasks
 
-1. Read `docs/PATCH_UPDATE_GUIDE.md` for the step-by-step process
-2. Fetch patch data: `https://www.dota2.com/datafeed/patchnotes?version=X.XX&language=english`
-3. Fetch d2vpkr data (shops.txt, neutral_items.txt) for authoritative item/ability names
-4. **Categorize changes**: STRUCTURAL (need code) vs NUMBER-ONLY (game API handles) vs TALENT SWAPS
-5. **Always verify ability names on Liquipedia** -- patch note summaries can be wrong
-6. Follow the checklist in order: items -> hero builds -> abilities -> neutrals -> actives -> map changes
-7. **Always update TS sources** for any TS-generated Lua files changed (see ARCHITECTURE.md Section 13)
+### Verify the baseline in a lobby
 
-### Add a New Hero
+1. Run `install-symlink.bat` as Administrator (creates symlink from Dota's vscripts/bots to this repo's `bots/`).
+2. Launch Dota -> Custom Lobby -> Local Host -> Local Dev Script for both teams.
+3. Expected welcome chat: `"Check out the GitHub page to get the latest files: https://github.com/ryndrb/dota2bot"` — that is ryndrb's baseline speaking. If you see any "Welcome to Open Hyper AI" text, Dota is still loading from a stale install, not this symlink.
 
-1. Copy a similar existing hero from `bots/BotLib/` as template
-2. Add to `FretBots/HeroNames.lua`, `FunLib/aba_hero_roles_map.lua`, `FunLib/spell_list.lua`
-3. See "New Heroes" section in `docs/PATCH_UPDATE_GUIDE.md`
+### Layer an improvement (only after baseline is verified)
 
-### Fix a Hero's Item Build
+1. Read the relevant section in [docs/IMPROVEMENTS_ROADMAP.md](docs/IMPROVEMENTS_ROADMAP.md).
+2. Add the improvement in a **new file** under `bots/FunLib/` or as a small, well-scoped patch to `GetDesire()` in the relevant mode file.
+3. Include a kill-switch flag (e.g. `M.ENABLED = true`) at the top of every new module.
+4. Lobby-test immediately; if anything regresses, flip the flag off.
+5. Commit each layer separately so rollback is a single `git revert`.
 
-1. Read `bots/BotLib/hero_[name].lua`
-2. Edit the `sRoleItemsBuyList['pos_N']` arrays
-3. Items use `item_[internal_name]` format -- check `FunLib/aba_item.lua` for valid names
+## Important rules
 
-### Fix a Hero's Ability Logic
-
-1. Read `bots/BotLib/hero_[name].lua`
-2. The `SkillsComplement()` function controls ability casting priority
-3. Each ability has a `ConsiderX()` function returning desire + target
-4. See "Skill / Ability System" in `docs/ARCHITECTURE.md`
-
-## Important Rules
-
-- **Use `GetItemComponents()` for item recipes** -- don't hardcode component arrays
-- **Use `sAbilityList[N]` references** when possible -- resilient to ability renames
-- **Always update BOTH neutral item files** (Buff/ AND FretBots/)
-- **Verify on Liquipedia** before trusting patch note summaries about ability names
-- **Test in-game** after changes -- some things can only be verified at runtime
+- **Do not touch ryndrb's `Think()` functions.**
+- **Every new module must `require('.../FunLib/jmz_func')` if it uses `J.*` helpers** — silent nil-index errors look like "bots stuck doing nothing" in-game.
+- **Use `bot:GetAttackRange() > 300`** as the ranged-check idiom. `GetAttackCapability()` and `ATTACK_CAPABILITY_RANGED` do not exist in the Dota bot Unit API.
+- **Verify any ability/item name on [Liquipedia](https://liquipedia.net/dota2)** before trusting patch note summaries.
+- **Lobby-test after every layer**, not after every commit batch. The Lua VM does not surface most errors until a bot enters the relevant mode.
