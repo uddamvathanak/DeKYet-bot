@@ -5,6 +5,7 @@ end
 local bot = GetBot();
 local X = {}
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
+local Pressure = require( GetScriptDirectory()..'/FunLib/dekyet_pressure_bias')
 
 local botName = bot:GetUnitName()
 local minute = 0
@@ -77,6 +78,7 @@ function GetDesire()
 	or X.IsUnitAroundLocation(GetAncient(GetTeam()):GetLocation(), 3200)
 	or #nEnemyHeroes > 0
 	or (nAliveEnemyCount <= 1 and networthAdvantage > 10000)
+	or Pressure.ShouldSuppressFarm(bot)
     then
         return BOT_MODE_DESIRE_NONE
     end

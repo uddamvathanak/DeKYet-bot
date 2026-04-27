@@ -1,5 +1,6 @@
 local Push = {}
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
+local Pressure = require( GetScriptDirectory()..'/FunLib/dekyet_pressure_bias')
 
 local pingTimeDelta = 5
 local tUrgentDefend = {false, nil}
@@ -127,6 +128,7 @@ function Push.GetPushDesire(bot, lane)
                 end
             end
 
+            nPushDesire = nPushDesire + Pressure.GetPushBoost(bot, lane)
             return Clamp(nPushDesire, 0, nMaxDesire)
         end
     end
