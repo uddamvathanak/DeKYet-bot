@@ -1,5 +1,6 @@
 local bot = GetBot()
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
+local DKLastHit = require( GetScriptDirectory()..'/FunLib/dekyet_lasthit')
 
 local clearMode = false
 local botName = bot:GetUnitName()
@@ -111,7 +112,8 @@ local function GetBestLastHitCreep(hCreepList)
 	for _, creep in pairs(hCreepList) do
 		if J.IsValid(creep) and J.CanBeAttacked(creep) then
 			local nDelay = J.GetAttackProDelayTime(bot, creep)
-			if J.WillKillTarget(creep, botAttackDamage - 3, DAMAGE_TYPE_PHYSICAL, nDelay) then
+			local nAllyIncoming = DKLastHit.GetIncomingAllyDamage(creep, nDelay)
+			if J.WillKillTarget(creep, botAttackDamage - 3 + nAllyIncoming, DAMAGE_TYPE_PHYSICAL, nDelay) then
 				local sCreepName = creep:GetUnitName()
 				local creepScore = 0
 				if string.find(sCreepName, 'ranged') then
