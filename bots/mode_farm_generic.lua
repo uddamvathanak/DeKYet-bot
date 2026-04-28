@@ -6,6 +6,7 @@ local bot = GetBot();
 local X = {}
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
 local Pressure = require( GetScriptDirectory()..'/FunLib/dekyet_pressure_bias')
+local DKLog = require( GetScriptDirectory()..'/FunLib/dekyet_debug_log')
 
 local botName = bot:GetUnitName()
 local minute = 0
@@ -32,6 +33,7 @@ function GetDesire()
 			if DotaTime() > -45 then
 				bot:ActionImmediate_Chat("Check out the GitHub page to get the latest files: https://github.com/ryndrb/dota2bot", true)
 				bot:ActionImmediate_Chat("If you have any feedback in improving the experience, kindly post them on the Steam Workshop page.", true)
+				bot:ActionImmediate_Chat(DKLog.GetStatusLine(), true)
 				bWelcomeMessageDone = true
 			end
 		end

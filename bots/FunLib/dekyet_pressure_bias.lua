@@ -8,6 +8,7 @@ local M = {}
 M.ENABLED = true
 
 local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+local Log = require(GetScriptDirectory()..'/FunLib/dekyet_debug_log')
 
 -- Returns true if this bot should NOT take farm desire right now because the
 -- team would benefit more from wave pressure / grouping. Used as an early
@@ -67,4 +68,5 @@ function M.GetPushBoost(bot, lane)
     return 0.10
 end
 
+Log.RegisterLayer('pressure_bias', M.ENABLED)
 return M

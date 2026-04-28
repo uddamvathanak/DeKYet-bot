@@ -8,6 +8,7 @@ local M = {}
 M.ENABLED = true
 
 local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+local Log = require(GetScriptDirectory()..'/FunLib/dekyet_debug_log')
 
 function M.GetUltBoost(bot)
     if not M.ENABLED then return 0 end
@@ -35,4 +36,5 @@ function M.GetUltBoost(bot)
     return 0
 end
 
+Log.RegisterLayer('ult_ready', M.ENABLED)
 return M

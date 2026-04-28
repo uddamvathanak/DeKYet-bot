@@ -9,6 +9,7 @@ local M = {}
 M.ENABLED = true
 
 local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+local Log = require(GetScriptDirectory()..'/FunLib/dekyet_debug_log')
 
 function M.GetTeamRoamBoost(bot)
     if not M.ENABLED then return 0 end
@@ -28,4 +29,5 @@ function M.GetTeamRoamBoost(bot)
     return 0.10
 end
 
+Log.RegisterLayer('team_engage', M.ENABLED)
 return M

@@ -10,6 +10,7 @@ local M = {}
 M.ENABLED = true
 
 local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+local Log = require(GetScriptDirectory()..'/FunLib/dekyet_debug_log')
 
 -- Sum of allied creep auto-attack damage that will land on hTarget within
 -- nDelay seconds. Approximates ryndrb's existing creep-damage model used in
@@ -39,4 +40,5 @@ function M.GetIncomingAllyDamage(hTarget, nDelay)
     return total
 end
 
+Log.RegisterLayer('lasthit', M.ENABLED)
 return M
