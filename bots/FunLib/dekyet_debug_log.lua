@@ -18,6 +18,7 @@ if M.ENABLED and _G.__DEKYET_DEBUG_LOG_INSTALLED ~= true then
     local _rawPrint = print
     M.RawPrint = _rawPrint
     _G.__DEKYET_RAW_PRINT = _rawPrint
+    _G.__DEKYET_RAWPRINT  = _rawPrint  -- alias for older module variants
     _rawPrint('[DeKYet] debug_log gate installed (DEBUG_LOG=' .. tostring(M.DEBUG_LOG) .. ')')
     _G.print = function(...)
         if M.DEBUG_LOG then return _rawPrint(...) end

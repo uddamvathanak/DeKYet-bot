@@ -1,83 +1,95 @@
--- DeKYet: laning aggression / hero spike awareness.
--- Returns a multiplier applied to the per-enemy fMultiplier score inside
--- mode_attack_generic.GetDesire during early game / laning phase only.
--- Lane bullies press harder; passive farmers back off early.
--- Kill switch: set M.ENABLED = false to return 1.0 always (neutral).
+-- DeKYet: per-hero laning aggression multiplier.
+-- Read-only side module. Called from GetDesire() in mode_laning_generic.lua.
+-- Never touches Think(). Kill-switch: set M.ENABLED = false.
 
 local Log = require(GetScriptDirectory()..'/FunLib/dekyet_debug_log')
 
 local M = {}
 M.ENABLED = true
+M.DEBUG   = true  -- prints once per hero per game to verify it's wired
 
--- Heroes that are threatening from level 1 and should always press.
+-- Bullies: press regardless of spike.
 M.LANE_BULLY = {
-    npc_dota_hero_viper          = true,
-    npc_dota_hero_bristleback    = true,
-    npc_dota_hero_huskar         = true,
-    npc_dota_hero_undying        = true,
-    npc_dota_hero_axe            = true,
-    npc_dota_hero_dragon_knight  = true,
-    npc_dota_hero_batrider       = true,
-    npc_dota_hero_ursa           = true,
-    npc_dota_hero_life_stealer   = true,
+    npc_dota_hero_bristleback   = true,
+    npc_dota_hero_viper         = true,
+    npc_dota_hero_huskar        = true,
+    npc_dota_hero_undying       = true,
+    npc_dota_hero_batrider      = true,
+    npc_dota_hero_razor         = true,
+    npc_dota_hero_bloodseeker   = true,
+    npc_dota_hero_clinkz        = true,
+    npc_dota_hero_night_stalker = true,
+    npc_dota_hero_pudge         = true,
+    npc_dota_hero_lina          = true,
+    npc_dota_hero_queenofpain   = true,
+    npc_dota_hero_zuus          = true,
+    npc_dota_hero_dragon_knight = true,
+    npc_dota_hero_centaur       = true,
 }
 
--- Heroes that should play passively and farm early (pre-level 11).
+-- Passive carries: farm safe pre-spike.
 M.PASSIVE_EARLY = {
-    npc_dota_hero_medusa         = true,
-    npc_dota_hero_spectre        = true,
-    npc_dota_hero_antimage       = true,
-    npc_dota_hero_naga_siren     = true,
-    npc_dota_hero_morphling      = true,
-    npc_dota_hero_phantom_assassin = true,
-    npc_dota_hero_phantom_lancer = true,
-    npc_dota_hero_luna           = true,
-    npc_dota_hero_gyrocopter     = true,
+    npc_dota_hero_medusa          = true,
+    npc_dota_hero_spectre         = true,
+    npc_dota_hero_antimage        = true,
+    npc_dota_hero_terrorblade     = true,
+    npc_dota_hero_phantom_lancer  = true,
+    npc_dota_hero_naga_siren      = true,
+    npc_dota_hero_morphling       = true,
+    npc_dota_hero_alchemist       = true,
+    npc_dota_hero_riki            = true,
+    npc_dota_hero_faceless_void   = true,
 }
 
--- Heroes whose first kill-threat spike is at a specific level (beyond level 1).
--- Key is full hero unit name; value is the level at which they become dangerous.
+-- Level at which each hero becomes a kill threat (default 6).
 M.LEVEL_SPIKE = {
-    npc_dota_hero_pudge          = 6,
-    npc_dota_hero_lion           = 6,
-    npc_dota_hero_lina           = 6,
-    npc_dota_hero_earthshaker    = 6,
-    npc_dota_hero_sand_king      = 6,
-    npc_dota_hero_tidehunter     = 6,
-    npc_dota_hero_enigma         = 6,
-    npc_dota_hero_faceless_void  = 6,
-    npc_dota_hero_shadow_shaman  = 6,
-    npc_dota_hero_witch_doctor   = 6,
-    npc_dota_hero_drow_ranger    = 6,
-    npc_dota_hero_templar_assassin = 7,
-    npc_dota_hero_invoker        = 7,
-    npc_dota_hero_storm_spirit   = 6,
-    npc_dota_hero_queenofpain    = 6,
-    npc_dota_hero_slark          = 6,
+    npc_dota_hero_lina             = 6,
+    npc_dota_hero_lion             = 6,
+    npc_dota_hero_nevermore        = 6,
+    npc_dota_hero_legion_commander = 6,
+    npc_dota_hero_queenofpain      = 6,
+    npc_dota_hero_sniper           = 11,
+    npc_dota_hero_medusa           = 11,
+    npc_dota_hero_antimage         = 11,
+    npc_dota_hero_spectre          = 16,
 }
 
--- Returns a multiplier (0.50–1.60) for mode_attack_generic's fMultiplier.
--- Applied only during early game / laning phase via a caller-side guard.
-function M.GetAttackMultiplier(botName, botLevel)
+local announced = {}
+
+-- Returns a multiplier in [0.5, 1.6] to apply to the bot's laning desire.
+-- 1.0 = no change. >1 = press harder. <1 = farm safer.
+function M.GetAggressionMultiplier(botName, level)
     if not M.ENABLED then return 1.0 end
 
-    -- Passive farmers: reduce aggression before their power spike.
-    if M.PASSIVE_EARLY[botName] and botLevel < 11 then
-        return 0.60
-    end
+    local mult = 1.0
+    local tier = 'NORMAL'
 
-    -- Lane bullies: always more aggressive.
     if M.LANE_BULLY[botName] then
-        return 1.25
+        mult = 1.25
+        tier = 'BULLY'
+    elseif M.PASSIVE_EARLY[botName] then
+        mult = 0.70
+        tier = 'PASSIVE'
     end
 
-    -- Heroes at their level spike: press the advantage.
-    local spike = M.LEVEL_SPIKE[botName]
-    if spike ~= nil and botLevel >= spike then
-        return 1.40
+    local spike = M.LEVEL_SPIKE[botName] or 6
+    if level and level >= spike then
+        mult = mult * 1.10
+        tier = tier..'+SPIKE'
     end
 
-    return 1.0
+    if mult < 0.5 then mult = 0.5 end
+    if mult > 1.6 then mult = 1.6 end
+
+    if M.DEBUG and not announced[botName] and level and level >= 1 then
+        announced[botName] = true
+        local _rawPrint = _G.__DEKYET_RAWPRINT or _G.__DEKYET_RAW_PRINT or print
+        _rawPrint(string.format(
+            '[DeKYet] laning_pressure %s tier=%s mult=%.2f (lvl=%d, spike=%d)',
+            botName, tier, mult, level, spike))
+    end
+
+    return mult
 end
 
 Log.RegisterLayer('laning_pressure', M.ENABLED)

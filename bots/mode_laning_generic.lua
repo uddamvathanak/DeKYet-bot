@@ -1,6 +1,11 @@
 local bot = GetBot()
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
 local DKLastHit = require( GetScriptDirectory()..'/FunLib/dekyet_lasthit')
+local DekyetLP = nil
+do
+    local ok, mod = pcall(require, GetScriptDirectory()..'/FunLib/dekyet_laning_pressure')
+    if ok then DekyetLP = mod end
+end
 
 local clearMode = false
 local botName = bot:GetUnitName()
@@ -42,7 +47,13 @@ function GetDesire()
 			return BOT_MODE_DESIRE_VERYHIGH - 0.01
 		end
 
-		return BOT_MODE_DESIRE_MODERATE - 0.05
+		local baseDesire = BOT_MODE_DESIRE_MODERATE - 0.05
+		if DekyetLP and DekyetLP.ENABLED then
+			local mult = DekyetLP.GetAggressionMultiplier(botName, botLevel)
+			baseDesire = baseDesire * mult
+			if baseDesire > 0.99 then baseDesire = 0.99 end
+		end
+		return baseDesire
 	end
 
 	local nTower = TOWER_TOP_1
