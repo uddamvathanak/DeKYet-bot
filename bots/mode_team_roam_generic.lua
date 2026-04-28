@@ -11,6 +11,7 @@ local J = require( GetScriptDirectory()..'/FunLib/jmz_func')
 local AttackSpecialUnit = dofile( GetScriptDirectory()..'/FunLib/aba_special_units')
 local Item = require( GetScriptDirectory()..'/FunLib/aba_item')
 local Engage = require( GetScriptDirectory()..'/FunLib/dekyet_team_engage')
+local UltReady = require( GetScriptDirectory()..'/FunLib/dekyet_ult_ready')
 
 local botName = bot:GetUnitName();
 
@@ -290,7 +291,7 @@ function GetDesire()
 			then
 				targetUnit = botTarget
 				bot:SetTarget(botTarget)
-				return Clamp(targetDesire + Engage.GetTeamRoamBoost(bot), 0, BOT_MODE_DESIRE_VERYHIGH + 0.04)
+				return Clamp(targetDesire + Engage.GetTeamRoamBoost(bot) + UltReady.GetUltBoost(bot), 0, BOT_MODE_DESIRE_VERYHIGH + 0.04)
 			end
 		end
 
@@ -301,7 +302,7 @@ function GetDesire()
 			then
 				targetUnit = botTarget
 				bot:SetTarget(botTarget)
-				return Clamp(targetDesire + Engage.GetTeamRoamBoost(bot), 0, BOT_MODE_DESIRE_VERYHIGH + 0.04)
+				return Clamp(targetDesire + Engage.GetTeamRoamBoost(bot) + UltReady.GetUltBoost(bot), 0, BOT_MODE_DESIRE_VERYHIGH + 0.04)
 			end
 		end
 
