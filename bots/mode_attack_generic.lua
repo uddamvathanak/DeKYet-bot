@@ -72,9 +72,6 @@ function GetDesire()
         then
             local sEnemyName = enemy:GetUnitName()
             local fMultiplier = 1
-            if J.IsEarlyGame() or J.IsInLaningPhase() then
-                fMultiplier = fMultiplier * Spike.GetAttackMultiplier(botName, bot:GetLevel())
-            end
 
             if sEnemyName == 'npc_dota_hero_sniper' then
                 fMultiplier = 4
@@ -98,6 +95,10 @@ function GetDesire()
                 fMultiplier = 0.3
             elseif enemy:HasModifier('modifier_item_aeon_disk_buff') then
                 fMultiplier = 0.5
+            end
+
+            if J.IsEarlyGame() or J.IsInLaningPhase() then
+                fMultiplier = fMultiplier * Spike.GetAttackMultiplier(botName, bot:GetLevel())
             end
 
             if sEnemyName ~= 'npc_dota_hero_bristleback' then
