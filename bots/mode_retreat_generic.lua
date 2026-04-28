@@ -169,6 +169,9 @@ function GetDesire()
     end
 
     if bot:HasModifier('modifier_fountain_aura_buff') then
+        if botHP >= 0.99 and (botMP >= 0.99 or botName == 'npc_dota_hero_huskar') then
+            return BOT_MODE_DESIRE_NONE
+        end
         if botHP <= 0.9 or (botMP <= 0.8 and botName ~= 'npc_dota_hero_huskar') then
             return BOT_MODE_DESIRE_ABSOLUTE
         end
