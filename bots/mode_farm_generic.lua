@@ -14,6 +14,7 @@ local sec = 0
 local preferedCamp = nil
 
 local bWelcomeMessageDone = false
+local fNextDeKYetReannounce = 30
 
 local fLastCampUpdateTime = 0
 local FARM_STATE__NONE = 0
@@ -33,8 +34,28 @@ function GetDesire()
 			if DotaTime() > -45 then
 				bot:ActionImmediate_Chat("Check out the GitHub page to get the latest files: https://github.com/ryndrb/dota2bot", true)
 				bot:ActionImmediate_Chat("If you have any feedback in improving the experience, kindly post them on the Steam Workshop page.", true)
-				bot:ActionImmediate_Chat(DKLog.GetStatusLine(), true)
+				local ok, statusLine = pcall(function() return DKLog.GetStatusLine() end)
+				if not ok or type(statusLine) ~= 'string' then
+					statusLine = '[DeKYet] status unavailable: ' .. tostring(statusLine)
+				end
+				bot:ActionImmediate_Chat(statusLine, true)
+				if DKLog.RawPrint then DKLog.RawPrint(statusLine) end
 				bWelcomeMessageDone = true
+			end
+		end
+
+		-- Re-emit the layer status at +30s and +60s so the user can still see
+		-- it after opening the in-game console mid-game.
+		if bWelcomeMessageDone and fNextDeKYetReannounce ~= nil and DotaTime() >= fNextDeKYetReannounce then
+			local ok2, statusLine2 = pcall(function() return DKLog.GetStatusLine() end)
+			if ok2 and type(statusLine2) == 'string' then
+				bot:ActionImmediate_Chat(statusLine2, true)
+				if DKLog.RawPrint then DKLog.RawPrint(statusLine2) end
+			end
+			if fNextDeKYetReannounce < 60 then
+				fNextDeKYetReannounce = 60
+			else
+				fNextDeKYetReannounce = nil
 			end
 		end
 
