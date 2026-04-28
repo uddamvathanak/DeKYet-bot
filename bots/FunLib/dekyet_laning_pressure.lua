@@ -4,6 +4,8 @@
 -- Lane bullies press harder; passive farmers back off early.
 -- Kill switch: set M.ENABLED = false to return 1.0 always (neutral).
 
+local Log = require(GetScriptDirectory()..'/FunLib/dekyet_debug_log')
+
 local M = {}
 M.ENABLED = true
 
@@ -17,7 +19,7 @@ M.LANE_BULLY = {
     npc_dota_hero_dragon_knight  = true,
     npc_dota_hero_batrider       = true,
     npc_dota_hero_ursa           = true,
-    npc_dota_hero_lifestealer    = true,
+    npc_dota_hero_life_stealer   = true,
 }
 
 -- Heroes that should play passively and farm early (pre-level 11).
@@ -50,7 +52,7 @@ M.LEVEL_SPIKE = {
     npc_dota_hero_templar_assassin = 7,
     npc_dota_hero_invoker        = 7,
     npc_dota_hero_storm_spirit   = 6,
-    npc_dota_hero_queen_of_pain  = 6,
+    npc_dota_hero_queenofpain    = 6,
     npc_dota_hero_slark          = 6,
 }
 
@@ -78,4 +80,5 @@ function M.GetAttackMultiplier(botName, botLevel)
     return 1.0
 end
 
+Log.RegisterLayer('laning_pressure', M.ENABLED)
 return M
