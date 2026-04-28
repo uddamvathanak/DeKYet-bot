@@ -1,4 +1,5 @@
 local J = require(GetScriptDirectory()..'/FunLib/jmz_func')
+local Spike = require(GetScriptDirectory()..'/FunLib/dekyet_laning_pressure')
 local X = {}
 
 local bot = GetBot()
@@ -71,6 +72,9 @@ function GetDesire()
         then
             local sEnemyName = enemy:GetUnitName()
             local fMultiplier = 1
+            if J.IsEarlyGame() or J.IsInLaningPhase() then
+                fMultiplier = fMultiplier * Spike.GetAttackMultiplier(botName, bot:GetLevel())
+            end
 
             if sEnemyName == 'npc_dota_hero_sniper' then
                 fMultiplier = 4
